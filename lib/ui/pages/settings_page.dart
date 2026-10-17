@@ -278,10 +278,15 @@ class _SettingsPageState extends State<SettingsPage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    // Simple detail level hides the Advanced tab entirely; Balanced shows the
+    // standard tabs; Advanced reveals everything.
+    final showAdvancedTab = Provider.of<StorageService>(
+      context,
+    ).uiSettings.detailLevel.reveals(DetailLevel.advanced);
     return Stack(
       children: [
         DefaultTabController(
-          length: 6,
+          length: showAdvancedTab ? 6 : 5,
           child: Scaffold(
             backgroundColor: AppColors.backgroundOf(
               context,
@@ -302,13 +307,13 @@ class _SettingsPageState extends State<SettingsPage> {
                   AppColors.surfaceOf(context).withValues(alpha: 0),
                 ),
                 splashFactory: NoSplash.splashFactory,
-                tabs: const [
-                  Tab(text: 'General'),
-                  Tab(text: 'Porch Life'),
-                  Tab(text: 'Generation'),
-                  Tab(text: 'Voice & Media'),
-                  Tab(text: 'Backend'),
-                  Tab(text: 'Advanced'),
+                tabs: [
+                  const Tab(text: 'General'),
+                  const Tab(text: 'Porch Life'),
+                  const Tab(text: 'Generation'),
+                  const Tab(text: 'Voice & Media'),
+                  const Tab(text: 'Backend'),
+                  if (showAdvancedTab) const Tab(text: 'Advanced'),
                 ],
               ),
             ),
@@ -331,7 +336,8 @@ class _SettingsPageState extends State<SettingsPage> {
                 // settings notify re-ran ALL five tabs' construction even
                 // with a different tab visible.
                 Builder(builder: (context) => _backendTab()),
-                Builder(builder: (context) => _buildAdvancedTab(context)),
+                if (showAdvancedTab)
+                  Builder(builder: (context) => _buildAdvancedTab(context)),
               ],
             ),
           ),

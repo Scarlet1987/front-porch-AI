@@ -70,6 +70,8 @@ class GeneralTab extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          const DetailLevelControl(),
+          const SizedBox(height: 16),
           SwitchListTile(
             key: const ValueKey('user-messages-on-right'),
             contentPadding: EdgeInsets.zero,
@@ -123,6 +125,51 @@ class GeneralTab extends StatelessWidget {
                 },
               ),
             ],
+          ),
+          if (storageService.uiSettings.isDark) ...[
+            const SizedBox(height: 4),
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              title: Text(
+                'OLED true black',
+                style: TextStyle(color: AppColors.textPrimary(context)),
+              ),
+              subtitle: Text(
+                'Pure-black backgrounds so OLED screens can switch pixels '
+                'fully off. Easier on the eyes in the dark, kinder to the '
+                'battery.',
+                style: TextStyle(
+                  fontSize: 12.5,
+                  color: AppColors.textSecondary(context),
+                ),
+              ),
+              value: storageService.uiSettings.oledBlack,
+              onChanged: (v) =>
+                  storageService.uiSettings.setOledBlack(v),
+            ),
+          ],
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: Icon(
+              Icons.menu_book_outlined,
+              color: AppColors.porchAmberOf(context),
+            ),
+            title: Text(
+              'Words we use',
+              style: TextStyle(color: AppColors.textPrimary(context)),
+            ),
+            subtitle: Text(
+              'What MC, NPC, User and the other terms mean, in plain English.',
+              style: TextStyle(
+                fontSize: 12.5,
+                color: AppColors.textSecondary(context),
+              ),
+            ),
+            trailing: Icon(
+              Icons.chevron_right,
+              color: AppColors.textTertiary(context),
+            ),
+            onTap: () => showGlossaryDialog(context),
           ),
           const SizedBox(height: 16),
           if (UpdateService.isSupported) ...[
