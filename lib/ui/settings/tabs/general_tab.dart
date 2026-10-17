@@ -72,6 +72,8 @@ class GeneralTab extends StatelessWidget {
         children: [
           const DetailLevelControl(),
           const SizedBox(height: 16),
+          const CompanionCard(),
+          const SizedBox(height: 16),
           SwitchListTile(
             key: const ValueKey('user-messages-on-right'),
             contentPadding: EdgeInsets.zero,
