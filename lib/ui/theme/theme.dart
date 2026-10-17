@@ -9,5 +9,7 @@
 // (at your option) any later version.
 
 export 'app_colors.dart';
+export 'porch_design.dart';
+export 'porch_theme_scope.dart';
 export 'reading_size.dart';
 export 'tier_colors.dart';

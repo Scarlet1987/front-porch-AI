@@ -3,8 +3,35 @@
 
 import 'package:flutter/material.dart';
 
+import 'package:front_porch_ai/ui/theme/porch_theme_scope.dart';
+
 class AppColors {
   AppColors._();
+
+  /// True when the OLED true-black theme variant is active for this build.
+  static bool isOled(BuildContext context) =>
+      PorchThemeScope.oledBlackOf(context);
+
+  // ---------------------------------------------------------------------------
+  // OLED true-black variant (pure black grounds for OLED screens)
+  // ---------------------------------------------------------------------------
+
+  /// True-black scaffold background for the OLED variant.
+  static const Color oledBackground = Color(0xFF000000);
+
+  /// True-black card fill for the OLED variant.
+  static const Color oledCard = Color(0xFF0A0A0C);
+
+  /// True-black surface fill for the OLED variant.
+  static const Color oledSurface = Color(0xFF101013);
+
+  /// Resolves dark/light, preferring the OLED true-black variant when active.
+  static Color resolveOled(
+    BuildContext context,
+    Color dark,
+    Color light,
+    Color oled,
+  ) => isOled(context) ? oled : resolve(context, dark, light);
 
   /// Surface background for dialogs, containers, and panels.
   static const Color surface = Color(0xFF1F2937);
@@ -121,17 +148,17 @@ class AppColors {
   static Color resolve(BuildContext context, Color dark, Color light) =>
       isLight(context) ? light : dark;
 
-  /// Background for the current brightness.
+  /// Background for the current brightness (true black in OLED mode).
   static Color backgroundOf(BuildContext context) =>
-      resolve(context, background, lightBackground);
+      resolveOled(context, background, lightBackground, oledBackground);
 
-  /// Card color for the current brightness.
+  /// Card color for the current brightness (true black in OLED mode).
   static Color cardOf(BuildContext context) =>
-      resolve(context, card, lightCard);
+      resolveOled(context, card, lightCard, oledCard);
 
-  /// Surface color for the current brightness.
+  /// Surface color for the current brightness (true black in OLED mode).
   static Color surfaceOf(BuildContext context) =>
-      resolve(context, surface, lightSurface);
+      resolveOled(context, surface, lightSurface, oledSurface);
 
   /// Subtle border color for the current brightness (reuses resolve scaffold; no new logic).
   static Color borderOf(BuildContext context) =>
@@ -347,13 +374,13 @@ class AppColors {
   static const Color sunkenSurface = Color(0xFF111827);
   static const Color sunkenSurfaceLight = Color(0xFFE9E2D8);
   static Color sunkenSurfaceOf(BuildContext context) =>
-      resolve(context, sunkenSurface, sunkenSurfaceLight);
+      resolveOled(context, sunkenSurface, sunkenSurfaceLight, oledBackground);
 
   /// Read-only text wells (deepest inset, e.g. evolution "original" text).
   static const Color deepWell = Color(0xFF0D1117);
   static const Color deepWellLight = Color(0xFFF0EBE3);
   static Color deepWellOf(BuildContext context) =>
-      resolve(context, deepWell, deepWellLight);
+      resolveOled(context, deepWell, deepWellLight, oledBackground);
 
   // ── KoboldCpp presets and the local model card (approved sketch,
   // 2026-10-04): slate text, an inset panel, and the parts of the preset
@@ -362,7 +389,7 @@ class AppColors {
   static const Color insetPanel = Color(0xFF172033);
   static const Color insetPanelLight = Color(0xFFF3EEE6);
   static Color insetPanelOf(BuildContext context) =>
-      resolve(context, insetPanel, insetPanelLight);
+      resolveOled(context, insetPanel, insetPanelLight, oledSurface);
   static const Color slateInk = Color(0xFFF3F4F6);
   static const Color slateInkLight = Color(0xFF1F2937);
   static Color slateInkOf(BuildContext context) =>

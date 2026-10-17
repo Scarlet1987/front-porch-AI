@@ -20,6 +20,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:front_porch_ai/ui/theme/app_colors.dart';
 import 'package:front_porch_ai/models/models.dart';
+import 'detail_level.dart';
 import 'library_view_prefs.dart';
 import 'settings_base.dart';
 
@@ -46,6 +47,14 @@ class UiSettings with SettingsBase, LibraryViewPrefs {
 
   // Theme mode (persisted; drives which set of the 5 chat colors is active)
   bool _isDark = true;
+
+  // How much detail/control the UI exposes (Simple / Balanced / Advanced).
+  // Persisted; screens gate advanced knobs on it.
+  DetailLevel _detailLevel = DetailLevel.balanced;
+
+  // OLED true-black theme variant (dark mode only). Swaps dark surfaces for
+  // pure black so OLED screens can turn pixels fully off.
+  bool _oledBlack = false;
 
   // Stick-to-bottom while a reply is streaming. Default ON — the old
   // follow-while-generating feel. Off is the Mac-pass no-chase lock.
@@ -91,6 +100,8 @@ class UiSettings with SettingsBase, LibraryViewPrefs {
   Color get globalActionColor =>
       _isDark ? _globalActionColor : _lightActionColor;
   bool get isDark => _isDark;
+  DetailLevel get detailLevel => _detailLevel;
+  bool get oledBlack => _oledBlack && _isDark;
   bool get followStreamingReplies => _followStreamingReplies;
   String get globalChatFontFamily => _globalChatFontFamily;
   double get textScale => _textScale;
@@ -130,6 +141,8 @@ class UiSettings with SettingsBase, LibraryViewPrefs {
 
     // Theme + light-mode color set (fall back to AppColors light defaults if never saved)
     _isDark = prefs?.getBool(k('dark_mode')) ?? true;
+    _detailLevel = DetailLevelLabel.fromName(prefs?.getString(k('detail_level')));
+    _oledBlack = prefs?.getBool(k('oled_black')) ?? false;
     _followStreamingReplies =
         prefs?.getBool(k('follow_streaming_replies')) ?? true;
     _lightUserBubbleColor = Color(
@@ -285,6 +298,20 @@ class UiSettings with SettingsBase, LibraryViewPrefs {
     if (_isDark == value) return;
     _isDark = value;
     await prefs?.setBool(k('dark_mode'), value);
+    notify();
+  }
+
+  Future<void> setDetailLevel(DetailLevel value) async {
+    if (_detailLevel == value) return;
+    _detailLevel = value;
+    await prefs?.setString(k('detail_level'), value.name);
+    notify();
+  }
+
+  Future<void> setOledBlack(bool value) async {
+    if (_oledBlack == value) return;
+    _oledBlack = value;
+    await prefs?.setBool(k('oled_black'), value);
     notify();
   }
 

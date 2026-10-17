@@ -40,6 +40,8 @@ import 'package:screen_retriever/screen_retriever.dart';
 import 'package:front_porch_ai/providers/app_state.dart';
 import 'package:front_porch_ai/providers/auth_state.dart';
 import 'package:front_porch_ai/ui/theme/app_colors.dart';
+import 'package:front_porch_ai/ui/theme/porch_design.dart';
+import 'package:front_porch_ai/ui/theme/porch_theme_scope.dart';
 import 'package:front_porch_ai/ui/window_chrome.dart';
 import 'package:front_porch_ai/ui/window_size_env.dart';
 import 'package:front_porch_ai/services/backporch/backporch.dart';
@@ -297,41 +299,14 @@ class _MyAppState extends State<MyApp> with WindowListener {
     return Consumer<StorageService>(
       builder: (context, storage, child) {
         final isDark = storage.uiSettings.isDark;
-        return MaterialApp(
-          title: 'Front Porch AI',
-          debugShowCheckedModeBanner: false,
-          theme: ThemeData(
-            brightness: isDark ? Brightness.dark : Brightness.light,
-            // Warm-porch app-wide accent: seed the Material 3 color scheme from
-            // porch amber (was primarySwatch: Colors.blue) so every default
-            // control — switches, sliders, buttons, progress bars, the text
-            // cursor, tab indicators — warms up to match the chat sidebar and
-            // the web UI (whose --accent is already porch amber). The scheme's
-            // surfaces are pinned back to the app's existing slate/warm-paper
-            // grounds so only the ACCENT roles change, not the backgrounds.
-            colorScheme:
-                ColorScheme.fromSeed(
-                  seedColor: AppColors.porchAmber,
-                  brightness: isDark ? Brightness.dark : Brightness.light,
-                ).copyWith(
-                  primary: isDark
-                      ? AppColors.porchAmber
-                      : AppColors.porchAmberLight,
-                  onPrimary: isDark ? AppColors.onChaosAccent : Colors.white,
-                  surface: isDark ? AppColors.surface : AppColors.lightSurface,
-                ),
-            scaffoldBackgroundColor: isDark
-                ? AppColors.background
-                : AppColors.lightBackground, // warmer paper
-            cardColor: isDark ? AppColors.card : AppColors.lightCard,
-            textTheme: GoogleFonts.interTextTheme(Theme.of(context).textTheme)
-                .apply(
-                  bodyColor: isDark ? Colors.white : Colors.black87,
-                  displayColor: isDark ? Colors.white : Colors.black87,
-                ),
-            useMaterial3: true,
-          ),
-          home: Builder(
+        final oledBlack = storage.uiSettings.oledBlack;
+        return PorchThemeScope(
+          oledBlack: oledBlack,
+          child: MaterialApp(
+            title: 'Front Porch AI',
+            debugShowCheckedModeBanner: false,
+            theme: buildPorchThemeData(isDark: isDark, oledBlack: oledBlack),
+            home: Builder(
             builder: (context) {
               // Trigger update check once after first build
               if (!_updateChecked) {
@@ -462,6 +437,7 @@ class _MyAppState extends State<MyApp> with WindowListener {
                 ),
               );
             },
+          ),
           ),
         );
       },
