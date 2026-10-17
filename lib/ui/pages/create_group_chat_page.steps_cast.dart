@@ -43,6 +43,33 @@ extension _GroupWizardCastSteps on _CreateGroupChatPageState {
             'Build your roster. At least 2 characters required.',
             style: TextStyle(color: AppColors.textSecondary(context)),
           ),
+          const SizedBox(height: 12),
+          // Who-is-who for group casts: MCs vs NPCs, in plain English.
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              Text(
+                'Who is who:',
+                style: TextStyle(
+                  fontSize: 13,
+                  color: AppColors.textSecondary(context),
+                ),
+              ),
+              const GlossaryChip(term: 'MC'),
+              const GlossaryChip(term: 'NPC'),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'The character you talk to most leads as the MC; the rest of '
+            'the roster plays supporting NPC roles around you and them.',
+            style: TextStyle(
+              fontSize: 12.5,
+              color: AppColors.textTertiary(context),
+            ),
+          ),
           const SizedBox(height: 16),
 
           // Current Roster

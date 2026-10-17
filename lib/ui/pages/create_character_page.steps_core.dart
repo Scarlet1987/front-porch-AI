@@ -54,6 +54,11 @@ extension _CreateCharacterCoreSteps on _CreateCharacterPageState {
               ),
               const SizedBox(height: 32),
 
+              // Who-is-who: your persona (User) vs the character (MC), kept
+              // visually distinct so the two data sets never blur together.
+              const UserVsCharacterCard(),
+              const SizedBox(height: 24),
+
               // Name field
               _inputLabel('Character Name', required: true),
               const SizedBox(height: 8),
@@ -195,12 +200,14 @@ extension _CreateCharacterCoreSteps on _CreateCharacterPageState {
               ),
               const SizedBox(height: 24),
 
-              // Advanced Prompts (collapsed)
-              Theme(
-                data: Theme.of(
-                  context,
-                ).copyWith(dividerColor: Colors.transparent),
-                child: ExpansionTile(
+              // Advanced Prompts (collapsed) — hidden in Simple detail level.
+              DetailGate(
+                required: DetailLevel.balanced,
+                child: Theme(
+                  data: Theme.of(
+                    context,
+                  ).copyWith(dividerColor: Colors.transparent),
+                  child: ExpansionTile(
                   tilePadding: EdgeInsets.zero,
                   title: Row(
                     children: [
@@ -237,6 +244,7 @@ extension _CreateCharacterCoreSteps on _CreateCharacterPageState {
                       maxLines: 3,
                     ),
                   ],
+                  ),
                 ),
               ),
 

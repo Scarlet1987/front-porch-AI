@@ -24,6 +24,7 @@ import 'package:front_porch_ai/services/services.dart';
 import 'package:front_porch_ai/services/chat/chat.dart'
     show Pockets, BirthdayMath;
 import 'package:front_porch_ai/ui/avatar_creation/avatar_generation_panel.dart';
+import 'package:front_porch_ai/ui/character_creator/widgets/user_vs_character_card.dart';
 import 'package:front_porch_ai/ui/dialogs/lorebook_entry_dialog.dart';
 import 'package:front_porch_ai/ui/widgets/widgets.dart';
 import 'package:front_porch_ai/ui/widgets/greeting_seed_form.dart';
