@@ -23,10 +23,18 @@ import 'package:front_porch_ai/ui/widgets/warm_dialog.dart';
 
 /// Shows [MemoryCheckpointBanner] on a timer driven by
 /// [MemorySettings.memoryCheckpointMinutes].
+///
+/// Set [defer] while the user is actively typing or a reply is streaming:
+/// the nudge waits for a natural pause instead of ambushing mid-thought.
 class MemoryCheckpointNudge extends StatefulWidget {
   final CharacterCard character;
+  final bool defer;
 
-  const MemoryCheckpointNudge({super.key, required this.character});
+  const MemoryCheckpointNudge({
+    super.key,
+    required this.character,
+    this.defer = false,
+  });
 
   @override
   State<MemoryCheckpointNudge> createState() => _MemoryCheckpointNudgeState();
@@ -34,6 +42,7 @@ class MemoryCheckpointNudge extends StatefulWidget {
 
 class _MemoryCheckpointNudgeState extends State<MemoryCheckpointNudge> {
   Timer? _timer;
+  Timer? _deferTimer;
   bool _visible = false;
 
   @override
@@ -51,6 +60,12 @@ class _MemoryCheckpointNudgeState extends State<MemoryCheckpointNudge> {
       setState(() => _visible = false);
       _arm();
     }
+    // A natural pause arrived while we were deferring: show the nudge now.
+    if (oldWidget.defer && !widget.defer && _deferTimer != null) {
+      _deferTimer?.cancel();
+      _deferTimer = null;
+      if (mounted) setState(() => _visible = true);
+    }
   }
 
   @override
@@ -65,14 +80,28 @@ class _MemoryCheckpointNudgeState extends State<MemoryCheckpointNudge> {
         .memorySettings
         .memoryCheckpointMinutes;
     if (minutes <= 0) return;
-    _timer = Timer(Duration(minutes: minutes), () {
-      if (mounted) setState(() => _visible = true);
-    });
+    _timer = Timer(Duration(minutes: minutes), _onFire);
+  }
+
+  void _onFire() {
+    if (!mounted) return;
+    // Respect the user's flow: if they're typing or a reply is streaming,
+    // wait for a natural pause (didUpdateWidget fires the nudge when defer
+    // clears). Backstop: show anyway after 5 minutes.
+    if (widget.defer) {
+      _deferTimer = Timer(const Duration(minutes: 5), () {
+        if (mounted) setState(() => _visible = true);
+      });
+      return;
+    }
+    setState(() => _visible = true);
   }
 
   void _disarm() {
     _timer?.cancel();
     _timer = null;
+    _deferTimer?.cancel();
+    _deferTimer = null;
   }
 
   void _snooze() {

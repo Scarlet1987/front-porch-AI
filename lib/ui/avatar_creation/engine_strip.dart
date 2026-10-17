@@ -139,10 +139,25 @@ class EngineStrip extends StatelessWidget {
   Widget _connectionStatus(BuildContext context, AvatarCreationController c) {
     if (c.backend == ImageGenBackend.remote) {
       final ready = c.engineReady;
-      return _statusDot(
-        context,
-        ok: ready,
-        text: ready ? 'API configured' : 'API key or model missing',
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _statusDot(
+            context,
+            ok: ready,
+            text: ready ? 'API configured' : 'API key or model missing',
+          ),
+          const SizedBox(height: 2),
+          Text(
+            'Remote API: subject to its provider\u2019s content policies.',
+            style: TextStyle(
+              fontSize: 11,
+              fontStyle: FontStyle.italic,
+              color: AppColors.textTertiary(context),
+            ),
+          ),
+        ],
       );
     }
     if (c.testingConnection) {

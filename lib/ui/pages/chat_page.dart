@@ -432,8 +432,13 @@ class _ChatPageState extends State<ChatPage> {
                         // a gentle, snoozable banner offers to pin context
                         // to the MC's character card. Single-character
                         // chats only — group casts have no single MC.
+                        // Deferred while a reply streams: no ambush
+                        // mid-thought.
                         if (character != null && !isGroup)
-                          MemoryCheckpointNudge(character: character),
+                          MemoryCheckpointNudge(
+                            character: character,
+                            defer: chatService.isGenerating,
+                          ),
                         Expanded(
                           child: _buildChatSurface(
                             context: context,

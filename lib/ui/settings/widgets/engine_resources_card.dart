@@ -15,6 +15,7 @@ import 'package:front_porch_ai/services/services.dart';
 import 'package:front_porch_ai/services/storage/storage.dart';
 import 'package:front_porch_ai/ui/theme/app_colors.dart';
 import 'package:front_porch_ai/ui/theme/porch_design.dart';
+import 'package:front_porch_ai/ui/widgets/detail_level_control.dart';
 
 /// Settings → Backend: the Engine resources card.
 ///
@@ -29,9 +30,7 @@ class EngineResourcesCard extends StatelessWidget {
   static String _gb(int mb) {
     if (mb <= 0) return 'unknown';
     final gb = mb / 1024;
-    return gb >= 10
-        ? '${gb.round()} GB'
-        : '${gb.toStringAsFixed(1)} GB';
+    return gb >= 10 ? '${gb.round()} GB' : '${gb.toStringAsFixed(1)} GB';
   }
 
   @override
@@ -94,7 +93,9 @@ class EngineResourcesCard extends StatelessWidget {
                     vertical: PorchSpacing.xs,
                   ),
                   decoration: BoxDecoration(
-                    color: AppColors.bondHighOf(context).withValues(alpha: 0.14),
+                    color: AppColors.bondHighOf(
+                      context,
+                    ).withValues(alpha: 0.14),
                     borderRadius: BorderRadius.circular(PorchRadius.pill),
                   ),
                   child: Text(
@@ -104,6 +105,40 @@ class EngineResourcesCard extends StatelessWidget {
                       fontWeight: FontWeight.w700,
                       color: AppColors.bondHighOf(context),
                     ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: PorchSpacing.lg),
+          // Engine health: stable when the queue-don't-drop policy holds;
+          // the scheduler note explains what's happening in plain language.
+          _HealthRow(engines: engines),
+          const SizedBox(height: PorchSpacing.md),
+          // Character cards are data, not models: one resident model serves
+          // every card via context swapping. Adding cards costs no VRAM.
+          Container(
+            padding: const EdgeInsets.all(PorchSpacing.md),
+            decoration: BoxDecoration(
+              color: AppColors.sunkenSurfaceOf(context),
+              borderRadius: BorderRadius.circular(PorchRadius.md),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(
+                  Icons.info_outline,
+                  size: 18,
+                  color: AppColors.textSecondary(context),
+                ),
+                const SizedBox(width: PorchSpacing.sm),
+                Expanded(
+                  child: Text(
+                    'Character cards are data, not models — one model '
+                    'resident in VRAM serves every character card via '
+                    'context swapping. Adding character cards doesn\u2019t '
+                    'cost VRAM.',
+                    style: PorchType.caption(context),
                   ),
                 ),
               ],
@@ -145,8 +180,167 @@ class EngineResourcesCard extends StatelessWidget {
             value: engines.queueWithBackpressure,
             onChanged: engines.setQueueWithBackpressure,
           ),
+          // Advanced: micro-model role routing + detail→context linkage.
+          DetailGate(
+            required: DetailLevel.advanced,
+            label: 'Show engine tuning',
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: PorchSpacing.md),
+                Text(
+                  'Model roles',
+                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary(context),
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'Assign models to roles: a small, fast model for NPC '
+                  'dialogue, the main model for MC narrative. Empty uses '
+                  'the default model. Swaps queue — never mid-generation.',
+                  style: PorchType.caption(context),
+                ),
+                const SizedBox(height: PorchSpacing.sm),
+                _ModelIdField(
+                  label: 'NPC chatter model',
+                  value: engines.npcRoleModelId,
+                  onChanged: engines.setNpcRoleModelId,
+                ),
+                const SizedBox(height: PorchSpacing.sm),
+                _ModelIdField(
+                  label: 'MC narrative model',
+                  value: engines.mcRoleModelId,
+                  onChanged: engines.setMcRoleModelId,
+                ),
+                const SizedBox(height: PorchSpacing.md),
+                Text(
+                  'Detail level → context',
+                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary(context),
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Consumer<StorageService>(
+                  builder: (context, s, _) {
+                    final level = s.uiSettings.detailLevel;
+                    return Text(
+                      'Detail level ${level.label}: collapsed sections page '
+                      'in only their broad slice; expanded sections page in '
+                      'the deeper slice. Context is never spent on detail '
+                      'you aren\u2019t looking at.',
+                      style: PorchType.caption(context),
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
         ],
       ),
+    );
+  }
+}
+
+class _HealthRow extends StatelessWidget {
+  const _HealthRow({required this.engines});
+
+  final EngineResourcesSettings engines;
+
+  @override
+  Widget build(BuildContext context) {
+    final stable = engines.queueWithBackpressure;
+    final color = stable
+        ? AppColors.bondHighOf(context)
+        : AppColors.negativeAccentOf(context);
+    return Container(
+      padding: const EdgeInsets.all(PorchSpacing.md),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(PorchRadius.md),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            stable ? Icons.check_circle_outline : Icons.warning_amber_outlined,
+            size: 20,
+            color: color,
+          ),
+          const SizedBox(width: PorchSpacing.sm),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  stable ? 'Engines stable' : 'Engines degraded',
+                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary(context),
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  stable
+                      ? 'Scheduler: steady queue, one thing at a time when '
+                            'memory is tight. Nothing gets dropped.'
+                      : 'Queue-don\u2019t-drop is off: a busy engine may fail '
+                            'a generation instead of queueing it.',
+                  style: PorchType.caption(context),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ModelIdField extends StatefulWidget {
+  const _ModelIdField({
+    required this.label,
+    required this.value,
+    required this.onChanged,
+  });
+
+  final String label;
+  final String value;
+  final ValueChanged<String> onChanged;
+
+  @override
+  State<_ModelIdField> createState() => _ModelIdFieldState();
+}
+
+class _ModelIdFieldState extends State<_ModelIdField> {
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.value);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return TextField(
+      controller: _controller,
+      decoration: InputDecoration(
+        labelText: widget.label,
+        hintText: 'Model ID (empty = default)',
+        border: const OutlineInputBorder(),
+        isDense: true,
+      ),
+      style: TextStyle(color: AppColors.textPrimary(context), fontSize: 13),
+      onSubmitted: widget.onChanged,
     );
   }
 }
@@ -189,10 +383,7 @@ class _PlacementRow extends StatelessWidget {
         DropdownButton<EngineMemoryPlacement>(
           value: value,
           dropdownColor: AppColors.surfaceContainerOf(context),
-          style: TextStyle(
-            color: AppColors.textPrimary(context),
-            fontSize: 13,
-          ),
+          style: TextStyle(color: AppColors.textPrimary(context), fontSize: 13),
           underline: const SizedBox.shrink(),
           items: [
             for (final p in EngineMemoryPlacement.values)
