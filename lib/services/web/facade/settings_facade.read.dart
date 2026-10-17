@@ -151,6 +151,10 @@ extension SettingsFacadeRead on SettingsFacade {
       // General "Follow streaming replies" (default ON). Additive — an
       // older PWA ignores the key.
       'followStreamingReplies': _storage.uiSettings.followStreamingReplies,
+      // Detail level (simple/balanced/advanced) + OLED true-black variant.
+      // Additive — an older PWA ignores the keys.
+      'detailLevel': _storage.uiSettings.detailLevel.name,
+      'oledBlack': _storage.uiSettings.oledBlack,
       ...readWorkerSettings(_storage, _llm),
     };
   }

@@ -66,6 +66,8 @@ class StorageService extends ChangeNotifier {
   late final PresetSettings _presetSettings = PresetSettings();
   late final LorebookSettings _lorebookSettings = LorebookSettings();
   late final ToolVerdictSettings _toolVerdictSettings = ToolVerdictSettings();
+  late final EngineResourcesSettings _engineResourcesSettings =
+      EngineResourcesSettings();
 
   // Directories lifted to directories.dart (Stage 7); thin god owns root state for setRootPath.
   // Getter ensures live values after setRootPath / setCustomModelsPath.
@@ -123,6 +125,8 @@ class StorageService extends ChangeNotifier {
   PresetSettings get presetSettings => _presetSettings;
   LorebookSettings get lorebookSettings => _lorebookSettings;
   ToolVerdictSettings get toolVerdictSettings => _toolVerdictSettings;
+  EngineResourcesSettings get engineResourcesSettings =>
+      _engineResourcesSettings;
 
   // God-level (not in a *Settings): spell check language.
   //
@@ -201,6 +205,7 @@ class StorageService extends ChangeNotifier {
     _presetSettings.initializeBase(null, notifyListeners);
     _lorebookSettings.initializeBase(null, notifyListeners);
     _toolVerdictSettings.initializeBase(null, notifyListeners);
+    _engineResourcesSettings.initializeBase(null, notifyListeners);
     _generationSettings.load();
     _backendSettings.load();
     _uiSettings.load();
@@ -215,6 +220,7 @@ class StorageService extends ChangeNotifier {
     _presetSettings.load();
     _lorebookSettings.load();
     _toolVerdictSettings.load();
+    _engineResourcesSettings.load();
     if (!_initCompleter.isCompleted) _initCompleter.complete();
   }
 
@@ -337,6 +343,7 @@ class StorageService extends ChangeNotifier {
       _presetSettings.load();
       _lorebookSettings.load();
       _toolVerdictSettings.load();
+    _engineResourcesSettings.load();
       await repairKoboldPresetLinks(_presetSettings, engineDir: binDir.path);
       attachReasoningEffortMenuStore(_prefs);
 

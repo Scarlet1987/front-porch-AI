@@ -23,6 +23,7 @@ import 'package:provider/provider.dart';
 
 import 'package:front_porch_ai/services/services.dart';
 import 'package:front_porch_ai/ui/settings/tabs/backend/backend.dart';
+import 'package:front_porch_ai/ui/settings/widgets/widgets.dart';
 
 /// Backend tab: one Chat speech stack (chips + URL/key/check/model, then
 /// host extras), then OpenCode, then subordinate Side jobs.
@@ -81,6 +82,8 @@ class BackendTab extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          const EngineResourcesCard(),
+          const SizedBox(height: 16),
           BackendModeSelector(
             apiUrlController: apiUrlController,
             apiKeyController: apiKeyController,

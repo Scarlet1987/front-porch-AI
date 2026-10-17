@@ -75,6 +75,17 @@ extension SettingsFacadeUpdate on SettingsFacade {
       await _storage.uiSettings.setFollowStreamingReplies(follow);
     }
 
+    final detailLevel = body['detailLevel'];
+    if (detailLevel is String) {
+      await _storage.uiSettings.setDetailLevel(
+        DetailLevelLabel.fromName(detailLevel),
+      );
+    }
+    final oledBlack = body['oledBlack'];
+    if (oledBlack is bool) {
+      await _storage.uiSettings.setOledBlack(oledBlack);
+    }
+
     final realism = body['realism'];
     if (realism is Map) {
       final amb = realism['ambitionsEnabled'];
