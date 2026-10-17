@@ -39,6 +39,10 @@ class MemorySettings with SettingsBase {
   int _journalInterval = 10;
   int _journalMaxCards = 200;
   bool _journalReviewFirst = false; // §4.3 review-first mode (phase 4)
+  // Memory-checkpoint nudge: every N minutes of chatting, a gentle,
+  // snoozable, non-blocking prompt offers to pin important context to the
+  // MC's character card. 0 = off. Default 30.
+  int _memoryCheckpointMinutes = 30;
 
   // LLMerta → Journal porch memories (docs/design/llmerta-porch-memories.md).
   // Default on (parity with LLMerta lobby toggle). Consumed block keys track
@@ -65,6 +69,7 @@ class MemorySettings with SettingsBase {
   int get journalInterval => _journalInterval;
   int get journalMaxCards => _journalMaxCards;
   bool get journalReviewFirst => _journalReviewFirst;
+  int get memoryCheckpointMinutes => _memoryCheckpointMinutes;
   bool get importLlmertaPorchMemories => _importLlmertaPorchMemories;
   Set<String> get porchConsumedBlockKeys =>
       Set<String>.unmodifiable(_porchConsumedBlockKeys);
@@ -85,6 +90,8 @@ class MemorySettings with SettingsBase {
     _journalInterval = prefs?.getInt(k('journal_interval')) ?? 10;
     _journalMaxCards = prefs?.getInt(k('journal_max_cards')) ?? 200;
     _journalReviewFirst = prefs?.getBool(k('journal_review_first')) ?? false;
+    _memoryCheckpointMinutes =
+        prefs?.getInt(k('memory_checkpoint_minutes')) ?? 30;
 
     _importLlmertaPorchMemories =
         prefs?.getBool(k('import_llmerta_porch_memories')) ?? true;
@@ -137,6 +144,15 @@ class MemorySettings with SettingsBase {
   Future<void> setJournalInterval(int value) async {
     _journalInterval = value.clamp(3, 50);
     await prefs?.setInt(k('journal_interval'), _journalInterval);
+    notify();
+  }
+
+  Future<void> setMemoryCheckpointMinutes(int value) async {
+    _memoryCheckpointMinutes = value.clamp(0, 240);
+    await prefs?.setInt(
+      k('memory_checkpoint_minutes'),
+      _memoryCheckpointMinutes,
+    );
     notify();
   }
 

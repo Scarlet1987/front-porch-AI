@@ -34,6 +34,7 @@ import 'package:front_porch_ai/utils/utils.dart';
 import 'package:front_porch_ai/ui/widgets/widgets.dart';
 import 'package:front_porch_ai/ui/chat_components/chat_components.dart';
 import 'package:front_porch_ai/ui/chat_components/overlays/absence_recap_banner.dart';
+import 'package:front_porch_ai/ui/chat/widgets/memory_checkpoint_nudge.dart';
 import 'package:front_porch_ai/ui/dialogs/dialogs.dart';
 
 // Specific dialogs and modules not covered by the barrels (or intentionally direct)
@@ -427,6 +428,12 @@ class _ChatPageState extends State<ChatPage> {
                             );
                           },
                         ),
+                        // Memory-checkpoint nudge: every N minutes of chat,
+                        // a gentle, snoozable banner offers to pin context
+                        // to the MC's character card. Single-character
+                        // chats only — group casts have no single MC.
+                        if (character != null && !isGroup)
+                          MemoryCheckpointNudge(character: character),
                         Expanded(
                           child: _buildChatSurface(
                             context: context,

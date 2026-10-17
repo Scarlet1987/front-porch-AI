@@ -164,6 +164,45 @@ class PorchLifeTab extends StatelessWidget {
               onChanged: storage.memorySettings.setJournalEnabled,
             ),
             FeatureRow(
+              icon: Icons.push_pin_outlined,
+              label: 'Memory checkpoint',
+              need: FeatureNeed.alone,
+              blurb:
+                  'Every so often while you chat, a gentle nudge offers to pin '
+                  'important context to the MC\u2019s character card — so they '
+                  'remember it in every future chat. Never blocks; snooze or '
+                  'dismiss any time.',
+              value: storage.memorySettings.memoryCheckpointMinutes > 0,
+              onChanged: (on) => storage.memorySettings
+                  .setMemoryCheckpointMinutes(on ? 30 : 0),
+              showChildWhenOff: true,
+              child: Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Row(
+                  children: [
+                    const Text('Remind me every'),
+                    const SizedBox(width: 8),
+                    DropdownButton<int>(
+                      value: storage.memorySettings.memoryCheckpointMinutes > 0
+                          ? storage.memorySettings.memoryCheckpointMinutes
+                          : 30,
+                      items: const [
+                        DropdownMenuItem(value: 15, child: Text('15 min')),
+                        DropdownMenuItem(value: 30, child: Text('30 min')),
+                        DropdownMenuItem(value: 60, child: Text('1 hour')),
+                        DropdownMenuItem(value: 120, child: Text('2 hours')),
+                      ],
+                      onChanged: (v) {
+                        if (v != null) {
+                          storage.memorySettings.setMemoryCheckpointMinutes(v);
+                        }
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            FeatureRow(
               icon: Icons.nightlight_outlined,
               label: 'Dreams',
               need: FeatureNeed.needs,
