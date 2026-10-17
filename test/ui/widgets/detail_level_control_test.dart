@@ -19,7 +19,10 @@
 // The detail-level segmented control: it renders all three options and
 // persists the user's choice through UiSettings.
 
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -28,12 +31,24 @@ import 'package:front_porch_ai/services/services.dart';
 import 'package:front_porch_ai/services/storage/storage.dart';
 import 'package:front_porch_ai/ui/widgets/detail_level_control.dart';
 
+void _setupPathProviderMock() {
+  const channel = MethodChannel('plugins.flutter.io/path_provider');
+  TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+      .setMockMethodCallHandler(channel, (MethodCall methodCall) async {
+    if (methodCall.method == 'getApplicationDocumentsDirectory') {
+      return Directory.systemTemp.createTempSync('fpai_detail_ctl_').path;
+    }
+    return null;
+  });
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   late StorageService storage;
 
   setUp(() async {
+    _setupPathProviderMock();
     SharedPreferences.setMockInitialValues({});
     storage = StorageService();
     await storage.initialized;

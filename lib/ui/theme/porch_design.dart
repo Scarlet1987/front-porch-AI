@@ -297,8 +297,12 @@ class PorchSegmentedControl<T> extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
+        // The container pads its content and draws a 1px border: divide the
+        // *inner* width so the segments never overflow the pill.
+        final innerWidth =
+            constraints.maxWidth - PorchSpacing.xs * 2 - 2;
         final segmentWidth =
-            constraints.maxWidth / options.length.clamp(1, 99);
+            innerWidth / options.length.clamp(1, 99);
         final selectedIndex = options.indexWhere((o) => o.value == value);
         return Container(
           padding: const EdgeInsets.all(PorchSpacing.xs),
@@ -372,7 +376,7 @@ class _SegmentButton<T> extends StatelessWidget {
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
-          mainAxisSize: MainAxisSize.min,
+          mainAxisSize: MainAxisSize.max,
           children: [
             if (option.icon != null) ...[
               Icon(option.icon, size: 16, color: fg),

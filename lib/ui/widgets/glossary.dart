@@ -95,14 +95,19 @@ Future<void> showGlossaryDialog(BuildContext context) {
     title: 'What do these words mean?',
     icon: Icons.menu_book_outlined,
     width: 420,
-    content: Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        for (final entry in PorchGlossary.entries) ...[
-          _GlossaryRow(entry: entry),
-          const SizedBox(height: PorchSpacing.md),
-        ],
-      ],
+    content: ConstrainedBox(
+      constraints: const BoxConstraints(maxHeight: 400),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            for (final entry in PorchGlossary.entries) ...[
+              _GlossaryRow(entry: entry),
+              const SizedBox(height: PorchSpacing.md),
+            ],
+          ],
+        ),
+      ),
     ),
     actions: [warmDialogCancel(context, label: 'Close')],
   );

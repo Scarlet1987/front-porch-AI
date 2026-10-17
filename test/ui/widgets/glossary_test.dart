@@ -49,7 +49,7 @@ void main() {
     expect(find.text('Close'), findsNothing);
   });
 
-  testWidgets('GlossaryChip for an unknown term renders nothing', (
+  testWidgets('GlossaryChip for an unknown term renders nothing visible', (
     tester,
   ) async {
     await tester.pumpWidget(
@@ -59,7 +59,9 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.byType(GlossaryChip), findsNothing);
+    // The chip degrades to an empty box — no term text, no tap target.
+    expect(find.text('ZZZ'), findsNothing);
+    expect(find.byType(InkWell), findsNothing);
   });
 
   testWidgets('showGlossaryDialog lists every glossary term', (tester) async {
