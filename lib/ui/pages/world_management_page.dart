@@ -76,6 +76,21 @@ class _WorldManagementPageState extends State<WorldManagementPage>
   Widget build(BuildContext context) {
     return Consumer<WorldRepository>(
       builder: (context, repo, child) {
+        // Hierarchy breadcrumbs: walk each world's parent chain (cycle-safe).
+        final byId = {for (final w in repo.placeWorlds) w.id: w};
+        String breadcrumbFor(World w) {
+          final parts = <String>[];
+          final seen = <String>{w.id};
+          var parentId = w.parentWorldId;
+          while (parentId != null && seen.add(parentId)) {
+            final parent = byId[parentId];
+            if (parent == null) break;
+            parts.insert(0, '${parent.tier.label}: ${parent.name}');
+            parentId = parent.parentWorldId;
+          }
+          return parts.join('  ›  ');
+        }
+
         return Scaffold(
           backgroundColor: AppColors.backgroundOf(context),
           body: CustomScrollView(
@@ -129,6 +144,7 @@ class _WorldManagementPageState extends State<WorldManagementPage>
                     final w = repo.placeWorlds[index];
                     return WorldPlaceCard(
                       world: w,
+                      breadcrumb: breadcrumbFor(w),
                       onEdit: () => _showWorldDialog(context, repo, w),
                       onExport: () => exportFpWorldFlow(context, repo, w),
                       onDelete: () => _confirmDelete(context, repo, w),

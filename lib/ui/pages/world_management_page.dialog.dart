@@ -46,7 +46,9 @@ class _WorldDraft {
       // 'custom' sentinel = this world authors its own climate (biomeJson).
       selectedBiomeId = world?.biomeJson != null
           ? 'custom'
-          : (world?.biomeId ?? Biome.temperate.id);
+          : (world?.biomeId ?? Biome.temperate.id),
+      tier = world?.tier ?? WorldTier.planet,
+      parentWorldId = world?.parentWorldId;
 
   final TextEditingController nameController;
   final TextEditingController descController;
@@ -59,6 +61,10 @@ class _WorldDraft {
   // Place traits (standing facts; defaults are silent).
   WorldAtmosphere atmosphere;
   WorldGravity gravity;
+  // Hierarchy: tier in the Stage → Universe → Planet → Continent →
+  // City/Village/Town chain, plus the parent world's id (null = top level).
+  WorldTier tier;
+  String? parentWorldId;
   // Full clones -- the old 6-field copy stripped imported ST metadata
   // (secondary keys, probability, timers, ...) every time a world was
   // opened for editing and saved.
@@ -175,6 +181,8 @@ extension _WorldDialogFrame on _WorldManagementPageState {
                               draft,
                               setDialogState,
                               compact: maxH < 640,
+                              allWorlds: repo.placeWorlds,
+                              excludeWorldId: world?.id,
                             ),
 
                             const SizedBox(height: 24),
@@ -264,6 +272,8 @@ extension _WorldDialogFrame on _WorldManagementPageState {
                               newWorld.injectDescription =
                                   draft.injectDescription;
                               newWorld.coverImage = draft.coverImage;
+                              newWorld.tier = draft.tier;
+                              newWorld.parentWorldId = draft.parentWorldId;
 
                               // Update lorebook entries
                               newWorld.lorebook.entries.clear();

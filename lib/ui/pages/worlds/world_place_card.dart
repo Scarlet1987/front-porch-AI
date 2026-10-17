@@ -19,12 +19,16 @@ class WorldPlaceCard extends StatelessWidget {
   final VoidCallback onExport;
   final VoidCallback onDelete;
 
+  /// Hierarchy breadcrumb (e.g. "Stage › Universe") — null when top-level.
+  final String? breadcrumb;
+
   const WorldPlaceCard({
     super.key,
     required this.world,
     required this.onEdit,
     required this.onExport,
     required this.onDelete,
+    this.breadcrumb,
   });
 
   @override
@@ -156,6 +160,30 @@ class WorldPlaceCard extends StatelessWidget {
                       ),
                     ),
                     const Spacer(),
+                    if (breadcrumb != null && breadcrumb!.isNotEmpty) ...[
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.account_tree_outlined,
+                            size: 11,
+                            color: AppColors.textTertiary(context),
+                          ),
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: Text(
+                              breadcrumb!,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 10.5,
+                                color: AppColors.textTertiary(context),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                    ],
                     Row(
                       children: [
                         if (climateLabel != null) ...[

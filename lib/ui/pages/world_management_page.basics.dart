@@ -36,6 +36,8 @@ extension _WorldBasicsSection on _WorldManagementPageState {
     _WorldDraft draft,
     StateSetter setDialogState, {
     bool compact = false,
+    List<World> allWorlds = const [],
+    String? excludeWorldId,
   }) {
     final gap = compact ? 8.0 : 16.0;
     final pad = compact ? 8.0 : 20.0;
@@ -253,8 +255,120 @@ extension _WorldBasicsSection on _WorldManagementPageState {
               onGravity: (v) => setDialogState(() => draft.gravity = v),
             ),
           ],
+          const SizedBox(height: 16),
+          _buildHierarchySection(
+            ctx,
+            draft,
+            setDialogState,
+            allWorlds
+                .where((w) => w.id != excludeWorldId)
+                .toList(),
+          ),
         ],
       ),
+    );
+  }
+
+  /// Hierarchy picker: tier in the Stage → Universe → Planet → Continent →
+  /// City/Village/Town chain plus an optional parent world. Stored on the
+  /// world's placeTraits (round-trips through exports; older apps ignore it).
+  Widget _buildHierarchySection(
+    BuildContext ctx,
+    _WorldDraft draft,
+    StateSetter setDialogState,
+    List<World> candidates,
+  ) {
+    InputDecoration decoration(String label) => InputDecoration(
+      labelText: label,
+      labelStyle: TextStyle(
+        color: AppColors.textSecondary(ctx),
+        fontSize: 12,
+      ),
+      filled: true,
+      fillColor: AppColors.surfaceContainerOf(ctx).withValues(alpha: 0.4),
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+    );
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(
+              Icons.account_tree_outlined,
+              size: 16,
+              color: AppColors.formMasterAccent,
+            ),
+            const SizedBox(width: 8),
+            Text(
+              'Hierarchy',
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary(ctx),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        Text(
+          'Nest this place inside a bigger one, so a city knows its '
+          'continent, its planet, and its universe.',
+          style: TextStyle(
+            fontSize: 11,
+            color: AppColors.textTertiary(ctx),
+          ),
+        ),
+        const SizedBox(height: 8),
+        DropdownButtonFormField<WorldTier>(
+          value: draft.tier,
+          decoration: decoration('Tier'),
+          style: TextStyle(color: AppColors.textPrimary(ctx), fontSize: 13),
+          dropdownColor: AppColors.surfaceContainerOf(ctx),
+          items: [
+            for (final t in WorldTier.values)
+              DropdownMenuItem(value: t, child: Text(t.label)),
+          ],
+          onChanged: (v) => setDialogState(() {
+            draft.tier = v ?? WorldTier.planet;
+            if (draft.tier == WorldTier.stage) draft.parentWorldId = null;
+          }),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          draft.tier.description,
+          style: TextStyle(
+            fontSize: 11,
+            color: AppColors.textTertiary(ctx),
+            fontStyle: FontStyle.italic,
+          ),
+        ),
+        if (draft.tier != WorldTier.stage) ...[
+          const SizedBox(height: 8),
+          DropdownButtonFormField<String?>(
+            value: draft.parentWorldId,
+            decoration: decoration('Parent ${draft.tier.label}'),
+            style: TextStyle(color: AppColors.textPrimary(ctx), fontSize: 13),
+            dropdownColor: AppColors.surfaceContainerOf(ctx),
+            items: [
+              const DropdownMenuItem<String?>(
+                value: null,
+                child: Text('Top level — no parent'),
+              ),
+              for (final w in candidates)
+                DropdownMenuItem<String?>(
+                  value: w.id,
+                  child: Text(
+                    '${w.tier.label}: ${w.name}',
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+            ],
+            onChanged: (v) =>
+                setDialogState(() => draft.parentWorldId = v),
+          ),
+        ],
+      ],
     );
   }
 
