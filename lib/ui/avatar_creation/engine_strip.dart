@@ -111,12 +111,18 @@ class EngineStrip extends StatelessWidget {
   );
 
   Widget _backendDropdown(BuildContext context, AvatarCreationController c) {
+    // Local-first ordering: on-device backends before the paid remote API,
+    // per the branch's local-backends-preferred policy.
+    final ordered = [
+      ...ImageGenBackend.values.where((b) => b != ImageGenBackend.remote),
+      ImageGenBackend.remote,
+    ];
     return DropdownButtonHideUnderline(
       child: DropdownButton<ImageGenBackend>(
         value: c.backend,
         dropdownColor: AppColors.surfaceContainerOf(context),
         style: TextStyle(color: AppColors.textPrimary(context), fontSize: 12.5),
-        items: ImageGenBackend.values
+        items: ordered
             .map((b) => DropdownMenuItem(value: b, child: Text(b.label)))
             .toList(),
         onChanged: c.running

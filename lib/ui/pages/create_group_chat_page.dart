@@ -34,6 +34,7 @@ import 'package:front_porch_ai/utils/utils.dart';
 import 'package:front_porch_ai/ui/widgets/relationship_scale.dart'
     show relationshipTierName, relationshipScaleColor;
 import 'package:front_porch_ai/ui/theme/app_colors.dart';
+import 'package:front_porch_ai/ui/theme/porch_design.dart';
 import 'package:front_porch_ai/ui/pages/chat_page.dart';
 import 'package:uuid/uuid.dart';
 import 'package:drift/drift.dart' show Value;

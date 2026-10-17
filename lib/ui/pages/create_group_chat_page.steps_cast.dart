@@ -70,6 +70,48 @@ extension _GroupWizardCastSteps on _CreateGroupChatPageState {
               color: AppColors.textTertiary(context),
             ),
           ),
+          const SizedBox(height: 12),
+          // AI-drafted NPCs: you author the MC and the world; the AI
+          // writes the supporting cast. One tap drafts a full NPC card
+          // from just a name and a role.
+          PorchCard(
+            padding: const EdgeInsets.all(PorchSpacing.md),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.auto_awesome_outlined,
+                  color: AppColors.porchAmberOf(context),
+                  size: 22,
+                ),
+                const SizedBox(width: PorchSpacing.sm),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'Let the AI write your NPCs',
+                        style: PorchType.bodySmall(
+                          context,
+                        ).copyWith(fontWeight: FontWeight.w600),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'Give a name and a role — the AI drafts their '
+                        'full character card.',
+                        style: PorchType.hint(context),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: PorchSpacing.sm),
+                FilledButton.tonal(
+                  onPressed: _draftNpcWithAi,
+                  child: const Text('Draft NPC'),
+                ),
+              ],
+            ),
+          ),
           const SizedBox(height: 16),
 
           // Current Roster
@@ -190,7 +232,6 @@ extension _GroupWizardCastSteps on _CreateGroupChatPageState {
     );
   }
 
-
   Widget _avatar(CharacterCard c, {double radius = 20}) {
     return CircleAvatar(
       radius: radius,
@@ -294,4 +335,132 @@ extension _GroupWizardCastSteps on _CreateGroupChatPageState {
       ),
     );
   }
+
+  /// AI-drafted NPC: asks for a name and a role, then uses the active LLM
+  /// backend to generate a full character card and adds it to the roster.
+  /// The user authors the MC and the world; the AI writes the NPCs.
+  Future<void> _draftNpcWithAi() async {
+    final nameController = TextEditingController();
+    final roleController = TextEditingController();
+    try {
+      final input = await showWarmDialog<_NpcDraftInput>(
+        context,
+        title: 'Draft an NPC with AI',
+        icon: Icons.auto_awesome_outlined,
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Name and role are enough — the AI fills in personality, '
+              'appearance, voice and greeting.',
+              style: PorchType.body(context),
+            ),
+            const SizedBox(height: PorchSpacing.sm),
+            TextField(
+              controller: nameController,
+              autofocus: true,
+              textCapitalization: TextCapitalization.words,
+              decoration: const InputDecoration(
+                labelText: 'Name',
+                hintText: 'e.g. Maren Voss',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: PorchSpacing.sm),
+            TextField(
+              controller: roleController,
+              maxLines: 3,
+              minLines: 2,
+              textCapitalization: TextCapitalization.sentences,
+              decoration: const InputDecoration(
+                labelText: 'Role in the story',
+                hintText:
+                    'e.g. A retired smuggler who runs the dockside tavern '
+                    'and knows every rumor in town.',
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          warmDialogCancel(context),
+          warmDialogConfirm(
+            context,
+            label: 'Draft',
+            onPressed: () {
+              final name = nameController.text.trim();
+              final role = roleController.text.trim();
+              Navigator.of(context).pop(
+                name.isEmpty || role.isEmpty
+                    ? null
+                    : _NpcDraftInput(name: name, role: role),
+              );
+            },
+          ),
+        ],
+      );
+      if (input == null || !mounted) return;
+
+      final llm = context.read<LLMProvider>().activeService;
+      if (!llm.isReady) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'No AI backend is ready. Start one in Settings → Backend, '
+              'then draft your NPC.',
+            ),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        return;
+      }
+
+      // Non-blocking progress: the draft streams in the background while
+      // the user keeps building the roster.
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Drafting ${input.name}…'),
+            behavior: SnackBarBehavior.floating,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+      final card = await CharacterGenService(llm).generateCharacter(
+        name: input.name,
+        concept: 'Supporting NPC. ${input.role}',
+        generateLorebook: false,
+        altGreetingCount: 1,
+      );
+      if (!mounted) return;
+      if (card == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('The AI could not draft that NPC. Try again.'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        return;
+      }
+      _addMember(card);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('${card.name} joined the roster.'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } finally {
+      nameController.dispose();
+      roleController.dispose();
+    }
+  }
+}
+
+/// Name + role collected by the NPC draft dialog.
+class _NpcDraftInput {
+  const _NpcDraftInput({required this.name, required this.role});
+  final String name;
+  final String role;
 }
