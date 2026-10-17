@@ -250,14 +250,14 @@ class PorchSectionHeader extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(title, style: PorchType.sectionTitle(context)),
-                if (helper != null) ...[
+                if (helper case final h?) ...[
                   const SizedBox(height: PorchSpacing.xs),
-                  Text(helper!, style: PorchType.hint(context)),
+                  Text(h, style: PorchType.hint(context)),
                 ],
               ],
             ),
           ),
-          if (trailing != null) trailing!,
+          ?trailing,
         ],
       ),
     );

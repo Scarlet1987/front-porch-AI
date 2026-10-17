@@ -321,7 +321,7 @@ extension _WorldBasicsSection on _WorldManagementPageState {
         ),
         const SizedBox(height: 8),
         DropdownButtonFormField<WorldTier>(
-          value: draft.tier,
+          initialValue: draft.tier,
           decoration: decoration('Tier'),
           style: TextStyle(color: AppColors.textPrimary(ctx), fontSize: 13),
           dropdownColor: AppColors.surfaceContainerOf(ctx),
@@ -346,7 +346,7 @@ extension _WorldBasicsSection on _WorldManagementPageState {
         if (draft.tier != WorldTier.stage) ...[
           const SizedBox(height: 8),
           DropdownButtonFormField<String?>(
-            value: draft.parentWorldId,
+            initialValue: draft.parentWorldId,
             decoration: decoration('Parent ${draft.tier.label}'),
             style: TextStyle(color: AppColors.textPrimary(ctx), fontSize: 13),
             dropdownColor: AppColors.surfaceContainerOf(ctx),

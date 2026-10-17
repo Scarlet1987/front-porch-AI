@@ -26,6 +26,7 @@ import 'package:path/path.dart' as p;
 // Barrel imports (high-frequency services + widgets)
 import 'package:front_porch_ai/services/gpu_backend_resolver.dart';
 import 'package:front_porch_ai/services/services.dart';
+import 'package:front_porch_ai/services/storage/storage.dart';
 import 'package:front_porch_ai/services/storage/settings/remote_provider.dart';
 import 'package:front_porch_ai/ui/widgets/widgets.dart';
 
