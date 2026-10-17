@@ -22,22 +22,54 @@ extension DetailContext on BuildContext {
 }
 
 /// Shows [child] only when the user's detail level reveals [required].
-/// Use to hide advanced knobs and jargon in Simple mode.
+/// Use to keep advanced knobs and jargon out of the way in Simple mode.
+///
+/// Progressive disclosure runs both ways: at or above [required] the child
+/// shows inline; below it, the child hides behind a "Show advanced options"
+/// expander. The detail level is a default, never a cage — Simple users can
+/// still reach every knob without switching modes.
 class DetailGate extends StatelessWidget {
   const DetailGate({
     super.key,
     required this.required,
     required this.child,
+    this.label = 'Show advanced options',
   });
 
   final DetailLevel required;
   final Widget child;
+  final String label;
 
   @override
   Widget build(BuildContext context) {
     final level = Provider.of<StorageService>(context).uiSettings.detailLevel;
-    if (!level.reveals(required)) return const SizedBox.shrink();
-    return child;
+    if (level.reveals(required)) return child;
+    return Theme(
+      data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+      child: ExpansionTile(
+        tilePadding: EdgeInsets.zero,
+        childrenPadding: EdgeInsets.zero,
+        title: Row(
+          children: [
+            Icon(
+              Icons.tune,
+              size: 16,
+              color: AppColors.porchAmberOf(context),
+            ),
+            const SizedBox(width: PorchSpacing.sm),
+            Text(
+              label,
+              style: TextStyle(
+                color: AppColors.porchAmberOf(context),
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+        children: [child],
+      ),
+    );
   }
 }
 

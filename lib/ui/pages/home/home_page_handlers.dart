@@ -249,22 +249,4 @@ extension _HomePageHandlers on _HomePageState {
         break;
     }
   }
-
-  ButtonStyle _buttonStyle() {
-    return ElevatedButton.styleFrom(
-      backgroundColor: AppColors.resolve(
-        context,
-        Colors.white.withValues(alpha: 0.1),
-        Colors.black.withValues(alpha: 0.05),
-      ),
-      foregroundColor: AppColors.textPrimary(context),
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(
-          color: AppColors.resolve(context, Colors.white24, Colors.black26),
-        ),
-      ),
-    );
-  }
 }

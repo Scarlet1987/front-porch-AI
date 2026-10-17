@@ -26,6 +26,7 @@ import 'package:path/path.dart' as path;
 import 'package:front_porch_ai/database/database.dart';
 import 'package:front_porch_ai/providers/app_state.dart';
 import 'package:front_porch_ai/ui/theme/app_colors.dart';
+import 'package:front_porch_ai/ui/theme/porch_design.dart';
 import 'package:front_porch_ai/ui/theme/studio_colors.dart';
 
 // Barrel imports (preferred during major refactor per project guidelines)
@@ -260,74 +261,82 @@ class _HomePageState extends State<HomePage> {
                 _modeToggleBar(),
                 Expanded(
                   child: Center(
-                    child: Padding(
+                    child: SingleChildScrollView(
                       padding: const EdgeInsets.symmetric(horizontal: 24),
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text(
-                            'Get started by creating a new character!',
-                            textAlign: TextAlign.center,
-                            style: Theme.of(context).textTheme.titleLarge
-                                ?.copyWith(
-                                  color: Theme.of(context)
-                                      .textTheme
-                                      .titleLarge
-                                      ?.color
-                                      ?.withValues(alpha: 0.7),
-                                ),
+                          Container(
+                            padding: const EdgeInsets.all(20),
+                            decoration: BoxDecoration(
+                              color: AppColors.sunkenSurfaceOf(context),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              Icons.theater_comedy_outlined,
+                              size: 44,
+                              color: AppColors.porchAmberOf(context),
+                            ),
                           ),
                           const SizedBox(height: 24),
+                          Text(
+                            'Your porch is empty',
+                            textAlign: TextAlign.center,
+                            style: PorchType.headline(context),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Create your first character and pull up a chair. '
+                            'Your library lives on this machine — nothing '
+                            'leaves unless you say so.',
+                            textAlign: TextAlign.center,
+                            style: PorchType.hint(context),
+                          ),
+                          const SizedBox(height: 28),
                           Wrap(
                             alignment: WrapAlignment.center,
-                            spacing: 16,
+                            spacing: 12,
                             runSpacing: 12,
                             children: [
-                              ElevatedButton.icon(
+                              PorchPrimaryButton(
+                                label: 'Create character',
+                                icon: Icons.add,
                                 onPressed: () => Provider.of<AppState>(
                                   context,
                                   listen: false,
                                 ).setIndex(1),
-                                icon: const Icon(Icons.add_circle_outline),
-                                label: const Text('Create New'),
-                                style: _buttonStyle(),
                               ),
-                              ElevatedButton.icon(
-                                onPressed: () => _importCharacter(context),
-                                icon: const Icon(Icons.download),
-                                label: const Text('Import Card'),
-                                style: _buttonStyle(),
-                              ),
-                              ElevatedButton.icon(
+                              PorchGhostButton(
+                                label: 'AI create',
+                                icon: Icons.auto_awesome,
                                 onPressed: () => Navigator.of(context).push(
                                   MaterialPageRoute(
                                     builder: (_) =>
                                         const CharacterCreatorPage(),
                                   ),
                                 ),
-                                icon: const Icon(Icons.auto_awesome),
-                                label: const Text('AI Create'),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: AppColors.porchAmberOf(
-                                    context,
-                                  ),
-                                  foregroundColor: AppColors.onChaosAccent,
-                                ),
                               ),
-                              ElevatedButton.icon(
+                              PorchGhostButton(
+                                label: 'Import card',
+                                icon: Icons.download,
+                                onPressed: () => _importCharacter(context),
+                              ),
+                              PorchGhostButton(
+                                label: 'Bulk import',
+                                icon: Icons.library_add,
                                 onPressed: () =>
                                     _folderImportCharacters(context),
-                                icon: const Icon(Icons.library_add),
-                                label: const Text('Bulk Import'),
-                                style: _buttonStyle(),
                               ),
-                              ElevatedButton.icon(
+                              PorchGhostButton(
+                                label: 'Import BYAF',
+                                icon: Icons.archive_outlined,
                                 onPressed: () => _importByaf(context),
-                                icon: const Icon(Icons.archive_outlined),
-                                label: const Text('Import BYAF'),
-                                style: _buttonStyle(),
                               ),
                             ],
+                          ),
+                          const SizedBox(height: 16),
+                          const GlossaryLink(
+                            label: 'New here? Learn the words we use',
                           ),
                         ],
                       ),

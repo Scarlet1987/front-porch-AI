@@ -200,14 +200,13 @@ extension _CreateCharacterCoreSteps on _CreateCharacterPageState {
               ),
               const SizedBox(height: 24),
 
-              // Advanced Prompts (collapsed) — hidden in Simple detail level.
-              DetailGate(
-                required: DetailLevel.balanced,
-                child: Theme(
-                  data: Theme.of(
-                    context,
-                  ).copyWith(dividerColor: Colors.transparent),
-                  child: ExpansionTile(
+              // Advanced Prompts (collapsed) — already progressive disclosure:
+              // Simple users see the collapsed expander and can still open it.
+              Theme(
+                data: Theme.of(
+                  context,
+                ).copyWith(dividerColor: Colors.transparent),
+                child: ExpansionTile(
                   tilePadding: EdgeInsets.zero,
                   title: Row(
                     children: [
@@ -244,7 +243,6 @@ extension _CreateCharacterCoreSteps on _CreateCharacterPageState {
                       maxLines: 3,
                     ),
                   ],
-                  ),
                 ),
               ),
 

@@ -278,11 +278,13 @@ class _SettingsPageState extends State<SettingsPage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    // Simple detail level hides the Advanced tab entirely; Balanced shows the
-    // standard tabs; Advanced reveals everything.
-    final showAdvancedTab = Provider.of<StorageService>(
+    // The detail level is a default, never a cage: Simple hides the Advanced
+    // tab (one tap on the detail control brings it back); Balanced and
+    // Advanced show the full standard tab set.
+    final detailLevel = Provider.of<StorageService>(
       context,
-    ).uiSettings.detailLevel.reveals(DetailLevel.advanced);
+    ).uiSettings.detailLevel;
+    final showAdvancedTab = detailLevel != DetailLevel.simple;
     return Stack(
       children: [
         DefaultTabController(
