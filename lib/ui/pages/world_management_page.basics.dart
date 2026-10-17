@@ -260,9 +260,7 @@ extension _WorldBasicsSection on _WorldManagementPageState {
             ctx,
             draft,
             setDialogState,
-            allWorlds
-                .where((w) => w.id != excludeWorldId)
-                .toList(),
+            allWorlds.where((w) => w.id != excludeWorldId).toList(),
           ),
         ],
       ),
@@ -280,10 +278,7 @@ extension _WorldBasicsSection on _WorldManagementPageState {
   ) {
     InputDecoration decoration(String label) => InputDecoration(
       labelText: label,
-      labelStyle: TextStyle(
-        color: AppColors.textSecondary(ctx),
-        fontSize: 12,
-      ),
+      labelStyle: TextStyle(color: AppColors.textSecondary(ctx), fontSize: 12),
       filled: true,
       fillColor: AppColors.surfaceContainerOf(ctx).withValues(alpha: 0.4),
       border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
@@ -314,8 +309,16 @@ extension _WorldBasicsSection on _WorldManagementPageState {
         Text(
           'Nest this place inside a bigger one, so a city knows its '
           'continent, its planet, and its universe.',
+          style: TextStyle(fontSize: 11, color: AppColors.textTertiary(ctx)),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          'AI helps write your NPCs — your main character and world are '
+          'yours to create. You (the account holder) create the Stage '
+          'and the MC.',
           style: TextStyle(
             fontSize: 11,
+            fontStyle: FontStyle.italic,
             color: AppColors.textTertiary(ctx),
           ),
         ),
@@ -326,7 +329,10 @@ extension _WorldBasicsSection on _WorldManagementPageState {
           style: TextStyle(color: AppColors.textPrimary(ctx), fontSize: 13),
           dropdownColor: AppColors.surfaceContainerOf(ctx),
           items: [
-            for (final t in WorldTier.values)
+            // Simple mode shows the trimmed path (Stage → Planet → key
+            // locations); the full tree is one expander away, and Advanced
+            // reveals every tier. The mode is a default, never a cage.
+            for (final t in _visibleTiers(ctx))
               DropdownMenuItem(value: t, child: Text(t.label)),
           ],
           onChanged: (v) => setDialogState(() {
@@ -364,8 +370,7 @@ extension _WorldBasicsSection on _WorldManagementPageState {
                   ),
                 ),
             ],
-            onChanged: (v) =>
-                setDialogState(() => draft.parentWorldId = v),
+            onChanged: (v) => setDialogState(() => draft.parentWorldId = v),
           ),
         ],
       ],
@@ -436,5 +441,26 @@ extension _WorldBasicsSection on _WorldManagementPageState {
         size: 28,
       ),
     );
+  }
+}
+
+/// Tiers shown in the hierarchy picker for the current detail level.
+/// Simple shows the trimmed path (Stage → Planet → key locations);
+/// Balanced adds the middle tiers; Advanced reveals the full tree down
+/// to districts and landmarks.
+List<WorldTier> _visibleTiers(BuildContext context) {
+  switch (context.detailLevel) {
+    case DetailLevel.simple:
+      return const [WorldTier.stage, WorldTier.planet, WorldTier.settlement];
+    case DetailLevel.balanced:
+      return const [
+        WorldTier.stage,
+        WorldTier.universe,
+        WorldTier.planet,
+        WorldTier.continent,
+        WorldTier.settlement,
+      ];
+    case DetailLevel.advanced:
+      return WorldTier.values;
   }
 }

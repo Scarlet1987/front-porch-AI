@@ -22,6 +22,7 @@ export 'remote_ready_badge.dart';
 export 'porch_life_row_children.dart';
 export 'section_header.dart';
 export 'companion_card.dart';
+export 'content_zone_card.dart';
 export 'engine_resources_card.dart';
 export 'slider_setting.dart';
 export 'spell_check_language_row.dart';

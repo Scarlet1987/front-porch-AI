@@ -116,7 +116,8 @@ class World {
   /// Hierarchy tier in the Stage → Universe → Planet → Continent →
   /// City/Village/Town chain. Stored in [placeTraits] so older app versions
   /// round-trip it untouched (mixed-fleet rule). Defaults to planet.
-  WorldTier get tier => WorldTierLabel.fromName(placeTraits['tier']?.toString());
+  WorldTier get tier =>
+      WorldTierLabel.fromName(placeTraits['tier']?.toString());
   set tier(WorldTier v) => v == WorldTier.planet
       ? placeTraits.remove('tier')
       : placeTraits['tier'] = v.name;
@@ -235,11 +236,21 @@ bool attachedWorldsAllowClimate(Iterable<World> worlds) {
 }
 
 /// One tier of the world hierarchy: Stage → Universe → Planet → Continent →
-/// City/Village/Town. Lets authors nest places so a city knows its continent,
-/// its planet, and its universe.
-enum WorldTier { stage, universe, planet, continent, settlement }
+/// City/Village/Town → District → Landmark. Lets authors nest places so a
+/// city knows its continent, its planet, and its universe. Each level is
+/// created as a child of the one above.
+enum WorldTier {
+  stage,
+  universe,
+  planet,
+  continent,
+  settlement,
+  district,
+  landmark,
+}
 
-/// Presentation copy for [WorldTier].
+/// Presentation copy for [WorldTier]. Descriptions are Elaina's verbatim
+/// helper text.
 extension WorldTierLabel on WorldTier {
   String get label => switch (this) {
     WorldTier.stage => 'Stage',
@@ -247,18 +258,31 @@ extension WorldTierLabel on WorldTier {
     WorldTier.planet => 'Planet',
     WorldTier.continent => 'Continent',
     WorldTier.settlement => 'City / Village / Town',
+    WorldTier.district => 'District',
+    WorldTier.landmark => 'Landmark',
   };
 
   String get description => switch (this) {
     WorldTier.stage =>
-      'The grand stage — the top of the hierarchy, holding everything beneath it.',
-    WorldTier.universe =>
-      'A universe within the stage, with its own rules and history.',
-    WorldTier.planet => 'A planet orbiting its star, home to continents.',
-    WorldTier.continent =>
-      'A landmass on a planet, holding cities, wilds and borders.',
-    WorldTier.settlement =>
-      'A place where stories happen — a city, village, or town.',
+      'The world the character creates — the details of the user\u2019s main world: the land, the broad strokes.',
+    WorldTier.universe => 'Contains planets; parent level above Planet.',
+    WorldTier.planet =>
+      'The finer details; holds the broad strokes for its continents (and extras).',
+    WorldTier.continent => 'Child of a planet.',
+    WorldTier.settlement => 'Children of a continent.',
+    WorldTier.district => 'Child of a city, village, or town.',
+    WorldTier.landmark => 'Child of a district — a notable place or feature.',
+  };
+
+  /// The tier above this one, if any. Stage sits at the top.
+  WorldTier? get parentTier => switch (this) {
+    WorldTier.stage => null,
+    WorldTier.universe => WorldTier.stage,
+    WorldTier.planet => WorldTier.universe,
+    WorldTier.continent => WorldTier.planet,
+    WorldTier.settlement => WorldTier.continent,
+    WorldTier.district => WorldTier.settlement,
+    WorldTier.landmark => WorldTier.district,
   };
 
   static WorldTier fromName(String? name) => WorldTier.values.firstWhere(

@@ -86,7 +86,8 @@ class UserVsCharacterCard extends StatelessWidget {
             title: 'Them (the MC)',
             helper:
                 'The main character you are creating. Everything on this '
-                'page describes them — not you.',
+                'page describes them — not you. AI helps write your NPCs — '
+                'your main character and world are yours to create.',
             trailing: const GlossaryChip(term: 'MC'),
           ),
         ],
@@ -119,11 +120,7 @@ class _WhoRow extends StatelessWidget {
             color: AppColors.sunkenSurfaceOf(context),
             borderRadius: BorderRadius.circular(PorchRadius.md),
           ),
-          child: Icon(
-            icon,
-            size: 20,
-            color: AppColors.porchAmberOf(context),
-          ),
+          child: Icon(icon, size: 20, color: AppColors.porchAmberOf(context)),
         ),
         const SizedBox(width: PorchSpacing.md),
         Expanded(

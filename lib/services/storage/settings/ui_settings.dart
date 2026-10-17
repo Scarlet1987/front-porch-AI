@@ -56,6 +56,13 @@ class UiSettings with SettingsBase, LibraryViewPrefs {
   // pure black so OLED screens can turn pixels fully off.
   bool _oledBlack = false;
 
+  // Content zone (Safe Commons / NSFW / Dead Dove), chosen at account
+  // creation and changeable in Settings. Drives the GenerationPolicy.
+  ContentZone _contentZone = ContentZone.commons;
+
+  // 18+ verification flag. Required before the adult zones can be selected.
+  bool _adultVerified = false;
+
   // Stick-to-bottom while a reply is streaming. Default ON — the old
   // follow-while-generating feel. Off is the Mac-pass no-chase lock.
   bool _followStreamingReplies = true;
@@ -101,6 +108,10 @@ class UiSettings with SettingsBase, LibraryViewPrefs {
       _isDark ? _globalActionColor : _lightActionColor;
   bool get isDark => _isDark;
   DetailLevel get detailLevel => _detailLevel;
+  ContentZone get contentZone => _contentZone;
+  bool get adultVerified => _adultVerified;
+  GenerationPolicy get generationPolicy =>
+      GenerationPolicy.forZone(_contentZone);
   bool get oledBlack => _oledBlack && _isDark;
   bool get followStreamingReplies => _followStreamingReplies;
   String get globalChatFontFamily => _globalChatFontFamily;
@@ -141,8 +152,14 @@ class UiSettings with SettingsBase, LibraryViewPrefs {
 
     // Theme + light-mode color set (fall back to AppColors light defaults if never saved)
     _isDark = prefs?.getBool(k('dark_mode')) ?? true;
-    _detailLevel = DetailLevelLabel.fromName(prefs?.getString(k('detail_level')));
+    _detailLevel = DetailLevelLabel.fromName(
+      prefs?.getString(k('detail_level')),
+    );
     _oledBlack = prefs?.getBool(k('oled_black')) ?? false;
+    _contentZone = ContentZoneLabel.fromName(
+      prefs?.getString(k('content_zone')),
+    );
+    _adultVerified = prefs?.getBool(k('adult_verified')) ?? false;
     _followStreamingReplies =
         prefs?.getBool(k('follow_streaming_replies')) ?? true;
     _lightUserBubbleColor = Color(
@@ -312,6 +329,20 @@ class UiSettings with SettingsBase, LibraryViewPrefs {
     if (_oledBlack == value) return;
     _oledBlack = value;
     await prefs?.setBool(k('oled_black'), value);
+    notify();
+  }
+
+  Future<void> setContentZone(ContentZone value) async {
+    if (_contentZone == value) return;
+    _contentZone = value;
+    await prefs?.setString(k('content_zone'), value.name);
+    notify();
+  }
+
+  Future<void> setAdultVerified(bool value) async {
+    if (_adultVerified == value) return;
+    _adultVerified = value;
+    await prefs?.setBool(k('adult_verified'), value);
     notify();
   }
 

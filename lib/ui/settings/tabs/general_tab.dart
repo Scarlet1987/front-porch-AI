@@ -74,6 +74,8 @@ class GeneralTab extends StatelessWidget {
           const SizedBox(height: 16),
           const CompanionCard(),
           const SizedBox(height: 16),
+          const ContentZoneCard(),
+          const SizedBox(height: 16),
           SwitchListTile(
             key: const ValueKey('user-messages-on-right'),
             contentPadding: EdgeInsets.zero,
@@ -146,8 +148,7 @@ class GeneralTab extends StatelessWidget {
                 ),
               ),
               value: storageService.uiSettings.oledBlack,
-              onChanged: (v) =>
-                  storageService.uiSettings.setOledBlack(v),
+              onChanged: (v) => storageService.uiSettings.setOledBlack(v),
             ),
           ],
           ListTile(

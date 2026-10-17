@@ -52,9 +52,22 @@ class EngineResourcesSettings with SettingsBase {
   /// Never drop a generation: queue work with backpressure instead.
   bool _queueWithBackpressure = true;
 
+  /// Micro-model role routing (Advanced): model ID for NPC dialogue/chatter
+  /// (small, fast) vs MC narrative and scene generation (main, larger).
+  /// Empty = use the default model for both.
+  String _npcRoleModelId = '';
+  String _mcRoleModelId = '';
+
+  /// VRAM budget in MB for both engines combined. 0 = auto (conservative
+  /// split with safety headroom).
+  int _vramBudgetMb = 0;
+
   EngineMemoryPlacement get textKvCache => _textKvCache;
   EngineMemoryPlacement get imageWeights => _imageWeights;
   bool get queueWithBackpressure => _queueWithBackpressure;
+  String get npcRoleModelId => _npcRoleModelId;
+  String get mcRoleModelId => _mcRoleModelId;
+  int get vramBudgetMb => _vramBudgetMb;
 
   void load() {
     _textKvCache = EngineMemoryPlacementLabel.fromName(
@@ -65,6 +78,9 @@ class EngineResourcesSettings with SettingsBase {
     );
     _queueWithBackpressure =
         prefs?.getBool(k('engine_queue_backpressure')) ?? true;
+    _npcRoleModelId = prefs?.getString(k('engine_npc_model')) ?? '';
+    _mcRoleModelId = prefs?.getString(k('engine_mc_model')) ?? '';
+    _vramBudgetMb = prefs?.getInt(k('engine_vram_budget_mb')) ?? 0;
   }
 
   Future<void> setTextKvCache(EngineMemoryPlacement value) async {
@@ -85,6 +101,28 @@ class EngineResourcesSettings with SettingsBase {
     if (_queueWithBackpressure == value) return;
     _queueWithBackpressure = value;
     await prefs?.setBool(k('engine_queue_backpressure'), value);
+    notify();
+  }
+
+  Future<void> setNpcRoleModelId(String value) async {
+    if (_npcRoleModelId == value) return;
+    _npcRoleModelId = value;
+    await prefs?.setString(k('engine_npc_model'), value);
+    notify();
+  }
+
+  Future<void> setMcRoleModelId(String value) async {
+    if (_mcRoleModelId == value) return;
+    _mcRoleModelId = value;
+    await prefs?.setString(k('engine_mc_model'), value);
+    notify();
+  }
+
+  Future<void> setVramBudgetMb(int value) async {
+    final v = value.clamp(0, 131072);
+    if (_vramBudgetMb == v) return;
+    _vramBudgetMb = v;
+    await prefs?.setInt(k('engine_vram_budget_mb'), v);
     notify();
   }
 }

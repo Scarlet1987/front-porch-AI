@@ -29,6 +29,8 @@
 
 export 'avatar_image.dart';
 export 'character_card.dart';
+export 'content_zone.dart';
+export 'generation_policy.dart';
 export 'greeting_realism_seed.dart';
 export 'chat_generation_settings.dart';
 export 'chat_message.dart';
