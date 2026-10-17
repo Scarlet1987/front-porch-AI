@@ -9,12 +9,18 @@ import { App } from './App';
 import { AppErrorBoundary } from './components/AppErrorBoundary';
 import { applyChatColors, loadChatColors } from './chatColors';
 import { applyReadingSize, loadReadingSize } from './readingSize';
+import { applyOled, loadOled, syncOledFromHost } from './oled';
+import { syncDetailLevelFromHost } from './detailLevel';
 import './styles.css';
 
 // Apply the user's saved chat colors before first paint so bubbles never flash
 // the default palette.
 applyChatColors(loadChatColors());
 applyReadingSize(loadReadingSize());
+applyOled(loadOled());
+// Then let the host's choices win on fresh devices.
+void syncOledFromHost();
+void syncDetailLevelFromHost();
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

@@ -8,6 +8,9 @@ import { ModelPicker } from '../components/ModelPicker';
 import { ChatColorsSettings } from '../components/ChatColorsSettings';
 import { ReadingSizeSettings } from '../components/ReadingSizeSettings';
 import { FollowStreamingSettings } from '../components/FollowStreamingSettings';
+import { DetailLevelSettings } from '../components/DetailLevelSettings';
+import { OledSettings } from '../components/OledSettings';
+import { GlossaryLink } from '../components/Glossary';
 import { MessageSideSettings } from '../components/MessageSideSettings';
 import { PorchLifeSettings } from '../components/PorchLifeSettings';
 import { ModelTransportCard } from '../components/ModelTransportCard';
@@ -329,6 +332,18 @@ export function SettingsPage() {
       <MessageSideSettings />
 
       <FollowStreamingSettings />
+
+      <DetailLevelSettings />
+
+      <OledSettings />
+
+      <section className="card" data-testid="glossary-card">
+        <h3>Words we use</h3>
+        <p className="muted">
+          What MC, NPC, User and the other terms mean, in plain English.
+        </p>
+        <GlossaryLink />
+      </section>
 
       <ReadingSizeSettings />
 
