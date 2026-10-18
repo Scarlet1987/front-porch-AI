@@ -1,7 +1,7 @@
-# Server Edition — `kavi/server-edition`
+# Wonderland — the server edition
 
 The server variant of the Front Porch AI front-end revamp. Branched from
-`kavi/gui-revamp` (the individual/desktop edition); the two share the full
+`Alice` (the local single-user edition); the two share the full
 UI and design language, and the server edition adds multi-user server
 behavior on top.
 
