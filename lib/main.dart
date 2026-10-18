@@ -45,6 +45,7 @@ import 'package:front_porch_ai/ui/window_chrome.dart';
 import 'package:front_porch_ai/ui/window_size_env.dart';
 import 'package:front_porch_ai/services/backporch/backporch.dart';
 import 'package:front_porch_ai/ui/alice/alice_shell.dart';
+import 'package:front_porch_ai/ui/alice/alice_setup_wizard.dart';
 import 'package:front_porch_ai/app_version.dart';
 import 'package:front_porch_ai/utils/native_exit.dart';
 import 'package:front_porch_ai/utils/utils.dart' show StartupTrace;
@@ -144,6 +145,13 @@ class _MyAppState extends State<MyApp> with WindowListener {
   /// overlays so first paint happens before the providers spin up.
   bool _overlaysArmed = false;
   bool _updateChecked = false;
+  // One-shot first-run decision: when true, the Alice setup wizard owns this
+  // launch's first-run flow and the legacy SetupOverlay stays parked. Set
+  // once after the first frame; never recomputed mid-wizard.
+  // [_takeoverDecided] gates the legacy overlay so it can never mount (and
+  // arm SetupService.runAutoSetup) in the frames before the decision lands.
+  bool _wizardTakeover = false;
+  bool _takeoverDecided = false;
   bool _isMigrating = false;
   bool _isDbCorrupt = false;
   List<File> _availableBackups = [];
@@ -183,6 +191,17 @@ class _MyAppState extends State<MyApp> with WindowListener {
       _mark('FIRST FRAME (user sees the app)');
       // First frame is up — arm the deferred overlays (see the home Stack).
       if (mounted) setState(() => _overlaysArmed = true);
+      // One-shot: does the Alice setup wizard own this launch's first run?
+      // Runs alongside everything below; the legacy SetupOverlay stays
+      // parked while the wizard is in charge.
+      AliceSetupWizard.shouldTakeOver(context).then((takeover) {
+        if (mounted) {
+          setState(() {
+            _wizardTakeover = takeover;
+            _takeoverDecided = true;
+          });
+        }
+      });
       // Capture initial window bounds after restore so tracking is correct
       // even if user maximizes without any interactive resize this session.
       try {
@@ -438,11 +457,23 @@ class _MyAppState extends State<MyApp> with WindowListener {
                       // graph (process spawns, dir scans, DB loads) before
                       // anything had painted. One frame (~16 ms) later is
                       // imperceptible; first paint no longer waits on it.
-                      if (_overlaysArmed) const SetupOverlay(),
+                      // The Alice setup wizard (alice8) owns the first run
+                      // when _wizardTakeover was decided above; the legacy
+                      // SetupOverlay stays parked meanwhile and resumes
+                      // afterwards for whatever the user left undecided. It
+                      // unmounts for good once uiSettings.wizardCompleted.
+                      if (_overlaysArmed &&
+                          _takeoverDecided &&
+                          !_wizardTakeover)
+                        const SetupOverlay(),
                       if (_overlaysArmed) const RemoteLockOverlay(),
                       if (_isDbCorrupt) _buildCorruptionOverlay(),
                       if (_isMigrating) _buildMigrationOverlay(),
                       if (_isReunifying) _buildReunificationOverlay(),
+                      if (_overlaysArmed &&
+                          _wizardTakeover &&
+                          !storage.uiSettings.wizardCompleted)
+                        const AliceSetupWizard(),
                     ],
                   ),
                 );

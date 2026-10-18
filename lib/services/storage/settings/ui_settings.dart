@@ -67,6 +67,11 @@ class UiSettings with SettingsBase, LibraryViewPrefs {
   // follow-while-generating feel. Off is the Mac-pass no-chase lock.
   bool _followStreamingReplies = true;
 
+  // Alice first-run setup wizard (alice8). False until the wizard finishes
+  // or is skipped — while false (and the legacy first-run choice is still
+  // open) the wizard shows instead of the old SetupOverlay choice.
+  bool _wizardCompleted = false;
+
   // Light-mode chat color defaults (populated from AppColors on first load if no prefs)
   Color _lightUserBubbleColor = AppColors.userBubbleLight;
   Color _lightUserTextColor = AppColors.userTextLight;
@@ -114,6 +119,18 @@ class UiSettings with SettingsBase, LibraryViewPrefs {
       GenerationPolicy.forZone(_contentZone);
   bool get oledBlack => _oledBlack && _isDark;
   bool get followStreamingReplies => _followStreamingReplies;
+
+  /// Whether the Alice first-run setup wizard has finished (or been
+  /// skipped). While false the wizard owns the first-run flow.
+  bool get wizardCompleted => _wizardCompleted;
+
+  Future<void> setWizardCompleted(bool value) async {
+    if (_wizardCompleted == value) return;
+    _wizardCompleted = value;
+    await prefs?.setBool(k('alice_wizard_completed'), value);
+    notify();
+  }
+
   String get globalChatFontFamily => _globalChatFontFamily;
   double get textScale => _textScale;
   String get chatBackground => _chatBackground;
@@ -160,6 +177,7 @@ class UiSettings with SettingsBase, LibraryViewPrefs {
       prefs?.getString(k('content_zone')),
     );
     _adultVerified = prefs?.getBool(k('adult_verified')) ?? false;
+    _wizardCompleted = prefs?.getBool(k('alice_wizard_completed')) ?? false;
     _followStreamingReplies =
         prefs?.getBool(k('follow_streaming_replies')) ?? true;
     _lightUserBubbleColor = Color(
