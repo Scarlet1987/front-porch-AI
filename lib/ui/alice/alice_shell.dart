@@ -30,7 +30,7 @@ class AliceShell extends StatelessWidget {
         children: [
           _AliceNavRail(selected: index, onSelect: (i) => appState.setIndex(i)),
           Expanded(
-            child: IndexedStack(
+            child: _TabFade(
               index: index,
               children: const [
                 AliceHomeScreen(),
@@ -43,6 +43,70 @@ class AliceShell extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Tab transition: a quick 90ms dip (out + back, 180ms total) around the
+/// [IndexedStack]. The stack itself stays mounted, so screen state
+/// (chat scroll, composer text) survives the switch — this is a fade of
+/// the whole content, not an AnimatedSwitcher child swap. Opacity-only,
+/// no slide/scale/bounce.
+class _TabFade extends StatefulWidget {
+  final int index;
+  final List<Widget> children;
+
+  const _TabFade({required this.index, required this.children});
+
+  @override
+  State<_TabFade> createState() => _TabFadeState();
+}
+
+class _TabFadeState extends State<_TabFade>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _fade = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 90),
+  );
+  late int _shown = widget.index;
+  int? _pending;
+  bool _swapping = false;
+
+  @override
+  void dispose() {
+    _fade.dispose();
+    super.dispose();
+  }
+
+  @override
+  void didUpdateWidget(_TabFade oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.index != widget.index) {
+      _pending = widget.index;
+      if (!_swapping) _swap();
+    }
+  }
+
+  /// Fade out, swap the shown child, fade back in. Re-entrant: rapid tab
+  /// taps queue the newest pending index and converge on it.
+  Future<void> _swap() async {
+    _swapping = true;
+    await _fade.forward();
+    if (!mounted) return;
+    setState(() => _shown = _pending ?? widget.index);
+    await _fade.reverse();
+    _swapping = false;
+    if (mounted && _pending != _shown) _swap();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: Tween<double>(
+        begin: 1,
+        end: 0.45,
+      ).animate(CurvedAnimation(parent: _fade, curve: Curves.easeOut)),
+      child: IndexedStack(index: _shown, children: widget.children),
     );
   }
 }

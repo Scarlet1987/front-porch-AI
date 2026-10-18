@@ -5,6 +5,7 @@
 // minimal shadows. Colors come from AppColors (already teal).
 
 import 'package:flutter/material.dart';
+import 'package:front_porch_ai/ui/alice/alice_motion.dart';
 import 'package:front_porch_ai/ui/theme/app_colors.dart';
 
 /// A card with the Alice look: teal-tinted surface, hairline border,
@@ -250,7 +251,7 @@ class AliceSegmentedControl<T> extends StatelessWidget {
 
   Widget _segButton(BuildContext context, T value, String label) {
     final isOn = value == selected;
-    return GestureDetector(
+    return AlicePressable(
       onTap: () => onChanged(value),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),

@@ -14,6 +14,7 @@ import 'package:provider/provider.dart';
 import 'package:front_porch_ai/models/models.dart';
 import 'package:front_porch_ai/services/services.dart';
 import 'package:front_porch_ai/services/storage/storage.dart';
+import 'package:front_porch_ai/ui/alice/alice_motion.dart';
 import 'package:front_porch_ai/ui/alice/alice_widgets.dart';
 import 'package:front_porch_ai/ui/settings/widgets/content_zone_select.dart';
 import 'package:front_porch_ai/ui/settings/widgets/dead_dove/dead_dove_panel.dart';

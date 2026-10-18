@@ -136,7 +136,7 @@ class _GpuWellState extends State<_GpuWell> {
               ],
             ),
           ),
-          GestureDetector(
+          AlicePressable(
             onTap: _detecting ? null : _redetect,
             child: AliceChip(
               label: _detecting ? 'Detecting\u2026' : 'Auto-detect',

@@ -26,7 +26,9 @@ class _MessageListState extends State<_MessageList> {
   void initState() {
     super.initState();
     _lastCount = widget.chat.messages.length;
-    WidgetsBinding.instance.addPostFrameCallback((_) => _toBottom());
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => _scrollToNewest(force: true),
+    );
   }
 
   @override
@@ -35,20 +37,41 @@ class _MessageListState extends State<_MessageList> {
     super.dispose();
   }
 
-  void _toBottom() {
-    if (!_scroll.hasClients) return;
-    if (widget.shrinkWrap) return;
-    _scroll.jumpTo(_scroll.position.maxScrollExtent);
+  /// Smooth-scrolls to the newest message (bottom of the reversed list).
+  /// Follows new arrivals only when the user is already near the bottom,
+  /// so reading history isn't yanked away mid-scroll.
+  void _scrollToNewest({bool force = false}) {
+    if (!_scroll.hasClients || widget.shrinkWrap) return;
+    final pos = _scroll.position;
+    if (!force && pos.maxScrollExtent - pos.pixels > 160) return;
+    _scroll.animateTo(
+      pos.maxScrollExtent,
+      duration: const Duration(milliseconds: 220),
+      curve: Curves.easeOut,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final messages = widget.chat.messages;
+    final chat = widget.chat;
+    final messages = chat.messages;
     if (messages.length != _lastCount) {
       _lastCount = messages.length;
-      WidgetsBinding.instance.addPostFrameCallback((_) => _toBottom());
+      WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToNewest());
     }
-    if (messages.isEmpty) {
+    // Typing indicator: the AI is generating but has nothing visible yet —
+    // either no AI message exists (newest is the user's) or the AI bubble
+    // is still empty (stream target created, no tokens arrived).
+    final generating = chat.isGenerating;
+    final last = messages.isEmpty ? null : messages.last;
+    final newestIsEmptyAi =
+        last != null &&
+        !last.isUser &&
+        !last.isStatusBanner &&
+        last.displayText.trim().isEmpty;
+    final appendTyping = generating && (last == null || last.isUser);
+    final swapNewestForTyping = generating && newestIsEmptyAi;
+    if (messages.isEmpty && !appendTyping) {
       return Center(
         child: Text(
           'No messages yet — say hello.',
@@ -58,17 +81,140 @@ class _MessageListState extends State<_MessageList> {
     }
     return ListView.builder(
       controller: _scroll,
+      // Newest message at the bottom, standard chat order: index 0 is the
+      // newest and sits at the bottom; _scrollToNewest targets
+      // maxScrollExtent.
+      reverse: true,
       shrinkWrap: widget.shrinkWrap,
       physics: widget.shrinkWrap
           ? const NeverScrollableScrollPhysics()
           : const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.symmetric(vertical: 8),
-      itemCount: messages.length,
+      itemCount: messages.length + (appendTyping ? 1 : 0),
       itemBuilder: (context, i) {
+        if (appendTyping && i == messages.length) {
+          return const Padding(
+            padding: EdgeInsets.symmetric(vertical: 5),
+            child: _TypingIndicator(),
+          );
+        }
+        if (swapNewestForTyping && i == 0) {
+          return const Padding(
+            padding: EdgeInsets.symmetric(vertical: 5),
+            child: _TypingIndicator(),
+          );
+        }
         final msg = messages[messages.length - 1 - i];
         return Padding(
           padding: const EdgeInsets.symmetric(vertical: 5),
-          child: _MessageRow(message: msg),
+          child: _FadeIn(
+            // Identity key: the same ChatMessage object mutates while
+            // streaming, so text updates don't re-trigger the fade.
+            key: ValueKey(msg),
+            child: _MessageRow(message: msg),
+          ),
+        );
+      },
+    );
+  }
+}
+
+/// One-shot fade-in for newly arrived rows: the message appears immediately
+/// on send with a subtle 160ms fade. Keyed by message identity so it runs
+/// once per message, not on every rebuild.
+class _FadeIn extends StatelessWidget {
+  final Widget child;
+
+  const _FadeIn({super.key, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0, end: 1),
+      duration: const Duration(milliseconds: 160),
+      curve: Curves.easeOut,
+      builder: (context, value, child) =>
+          Opacity(opacity: value, child: child!),
+      child: child,
+    );
+  }
+}
+
+/// Typing indicator: three dots pulsing in opacity (one shared controller,
+/// phase-offset per dot). Shown while the AI is generating but has no
+/// visible text yet.
+class _TypingIndicator extends StatefulWidget {
+  const _TypingIndicator();
+
+  @override
+  State<_TypingIndicator> createState() => _TypingIndicatorState();
+}
+
+class _TypingIndicatorState extends State<_TypingIndicator>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _pulse = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 1200),
+  )..repeat();
+
+  @override
+  void dispose() {
+    _pulse.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const AliceAvatar(name: 'AI', size: 32),
+        const SizedBox(width: 10),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
+          decoration: BoxDecoration(
+            color: AppColors.aiBubble,
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              for (var i = 0; i < 3; i++) _Dot(index: i, pulse: _pulse),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _Dot extends StatelessWidget {
+  final int index;
+  final AnimationController pulse;
+
+  const _Dot({required this.index, required this.pulse});
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: pulse,
+      builder: (context, _) {
+        final phase = (pulse.value + index / 3) % 1.0;
+        final opacity =
+            0.25 + 0.75 * (0.5 - 0.5 * math.cos(phase * 2 * math.pi));
+        return Padding(
+          padding: EdgeInsets.only(left: index == 0 ? 0 : 6),
+          child: Opacity(
+            opacity: opacity,
+            child: Container(
+              width: 8,
+              height: 8,
+              decoration: const BoxDecoration(
+                color: AppColors.aiText,
+                shape: BoxShape.circle,
+              ),
+            ),
+          ),
         );
       },
     );

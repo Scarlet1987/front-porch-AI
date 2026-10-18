@@ -14,6 +14,7 @@ import 'package:front_porch_ai/models/models.dart';
 import 'package:front_porch_ai/providers/app_state.dart';
 import 'package:front_porch_ai/services/services.dart';
 import 'package:front_porch_ai/services/storage/storage.dart';
+import 'package:front_porch_ai/ui/alice/alice_motion.dart';
 import 'package:front_porch_ai/ui/alice/alice_widgets.dart';
 import 'package:front_porch_ai/ui/theme/app_colors.dart';
 import 'package:front_porch_ai/utils/utils.dart';
@@ -302,7 +303,7 @@ class _AliceHomeScreenState extends State<AliceHomeScreen> {
             if (!snapshot.hasData) {
               return const Padding(
                 padding: EdgeInsets.symmetric(vertical: 16),
-                child: Center(child: CircularProgressIndicator()),
+                child: AliceSkeleton(lines: 3),
               );
             }
             final stories = snapshot.data!;
