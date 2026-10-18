@@ -333,8 +333,12 @@ extension HardwareServiceWindows on HardwareService {
             // this is an iGPU/APU that borrows from system RAM
             if (sharedMb > dedicatedMb && sharedMb > 1024) {
               isSharedMemory = true;
-              // Use dedicated + shared as the effective VRAM
-              vramMb = dedicatedMb + sharedMb;
+              // Use dedicated + HALF the shared pool as the effective VRAM.
+              // The shared pool is system RAM the OS, the desktop, and other
+              // apps all need — counting all of it as VRAM lets the fit
+              // offload until the machine thrashes. Half is the conservative
+              // figure the fit can treat as actually usable.
+              vramMb = dedicatedMb + (sharedMb ~/ 2);
             }
             debugPrint(
               '[Hardware] shared-memory adapter: ${chosen['Name']} '

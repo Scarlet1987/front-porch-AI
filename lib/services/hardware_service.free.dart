@@ -57,7 +57,7 @@ extension HardwareServiceFreeMemory on HardwareService {
           ? info.vramMb
           : (freeSystem < info.vramMb ? freeSystem : info.vramMb);
     }
-    if (info.hasCuda || info.vendor == 'NVIDIA') {
+    if (info.hasCuda || info.vendor == 'Nvidia') {
       final r = await _runNvidiaSmi(const [
         '--query-gpu=memory.free',
         '--format=csv,noheader,nounits',

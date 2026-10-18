@@ -187,6 +187,48 @@ class KoboldService extends ChangeNotifier
 
   /// True if the KoboldCPP process has been started (model may still be loading).
   bool get isProcessRunning => _isRunning;
+
+  /// Requests currently being generated. Engine arbitration (e.g. image
+  /// generation needing VRAM) must not pull the model out from under one.
+  int get inFlightRequests => _idle.inFlight;
+
+  /// Unload the model NOW to free VRAM for another engine (image
+  /// generation). Unlike idle unload this does not wait for the idle
+  /// timeout, but it still refuses while requests are in flight, and the
+  /// engine must look idle to itself. Returns true when the model was
+  /// unloaded. The next text request loads it back transparently via the
+  /// idle-wake path.
+  Future<bool> unloadForEngineHandoff() async {
+    final i = _idle;
+    if (!_isRunning || _isStarting || !_modelReady) return false;
+    if (i.inFlight > 0 || i.unloaded != null) return false;
+    if (i.unloading != null || i.waking != null) return false;
+    try {
+      // The engine is asked too: a request from outside the app counts.
+      final perf = await fetchPerf();
+      final queue = perf?['queue'];
+      if (perf == null || perf['idle'] == 0 || (queue is num && queue > 0)) {
+        return false;
+      }
+      var done = false;
+      await adminSwapLock.enqueue(() async {
+        final j = _idle;
+        if (!_isRunning || _isStarting || !_modelReady) return;
+        if (j.inFlight > 0 || j.unloaded != null || j.waking != null) {
+          return;
+        }
+        await _doUnload(
+          'Model unloaded to free VRAM for image generation. '
+          'It loads again with your next message.',
+        );
+        done = true;
+      });
+      return done;
+    } on Object catch (e) {
+      _addLog('Could not unload the model for image generation: $e');
+      return false;
+    }
+  }
   @override
   String get backendName => 'KoboldCPP';
 

@@ -1,0 +1,213 @@
+// Copyright (C) 2026 Front Porch AI
+// SPDX-License-Identifier: AGPL-3.0-or-later
+//
+// This file is part of Front Porch AI.
+//
+// Front Porch AI is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Front Porch AI is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+// Queue, dual-engine VRAM arbitration, and per-session teardown for
+// [ImageGenService]. Same library, so this extension sees the class's
+// private members. Split out to keep the main file under the 500-line
+// god-file ratchet. Queue state fields stay on the class itself
+// (extensions cannot declare instance fields).
+
+part of 'image_gen_service.dart';
+
+/// One entry in the image generation queue.
+class _ImageQueueEntry {
+  _ImageQueueEntry(this.sessionId) : turn = Completer<void>();
+
+  /// Server login session this generation belongs to, or null for the
+  /// local desktop (which has no session and is never torn down).
+  final String? sessionId;
+
+  /// Completed when this entry reaches the head of the queue.
+  final Completer<void> turn;
+
+  /// Set by [ImageGenService.teardownEngineSession]; the entry is
+  /// skipped instead of run when its turn comes.
+  bool cancelled = false;
+}
+
+/// Queue, arbitration, and session-teardown members of [ImageGenService].
+extension ImageGenServiceQueue on ImageGenService {
+  /// Drop this session's WAITING image generations (a running one is
+  /// left to finish — cancelling mid-flight risks backend state).
+  /// Called when a server login session ends.
+  void teardownEngineSession(String sessionId) {
+    var dropped = 0;
+    for (final entry in _imageQueue) {
+      if (!entry.cancelled && entry.sessionId == sessionId) {
+        entry.cancelled = true;
+        dropped++;
+      }
+    }
+    if (dropped > 0) {
+      debugPrint(
+          '[ImageGen] session ended: $dropped queued generation(s) dropped.');
+      _notify();
+    }
+  }
+
+  /// Run [job] when its turn comes. Waiters are woken in FIFO order; the
+  /// handoff keeps [_isGenerating] true across jobs (the pump, not the
+  /// job, owns the flag between turns) so a newcomer can't jump the queue
+  /// in the microtask gap. Entries cancelled by a session teardown are
+  /// skipped without running.
+  Future<Uint8List?> _enqueueImageJob(
+    Future<Uint8List?> Function() job, {
+    String? sessionId,
+  }) async {
+    final entry = _ImageQueueEntry(sessionId);
+    _imageQueue.add(entry);
+    _statusMessage =
+        'Queued for image generation (position ${_imageQueue.length}).';
+    _notify();
+    await entry.turn.future;
+    try {
+      if (entry.cancelled) return null;
+      return await job();
+    } finally {
+      _imageQueue.remove(entry);
+      if (_imageQueue.isNotEmpty) _imageQueue.first.turn.complete();
+    }
+  }
+
+  /// Dual-engine VRAM arbitration, run when a LOCAL image generation
+  /// starts. If KoboldCpp holds its model and free VRAM is below what an
+  /// image model needs, unload the text engine first — the next text
+  /// request loads it back transparently. Remote backends use no local
+  /// VRAM and skip this entirely.
+  Future<void> _arbitrateVramForImage(ImageGenBackend backend) async {
+    if (backend == ImageGenBackend.remote) return;
+    final kobold = _koboldService;
+    final hw = _hardwareService;
+    if (kobold == null || hw == null) return;
+    if (kobold.phase != KoboldPhase.ready) return;
+    FreeMemoryMb free;
+    try {
+      free = await hw.readFreeMemory();
+    } catch (e) {
+      debugPrint('[ImageGen] VRAM read failed, skipping arbitration: $e');
+      return;
+    }
+    // Conservative headroom: an image model wants at least this much free.
+    const needMb = 2048;
+    if ((free.graphics ?? 0) >= needMb) return;
+    _statusMessage = 'Freeing graphics memory from the text engine…';
+    _notify();
+    final unloaded = await kobold.unloadForEngineHandoff();
+    debugPrint(
+      '[ImageGen] VRAM arbitration: text-engine unload '
+      '${unloaded ? 'done' : 'not needed'}; '
+      'free VRAM was ${free.graphics} MB.',
+    );
+  }
+
+  /// Park image weights back in RAM after a local generation, when the
+  /// placement knob asks for it. Best-effort: unsupported servers ignore
+  /// the call.
+  Future<void> _parkImageWeights(ImageGenBackend backend) async {
+    if (_storage.engineResourcesSettings.imageWeights !=
+        EngineMemoryPlacement.ram) {
+      return;
+    }
+    try {
+      switch (backend) {
+        case ImageGenBackend.comfyUi:
+          await _comfyUi?.freeMemory();
+        case ImageGenBackend.a1111:
+        case ImageGenBackend.drawThings:
+          final url = _storage.imageGenSettings.localImageGenUrl;
+          if (url.isNotEmpty) await unloadLocalModel(url);
+        case ImageGenBackend.remote:
+          break;
+      }
+    } catch (e) {
+      debugPrint('[ImageGen] park weights failed (ignored): $e');
+    }
+  }
+
+  /// Generate an image from a prompt.
+  ///
+  /// Routes to the configured remote API (OpenRouter, Nano-GPT, etc.).
+  ///
+  /// Returns the image bytes on success, or null on failure.
+  Future<Uint8List?> generateImage({
+    required String prompt,
+    String? negativePrompt,
+    String? size,
+    Uint8List?
+    referenceImage, // img2img reference: honored by all three local backends
+    // (Draw Things, A1111, ComfyUI) at imageGenDenoise strength; remote APIs
+    // have no img2img endpoint here, so they ignore it.
+    String? model,
+    bool isPortrait = false,
+    // Per-call overrides for the stored seed/denoise settings; used by batch
+    // flows (expression packs) that need a shared fixed seed and fixed denoise
+    // across every image without touching the user's persisted settings.
+    // Remote APIs ignore them (no seed/denoise support on those endpoints).
+    int? seed,
+    double? denoise,
+    // Which surface asked. Create (default) keeps every existing path
+    // byte-identical; Edit routes an edit-capable model to edit-conditioning
+    // and resolves the EDIT model slot. Passed by the Studio's Edit tab and
+    // by edit-first expression packs (Studio dialog + the creator panel).
+    StudioIntent intent = StudioIntent.create,
+    // Edit-only: how strongly the instruction changes the reference (higher =
+    // more change). Overrides the edit profile's default strength when set, so
+    // the Edit tab can offer a "how much should change" control. Ignored outside
+    // the edit path.
+    double? editStrength,
+    // Server login session this generation belongs to (null = the local
+    // desktop). A session teardown drops this session's waiting queue
+    // entries; used by the server edition, always null on desktop.
+    String? sessionId,
+  }) {
+    // Backpressure: when "Never drop a generation" is on, a generation that
+    // arrives while one is running (or waiting) queues FIFO instead of being
+    // refused. When off, the previous behaviour stands: _generateImageImpl
+    // refuses the overlap. Pack flights bypass the queue — they hold the
+    // lock for their whole run via fromPack.
+    if (_storage.engineResourcesSettings.queueWithBackpressure &&
+        (_isGenerating || _imageQueue.isNotEmpty)) {
+      return _enqueueImageJob(
+        () => _generateImageImpl(
+          prompt: prompt,
+          negativePrompt: negativePrompt,
+          size: size,
+          referenceImage: referenceImage,
+          model: model,
+          isPortrait: isPortrait,
+          seed: seed,
+          denoise: denoise,
+          intent: intent,
+          editStrength: editStrength,
+        ),
+        sessionId: sessionId,
+      );
+    }
+    return _generateImageImpl(
+      prompt: prompt,
+      negativePrompt: negativePrompt,
+      size: size,
+      referenceImage: referenceImage,
+      model: model,
+    isPortrait: isPortrait,
+    seed: seed,
+    denoise: denoise,
+    intent: intent,
+    editStrength: editStrength,
+  );
+}

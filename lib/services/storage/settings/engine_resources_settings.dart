@@ -38,25 +38,29 @@ extension EngineMemoryPlacementLabel on EngineMemoryPlacement {
 }
 
 /// Dual-engine memory policy: how the text (KoboldCpp) and image engines
-/// share the machine's memory. The knobs are persisted here; the engines
-/// themselves apply them at launch. Stability first: generations queue with
-/// backpressure instead of being dropped.
+/// share the machine's memory. The knobs are persisted here and applied by
+/// the engines: the text placement feeds the KoboldCpp launch config
+/// (see koboldAppConfig), the image placement drives per-generation
+/// unload behaviour, and the queue toggle gates the image generation
+/// queue. Stability first: generations queue with backpressure instead of
+/// being dropped.
 class EngineResourcesSettings with SettingsBase {
-  /// Where the text engine keeps its KV cache / context memory.
+  /// Where the text engine runs. Auto lets the fit choose layers for the
+  /// hardware; "System RAM" forces CPU-only (gpuLayers 0), freeing VRAM
+  /// for the image engine. KoboldCpp cannot split KV cache to RAM while
+  /// keeping compute on GPU — layers travel with their KV — so this knob
+  /// controls layer placement, not KV placement.
   EngineMemoryPlacement _textKvCache = EngineMemoryPlacement.auto;
 
-  /// Where the image engine parks model weights between generations
-  /// (streamed to VRAM while generating).
+  /// Where the image engine parks model weights between generations.
+  /// "System RAM" unloads weights after each local generation (ComfyUI
+  /// /free, A1111 unload-checkpoint); "Graphics card" keeps them loaded.
   EngineMemoryPlacement _imageWeights = EngineMemoryPlacement.auto;
 
   /// Never drop a generation: queue work with backpressure instead.
+  /// Wired to the image generation queue; the text path already serializes
+  /// through KoboldRequestQueue.
   bool _queueWithBackpressure = true;
-
-  /// Micro-model role routing (Advanced): model ID for NPC dialogue/chatter
-  /// (small, fast) vs MC narrative and scene generation (main, larger).
-  /// Empty = use the default model for both.
-  String _npcRoleModelId = '';
-  String _mcRoleModelId = '';
 
   /// VRAM budget in MB for both engines combined. 0 = auto (conservative
   /// split with safety headroom).
@@ -65,8 +69,6 @@ class EngineResourcesSettings with SettingsBase {
   EngineMemoryPlacement get textKvCache => _textKvCache;
   EngineMemoryPlacement get imageWeights => _imageWeights;
   bool get queueWithBackpressure => _queueWithBackpressure;
-  String get npcRoleModelId => _npcRoleModelId;
-  String get mcRoleModelId => _mcRoleModelId;
   int get vramBudgetMb => _vramBudgetMb;
 
   void load() {
@@ -78,8 +80,6 @@ class EngineResourcesSettings with SettingsBase {
     );
     _queueWithBackpressure =
         prefs?.getBool(k('engine_queue_backpressure')) ?? true;
-    _npcRoleModelId = prefs?.getString(k('engine_npc_model')) ?? '';
-    _mcRoleModelId = prefs?.getString(k('engine_mc_model')) ?? '';
     _vramBudgetMb = prefs?.getInt(k('engine_vram_budget_mb')) ?? 0;
   }
 
@@ -101,20 +101,6 @@ class EngineResourcesSettings with SettingsBase {
     if (_queueWithBackpressure == value) return;
     _queueWithBackpressure = value;
     await prefs?.setBool(k('engine_queue_backpressure'), value);
-    notify();
-  }
-
-  Future<void> setNpcRoleModelId(String value) async {
-    if (_npcRoleModelId == value) return;
-    _npcRoleModelId = value;
-    await prefs?.setString(k('engine_npc_model'), value);
-    notify();
-  }
-
-  Future<void> setMcRoleModelId(String value) async {
-    if (_mcRoleModelId == value) return;
-    _mcRoleModelId = value;
-    await prefs?.setString(k('engine_mc_model'), value);
     notify();
   }
 

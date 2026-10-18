@@ -17,6 +17,7 @@
 // along with Front Porch AI. If not, see <https://www.gnu.org/licenses/>.
 
 import 'kobold_launch_config.dart';
+import 'package:front_porch_ai/services/storage/settings/engine_resources_settings.dart';
 
 /// The app's own launch settings, as plain values. Built from stored
 /// preferences by the caller so [koboldAppConfig] stays a pure function.
@@ -33,6 +34,7 @@ class KoboldAppSettings {
     required this.kvQuant,
     required this.mlock,
     this.rocmFlashAttentionFailed = false,
+    this.textPlacement = EngineMemoryPlacement.auto,
   });
 
   final int contextSize;
@@ -52,6 +54,11 @@ class KoboldAppSettings {
 
   /// KoboldCpp on ROCm died on this machine with flash attention on.
   final bool rocmFlashAttentionFailed;
+
+  /// Engine resources placement for the text engine. "System RAM" forces
+  /// CPU-only (gpuLayers 0), freeing VRAM for the image engine. Anything
+  /// else keeps the existing auto-fit. Manual layer counts always win.
+  final EngineMemoryPlacement textPlacement;
 }
 
 /// What is known about the model being launched.
@@ -143,6 +150,11 @@ KoboldLaunchConfig koboldAppConfig({
   String mmprojPath = '',
 }) {
   final manual = settings.layersManual;
+  // Engine resources placement: "System RAM" pins the model to CPU
+  // (gpuLayers 0) so the image engine gets the VRAM. Manual layer counts
+  // always win over the placement knob.
+  final cpuOnly =
+      !manual && settings.textPlacement == EngineMemoryPlacement.ram;
   final runs = koboldFlashAttentionRuns(
     backend: settings.backend,
     rocm: settings.rocm,
@@ -158,7 +170,9 @@ KoboldLaunchConfig koboldAppConfig({
     modelPath: modelPath,
     contextSize: settings.contextSize,
     batchSize: settings.batchSize,
-    gpuLayers: manual ? settings.manualLayers : KoboldLaunchConfig.autoLayers,
+    gpuLayers: manual
+        ? settings.manualLayers
+        : (cpuOnly ? 0 : KoboldLaunchConfig.autoLayers),
     // Locking pins the whole file in system memory. With automatic
     // fitting, or a MoE model whose experts stay off the card, that is the
     // "memory doubled, 0.2 tokens a second" case.
