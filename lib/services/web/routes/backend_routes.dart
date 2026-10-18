@@ -387,7 +387,7 @@ class WebBackendRoutes {
       // Server edition: scope the generation to this login session so a
       // logout drops its queued entries. Null when unauthenticated.
       final sessionId =
-          request.context[kAuthUserIdContextKey]?.toString();
+          r.context[kAuthUserIdContextKey]?.toString();
       result = await _image!.generate(body, sessionId: sessionId);
     } on DeskRefused catch (e) {
       return ImageDeskRoutes.refused(e);
