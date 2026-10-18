@@ -266,9 +266,9 @@ class _ExternalImageWidgetState extends State<ExternalImageWidget> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          color: Colors.orangeAccent.withValues(alpha: 0.08),
+          color: AppColors.porchTerracotta.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Colors.orangeAccent.withValues(alpha: 0.3)),
+          border: Border.all(color: AppColors.porchTerracotta.withValues(alpha: 0.3)),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -278,14 +278,14 @@ class _ExternalImageWidgetState extends State<ExternalImageWidget> {
               height: 14,
               child: CircularProgressIndicator(
                 strokeWidth: 1.5,
-                color: Colors.orangeAccent.withValues(alpha: 0.7),
+                color: AppColors.porchTerracotta.withValues(alpha: 0.7),
               ),
             ),
             const SizedBox(width: 8),
             Text(
               'External image detected...',
               style: TextStyle(
-                color: Colors.orangeAccent.withValues(alpha: 0.8),
+                color: AppColors.porchTerracotta.withValues(alpha: 0.8),
                 fontSize: 12,
               ),
             ),

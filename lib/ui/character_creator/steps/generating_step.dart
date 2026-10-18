@@ -48,8 +48,8 @@ class _GeneratingStepState extends State<GeneratingStep>
                   size: 64,
                   color: AppColors.resolve(
                     context,
-                    Colors.amberAccent,
-                    Colors.amber.shade700,
+                    AppColors.porchAmber,
+                    AppColors.porchAmber,
                   ),
                 ),
               ),

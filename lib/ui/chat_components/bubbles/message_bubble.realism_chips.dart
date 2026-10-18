@@ -243,7 +243,7 @@ extension _BubbleRealismChips on _MessageBubbleState {
       final icon = isAccepted ? Icons.verified : Icons.fact_check;
       final chipColor = isAccepted
           ? AppColors.resolve(context, Colors.greenAccent, Colors.green)
-          : AppColors.resolve(context, Colors.orangeAccent, Colors.deepOrange);
+          : AppColors.resolve(context, AppColors.porchTerracotta, AppColors.lustAccent);
       final chip = Row(
         mainAxisSize: MainAxisSize.min,
         children: [

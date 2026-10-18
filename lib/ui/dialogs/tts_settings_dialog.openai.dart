@@ -240,7 +240,7 @@ extension _TtsOpenAiSection on _TtsSettingsDialogState {
           children: [
             const Icon(
               Icons.cloud_outlined,
-              color: Colors.amber, // theme-keep: billing warning, not chrome
+              color: AppColors.porchAmber, // theme-keep: billing warning, not chrome
               size: 16,
             ),
             const SizedBox(width: 8),

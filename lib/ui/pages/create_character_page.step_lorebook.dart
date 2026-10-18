@@ -135,7 +135,7 @@ extension _CreateCharacterLorebookStep on _CreateCharacterPageState {
         border: Border.all(
           width: 1.5,
           color: entry.constant
-              ? Colors.amberAccent.withValues(alpha: 0.3)
+              ? AppColors.porchAmber.withValues(alpha: 0.3)
               : entry.enabled
               ? AppColors.formMasterAccent.withValues(alpha: 0.2)
               : AppColors.borderOf(context).withValues(alpha: 0.5),
@@ -150,7 +150,7 @@ extension _CreateCharacterLorebookStep on _CreateCharacterPageState {
                 Icons.menu_book,
                 size: 14,
                 color: entry.constant
-                    ? Colors.amberAccent
+                    ? AppColors.porchAmber
                     : entry.enabled
                     ? AppColors.formMasterAccent
                     : Colors.white38,
@@ -173,13 +173,13 @@ extension _CreateCharacterLorebookStep on _CreateCharacterPageState {
                     vertical: 2,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.amberAccent.withValues(alpha: 0.15),
+                    color: AppColors.porchAmber.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: const Text(
                     'Always Active',
                     style: TextStyle(
-                      color: Colors.amberAccent,
+                      color: AppColors.porchAmber,
                       fontSize: 9,
                       fontWeight: FontWeight.w600,
                     ),

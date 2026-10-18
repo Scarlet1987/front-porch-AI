@@ -126,7 +126,7 @@ class _KcppsSelectorState extends State<KcppsSelector> {
       text = 'Model: ${p.basename(modelPath!)}';
     } else if (hasModel) {
       icon = Icons.warning_amber_rounded;
-      color = Colors.orangeAccent;
+      color = AppColors.porchTerracotta;
       text = 'Model file not found';
     } else {
       icon = Icons.remove_circle_outline;

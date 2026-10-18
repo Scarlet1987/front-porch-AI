@@ -232,8 +232,8 @@ class AppColors {
   static Color bondMidOf(BuildContext context) =>
       resolve(context, bondMid, bondMidLight);
 
-  static const Color bondLow = Colors.orangeAccent;
-  static const Color bondLowLight = Color(0xFFE65100);
+  static const Color bondLow = porchTerracotta;
+  static const Color bondLowLight = porchTerracottaLight;
   static Color bondLowOf(BuildContext context) =>
       resolve(context, bondLow, bondLowLight);
 
@@ -267,13 +267,13 @@ class AppColors {
 
   static const Color optionalAccent = Colors.tealAccent;
 
-  static const Color timeDayAccent = Colors.amberAccent;
+  static const Color timeDayAccent = AppColors.porchAmber;
   static const Color timeDayAccentLight = Color(0xFFB45309);
   static Color timeDayAccentOf(BuildContext context) =>
       resolve(context, timeDayAccent, timeDayAccentLight);
 
-  static const Color taskAccent = Colors.orangeAccent;
-  static const Color taskAccentLight = Color(0xFFC2410C);
+  static const Color taskAccent = porchAmber;
+  static const Color taskAccentLight = porchAmberLight;
   static Color taskAccentOf(BuildContext context) =>
       resolve(context, taskAccent, taskAccentLight);
 

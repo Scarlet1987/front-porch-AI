@@ -242,8 +242,8 @@ extension _GroupWizardRealismStep on _CreateGroupChatPageState {
                   Icons.schedule,
                   color: AppColors.resolve(
                     context,
-                    Colors.amberAccent,
-                    Colors.amber.shade700,
+                    AppColors.porchAmber,
+                    AppColors.porchAmber,
                   ),
                   size: 18,
                 ),
@@ -255,8 +255,8 @@ extension _GroupWizardRealismStep on _CreateGroupChatPageState {
                     fontWeight: FontWeight.w600,
                     color: AppColors.resolve(
                       context,
-                      Colors.amberAccent,
-                      Colors.amber.shade700,
+                      AppColors.porchAmber,
+                      AppColors.porchAmber,
                     ),
                   ),
                 ),

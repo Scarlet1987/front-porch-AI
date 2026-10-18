@@ -54,7 +54,7 @@ extension _BubbleActions on _MessageBubbleState {
               Text(
                 '${chatService.greetingIndex + 1}/${allGreetings.length}',
                 style: const TextStyle(
-                  color: Colors.orangeAccent,
+                  color: AppColors.porchTerracotta,
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
                 ),
@@ -162,8 +162,8 @@ extension _BubbleActions on _MessageBubbleState {
                         size: 20,
                         color: AppColors.resolve(
                           context,
-                          Colors.orangeAccent,
-                          Colors.orange.shade800,
+                          AppColors.porchTerracotta,
+                          AppColors.porchTerracotta,
                         ),
                       ),
                     ),
@@ -189,7 +189,7 @@ extension _BubbleActions on _MessageBubbleState {
                       child: Icon(
                         Icons.refresh,
                         size: 20,
-                        color: Colors.orangeAccent,
+                        color: AppColors.porchTerracotta,
                       ),
                     ),
                   ),

@@ -55,7 +55,7 @@ extension _ChatPageImageConsent on _ChatPageState {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         icon: const Icon(
           Icons.shield_outlined,
-          color: Colors.orangeAccent,
+          color: AppColors.porchTerracotta,
           size: 36,
         ),
         title: const Text(
@@ -96,7 +96,7 @@ extension _ChatPageImageConsent on _ChatPageState {
             Text(
               'The source has not been verified as safe.',
               style: TextStyle(
-                color: Colors.orangeAccent.withValues(alpha: 0.8),
+                color: AppColors.porchTerracotta.withValues(alpha: 0.8),
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
               ),
@@ -114,7 +114,7 @@ extension _ChatPageImageConsent on _ChatPageState {
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.orangeAccent,
+              backgroundColor: AppColors.porchTerracotta,
               foregroundColor: Colors.black87,
             ),
             child: const Text('Accept Risk & Load'),
@@ -153,7 +153,7 @@ Widget _buildRiskItem(IconData icon, String text) {
     child: Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, size: 16, color: Colors.orangeAccent),
+        Icon(icon, size: 16, color: AppColors.porchTerracotta),
         const SizedBox(width: 8),
         Expanded(
           child: Text(

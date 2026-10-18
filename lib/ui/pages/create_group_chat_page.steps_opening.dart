@@ -95,8 +95,8 @@ extension _GroupWizardOpeningSteps on _CreateGroupChatPageState {
                               Icons.auto_awesome,
                               color: AppColors.resolve(
                                 context,
-                                Colors.amberAccent,
-                                Colors.amber.shade700,
+                                AppColors.porchAmber,
+                                AppColors.porchAmber,
                               ),
                             ),
                       label: Text(
@@ -122,8 +122,8 @@ extension _GroupWizardOpeningSteps on _CreateGroupChatPageState {
                     decoration: BoxDecoration(
                       color: AppColors.resolve(
                         context,
-                        Colors.amber.withValues(alpha: 0.08),
-                        Colors.amber.withValues(alpha: 0.08),
+                        AppColors.porchAmber.withValues(alpha: 0.08),
+                        AppColors.porchAmber.withValues(alpha: 0.08),
                       ),
                       borderRadius: BorderRadius.circular(8),
                     ),
@@ -133,8 +133,8 @@ extension _GroupWizardOpeningSteps on _CreateGroupChatPageState {
                         fontSize: 13,
                         color: AppColors.resolve(
                           context,
-                          Colors.amberAccent,
-                          Colors.amber.shade700,
+                          AppColors.porchAmber,
+                          AppColors.porchAmber,
                         ),
                       ),
                     ),
@@ -185,8 +185,8 @@ extension _GroupWizardOpeningSteps on _CreateGroupChatPageState {
                         Icons.auto_awesome,
                         color: AppColors.resolve(
                           context,
-                          Colors.amberAccent,
-                          Colors.amber.shade700,
+                          AppColors.porchAmber,
+                          AppColors.porchAmber,
                         ),
                       ),
                 label: Text(

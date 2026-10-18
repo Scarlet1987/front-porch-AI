@@ -131,7 +131,7 @@ extension _ModelSettingsLocalSection on _ModelSettingsDialogState {
                     padding: const EdgeInsets.all(12),
                     margin: const EdgeInsets.only(bottom: 12),
                     decoration: BoxDecoration(
-                      // Retheme: was Colors.amber, matching the oMLX banner's
+                      // Retheme: was AppColors.porchAmber, matching the oMLX banner's
                       // formMasterAccent 0.12/0.3 fill+border pattern below.
                       color: AppColors.formMasterAccent.withValues(alpha: 0.12),
                       border: Border.all(

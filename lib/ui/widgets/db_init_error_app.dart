@@ -74,7 +74,7 @@ class DbInitErrorApp extends StatelessWidget {
                   settingsFileCorrupt
                       ? Icons.settings_backup_restore_rounded
                       : Icons.storage_rounded,
-                  color: Colors.orangeAccent,
+                  color: const Color(0xFF2DD4BF),
                   size: 48,
                 ),
                 const SizedBox(height: 16),

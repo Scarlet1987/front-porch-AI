@@ -51,7 +51,7 @@ class ModelSelector extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
 
     if (!showManagedByKcpps && models.isEmpty) {
-      return Text(emptyMessage, style: const TextStyle(color: Colors.orange));
+      return Text(emptyMessage, style: const TextStyle(color: AppColors.porchAmber));
     }
 
     final rawPaths = models

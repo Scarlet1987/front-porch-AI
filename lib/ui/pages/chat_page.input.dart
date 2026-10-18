@@ -210,14 +210,14 @@ extension _ChatPageInput on _ChatPageState {
                 Icon(
                   Icons.warning_amber_rounded,
                   size: 14,
-                  color: Colors.orangeAccent,
+                  color: AppColors.porchTerracotta,
                 ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     'Trust is on the line — your next message is your only chance to explain yourself.',
                     style: const TextStyle(
-                      color: Colors.orangeAccent,
+                      color: AppColors.porchTerracotta,
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
                     ),
@@ -259,7 +259,7 @@ extension _ChatPageInput on _ChatPageState {
                               : Icons.info_outline,
                           size: 14,
                           color: chatService.guestActivityIsError
-                              ? Colors.orangeAccent
+                              ? AppColors.porchTerracotta
                               : AppColors.relationshipAccent,
                         ),
                 ),
@@ -269,7 +269,7 @@ extension _ChatPageInput on _ChatPageState {
                     chatService.guestActivityStatus!,
                     style: TextStyle(
                       color: chatService.guestActivityIsError
-                          ? Colors.orangeAccent
+                          ? AppColors.porchTerracotta
                           : AppColors.textSecondary(context),
                       fontSize: 12,
                       fontWeight: FontWeight.w500,

@@ -407,15 +407,15 @@ class GuidedConfigStep extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.resolve(
           context,
-          Colors.amber.withValues(alpha: 0.15),
-          Colors.amber.withValues(alpha: 0.08),
+          AppColors.porchAmber.withValues(alpha: 0.15),
+          AppColors.porchAmber.withValues(alpha: 0.08),
         ),
         borderRadius: BorderRadius.circular(10),
         border: Border.all(
           color: AppColors.resolve(
             context,
-            Colors.amber.withValues(alpha: 0.4),
-            Colors.amber.withValues(alpha: 0.25),
+            AppColors.porchAmber.withValues(alpha: 0.4),
+            AppColors.porchAmber.withValues(alpha: 0.25),
           ),
         ),
       ),
@@ -423,14 +423,14 @@ class GuidedConfigStep extends StatelessWidget {
         children: [
           const Icon(
             Icons.lightbulb_outline,
-            color: Colors.amberAccent,
+            color: AppColors.porchAmber,
             size: 16,
           ),
           const SizedBox(width: 8),
           const Expanded(
             child: Text(
               'Tip: The more detail you provide, the better the AI can capture your vision.',
-              style: TextStyle(color: Colors.amberAccent, fontSize: 12),
+              style: TextStyle(color: AppColors.porchAmber, fontSize: 12),
             ),
           ),
         ],

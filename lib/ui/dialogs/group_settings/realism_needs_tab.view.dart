@@ -78,7 +78,7 @@ extension _GroupRealismNeedsView on _GroupRealismNeedsTabState {
                   color: AppColors.surfaceOf(context),
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
-                    color: Colors.amber.withValues(alpha: 0.4),
+                    color: AppColors.porchAmber.withValues(alpha: 0.4),
                   ),
                 ),
                 child: Row(
@@ -86,7 +86,7 @@ extension _GroupRealismNeedsView on _GroupRealismNeedsTabState {
                     Icon(
                       Icons.warning_amber_rounded,
                       size: 18,
-                      color: Colors.amber,
+                      color: AppColors.porchAmber,
                     ),
                     const SizedBox(width: 8),
                     Expanded(
@@ -94,7 +94,7 @@ extension _GroupRealismNeedsView on _GroupRealismNeedsTabState {
                         'Director Mode is active. Realism Engine and related tracking are suspended for this group (narrative control only). Exit Director Mode to re-enable.',
                         style: const TextStyle(
                           fontSize: 12,
-                          color: Colors.amber,
+                          color: AppColors.porchAmber,
                           height: 1.3,
                         ),
                       ),

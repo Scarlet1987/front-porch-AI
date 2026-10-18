@@ -63,7 +63,7 @@ class NeedsBar extends StatelessWidget {
     switch (need.toLowerCase()) {
       case 'hunger':
         icon = Icons.restaurant;
-        color = Colors.orangeAccent;
+        color = AppColors.porchTerracotta;
         break;
       case 'bladder':
         icon = Icons.water_drop;
@@ -71,7 +71,7 @@ class NeedsBar extends StatelessWidget {
         break;
       case 'energy':
         icon = Icons.bolt;
-        color = Colors.amberAccent;
+        color = AppColors.porchAmber;
         break;
       case 'social':
         icon = Icons.people;

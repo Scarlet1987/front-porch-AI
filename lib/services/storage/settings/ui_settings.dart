@@ -39,7 +39,7 @@ class UiSettings with SettingsBase, LibraryViewPrefs {
   Color _globalUserTextColor = Colors.white;
   Color _globalAiBubbleColor = const Color(0xFF374151);
   Color _globalAiTextColor = Colors.white;
-  Color _globalDialogueColor = Colors.amberAccent;
+  Color _globalDialogueColor = AppColors.porchAmber;
   Color _globalActionColor = const Color(0xFF90CAF9);
 
   // Global chat font family

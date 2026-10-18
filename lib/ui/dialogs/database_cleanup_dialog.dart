@@ -211,7 +211,7 @@ class _DatabaseCleanupDialogState extends State<DatabaseCleanupDialog> {
                 ? 'Found $total item${total == 1 ? '' : 's'} needing attention:'
                 : 'Database is clean — no orphaned records found.',
             style: TextStyle(
-              color: total > 0 ? Colors.orangeAccent : Colors.greenAccent,
+              color: total > 0 ? AppColors.porchTerracotta : Colors.greenAccent,
               fontSize: 13,
               fontWeight: FontWeight.w600,
             ),
@@ -332,7 +332,7 @@ class _DatabaseCleanupDialogState extends State<DatabaseCleanupDialog> {
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
             decoration: BoxDecoration(
               color: count > 0
-                  ? Colors.orangeAccent.withValues(alpha: 0.15)
+                  ? AppColors.porchTerracotta.withValues(alpha: 0.15)
                   : AppColors.surfaceContainerOf(context),
               borderRadius: BorderRadius.circular(10),
             ),
@@ -342,7 +342,7 @@ class _DatabaseCleanupDialogState extends State<DatabaseCleanupDialog> {
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
                 color: count > 0
-                    ? Colors.orangeAccent
+                    ? AppColors.porchTerracotta
                     : AppColors.textTertiary(context),
               ),
             ),

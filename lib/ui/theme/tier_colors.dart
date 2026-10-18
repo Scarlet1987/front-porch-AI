@@ -60,8 +60,8 @@ class TierColors {
     if (tier >= -1) {
       return AppColors.resolve(
         context,
-        Colors.orangeAccent.shade100,
-        Colors.orange.shade700,
+        AppColors.chaosAccent,
+        AppColors.lustAccent,
       );
     }
     if (tier >= -2) {
@@ -86,22 +86,22 @@ class TierColors {
     if (tier >= -7) {
       return AppColors.resolve(
         context,
-        Colors.deepOrange.shade900,
-        Colors.deepOrange.shade700,
+        AppColors.lustDeep,
+        AppColors.lustDeepLight,
       );
     }
     if (tier >= -8) {
       return AppColors.resolve(
         context,
-        Colors.amber.shade900,
-        Colors.amber.shade800,
+        AppColors.porchAmber,
+        AppColors.porchAmber,
       );
     }
     if (tier >= -9) {
       return AppColors.resolve(
         context,
-        Colors.orange.shade900,
-        Colors.orange.shade800,
+        AppColors.lustDeep,
+        AppColors.lustDeepLight,
       );
     }
     return AppColors.textPrimary(context);

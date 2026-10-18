@@ -237,7 +237,7 @@ extension _ChatPageSidebar on _ChatPageState {
               const Spacer(),
               Switch(
                 value: chatService.observerMode,
-                activeTrackColor: Colors.amberAccent,
+                activeTrackColor: AppColors.porchAmber,
                 onChanged: chatService.isGenerating
                     ? null
                     : (val) => chatService.setObserverMode(val),
@@ -251,7 +251,7 @@ extension _ChatPageSidebar on _ChatPageState {
                 'Characters chat autonomously. Use the input box to direct the scene.',
                 style: TextStyle(
                   fontSize: 10,
-                  color: Colors.amberAccent.withValues(alpha: 0.7),
+                  color: AppColors.porchAmber.withValues(alpha: 0.7),
                 ),
               ),
             ),
@@ -272,7 +272,7 @@ extension _ChatPageSidebar on _ChatPageState {
                         Text(
                           '${(_dragDirectorDelay ?? storage.ttsSettings.directorDelay).toStringAsFixed(1)}s',
                           style: const TextStyle(
-                            color: Colors.amberAccent,
+                            color: AppColors.porchAmber,
                             fontSize: 11,
                             fontWeight: FontWeight.w600,
                           ),
@@ -293,7 +293,7 @@ extension _ChatPageSidebar on _ChatPageState {
                         min: 0.5,
                         max: 60.0,
                         divisions: 119,
-                        activeColor: Colors.amberAccent,
+                        activeColor: AppColors.porchAmber,
                         inactiveColor: Colors.white12,
                         onChanged: (val) =>
                             rebuildState(() => _dragDirectorDelay = val),

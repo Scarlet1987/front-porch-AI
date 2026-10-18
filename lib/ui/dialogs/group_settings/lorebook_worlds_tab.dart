@@ -232,7 +232,7 @@ class _GroupLorebookWorldsTabState extends State<GroupLorebookWorldsTab> {
                     });
                     _syncToGroup();
                   },
-                  activeThumbColor: Colors.orangeAccent,
+                  activeThumbColor: AppColors.porchAmber,
                 ),
                 const SizedBox(height: 16),
 
@@ -290,7 +290,7 @@ class _GroupLorebookWorldsTabState extends State<GroupLorebookWorldsTab> {
                 GroupSectionHeader(
                   'Group Lorebook',
                   Icons.menu_book,
-                  Colors.orangeAccent,
+                  AppColors.porchAmber,
                 ),
                 const SizedBox(height: 6),
                 Text(
@@ -320,7 +320,7 @@ class _GroupLorebookWorldsTabState extends State<GroupLorebookWorldsTab> {
                       icon: Icon(Icons.add, size: 16),
                       label: Text('Add Entry'),
                       style: FilledButton.styleFrom(
-                        backgroundColor: Colors.orangeAccent,
+                        backgroundColor: AppColors.porchAmber,
                         foregroundColor: AppColors.onChaosAccent,
                       ),
                     ),

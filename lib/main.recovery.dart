@@ -69,7 +69,7 @@ extension _MainDbRecovery on _MyAppState {
                   height: 80,
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
-                      colors: [Colors.red.shade700, Colors.orange.shade600],
+                      colors: [Colors.red.shade700, AppColors.porchTerracotta],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
@@ -213,7 +213,7 @@ extension _MainDbRecovery on _MyAppState {
                       color: AppColors.cardOf(context),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: Colors.orange.withValues(alpha: 0.3),
+                        color: AppColors.porchTerracotta.withValues(alpha: 0.3),
                       ),
                     ),
                     child: Row(
@@ -221,7 +221,7 @@ extension _MainDbRecovery on _MyAppState {
                         Icon(
                           Icons.info_outline,
                           size: 18,
-                          color: Colors.orange.shade300,
+                          color: AppColors.porchTerracotta,
                         ),
                         const SizedBox(width: 10),
                         Expanded(

@@ -55,12 +55,12 @@ Color relationshipScaleColor(BuildContext context, int value) {
   } else if (value >= -4) {
     return AppColors.textSecondary(context);
   } else if (value >= -19) {
-    return AppColors.resolve(context, Colors.orangeAccent, Colors.orange.shade700);
+    return AppColors.resolve(context, AppColors.porchTerracotta, AppColors.porchTerracotta);
   } else if (value >= -49) {
     return AppColors.resolve(
       context,
-      Colors.deepOrangeAccent,
-      Colors.deepOrange.shade700,
+      AppColors.porchTerracotta,
+      AppColors.lustAccent,
     );
   } else if (value >= -79) {
     return AppColors.resolve(context, Colors.redAccent, Colors.red.shade700);

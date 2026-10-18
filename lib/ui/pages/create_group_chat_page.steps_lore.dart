@@ -70,7 +70,7 @@ extension _GroupWizardLoreStep on _CreateGroupChatPageState {
                   border: Border.all(
                     width: 1.5,
                     color: entry.constant
-                        ? Colors.amberAccent.withValues(alpha: 0.3)
+                        ? AppColors.porchAmber.withValues(alpha: 0.3)
                         : entry.enabled
                         ? _loreEnabledAccent.withValues(alpha: 0.15)
                         : AppColors.borderOf(context).withValues(alpha: 0.5),
@@ -85,7 +85,7 @@ extension _GroupWizardLoreStep on _CreateGroupChatPageState {
                           Icons.menu_book,
                           size: 14,
                           color: entry.constant
-                              ? Colors.amberAccent
+                              ? AppColors.porchAmber
                               : entry.enabled
                               ? _loreEnabledAccent
                               : AppColors.iconSecondary(context),
@@ -110,13 +110,13 @@ extension _GroupWizardLoreStep on _CreateGroupChatPageState {
                               vertical: 2,
                             ),
                             decoration: BoxDecoration(
-                              color: Colors.amberAccent.withValues(alpha: 0.15),
+                              color: AppColors.porchAmber.withValues(alpha: 0.15),
                               borderRadius: BorderRadius.circular(4),
                             ),
                             child: const Text(
                               'Always Active',
                               style: TextStyle(
-                                color: Colors.amberAccent,
+                                color: AppColors.porchAmber,
                                 fontSize: 9,
                                 fontWeight: FontWeight.w600,
                               ),

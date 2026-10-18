@@ -149,10 +149,10 @@ extension _RagSetupProgress on RagSetupDialogState {
             width: double.infinity,
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: Colors.orangeAccent.withValues(alpha: 0.08),
+              color: AppColors.porchTerracotta.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(8),
               border: Border.all(
-                color: Colors.orangeAccent.withValues(alpha: 0.2),
+                color: AppColors.porchTerracotta.withValues(alpha: 0.2),
               ),
             ),
             child: Column(
@@ -163,13 +163,13 @@ extension _RagSetupProgress on RagSetupDialogState {
                     Icon(
                       Icons.lightbulb_outline,
                       size: 14,
-                      color: Colors.orangeAccent,
+                      color: AppColors.porchTerracotta,
                     ),
                     SizedBox(width: 6),
                     Text(
                       'Troubleshooting',
                       style: TextStyle(
-                        color: Colors.orangeAccent,
+                        color: AppColors.porchTerracotta,
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
                       ),

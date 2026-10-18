@@ -311,7 +311,7 @@ class _UserPersonaPageState extends State<UserPersonaPage>
                   onPressed: _importPersona,
                 ),
                 IconButton(
-                  icon: const Icon(Icons.upload, color: Colors.amberAccent),
+                  icon: const Icon(Icons.upload, color: AppColors.porchAmber),
                   tooltip: 'Export Personas (JSON)',
                   onPressed: _showExportDialog,
                 ),

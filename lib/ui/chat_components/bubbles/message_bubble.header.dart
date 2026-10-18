@@ -194,7 +194,7 @@ extension _BubbleHeader on _MessageBubbleState {
                           isSpeakingThis ? Icons.stop_circle : Icons.volume_up,
                           size: 16,
                           color: isSpeakingThis
-                              ? Colors.orangeAccent
+                              ? AppColors.porchTerracotta
                               : AppColors.textTertiary(context),
                         ),
                         padding: EdgeInsets.zero,

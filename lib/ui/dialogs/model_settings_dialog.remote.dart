@@ -220,7 +220,7 @@ extension _ModelSettingsRemoteSection on _ModelSettingsDialogState {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   // theme-keep: ready/needs-setup status
-                  color: ready ? Colors.greenAccent : Colors.amber,
+                  color: ready ? Colors.greenAccent : AppColors.porchAmber,
                 ),
               ),
               const SizedBox(width: 8),

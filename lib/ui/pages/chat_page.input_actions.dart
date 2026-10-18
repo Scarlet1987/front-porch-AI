@@ -272,7 +272,7 @@ extension _ChatPageInputActions on _ChatPageState {
       Tooltip(
         message: 'Impersonate (AI writes your message)',
         child: IconButton(
-          icon: const Icon(Icons.auto_fix_high, color: Colors.amberAccent),
+          icon: const Icon(Icons.auto_fix_high, color: AppColors.porchAmber),
           padding: EdgeInsets.zero,
           onPressed: chatService.isGenerating
               ? null
@@ -393,8 +393,8 @@ extension _ChatPageInputActions on _ChatPageState {
                   ? Icons.pause_circle_filled
                   : Icons.play_circle_filled,
               color: chatService.autoPlayActive
-                  ? Colors.orangeAccent
-                  : Colors.amberAccent,
+                  ? AppColors.porchTerracotta
+                  : AppColors.porchAmber,
             ),
             onPressed: () {
               if (chatService.autoPlayActive) {
@@ -431,7 +431,7 @@ extension _ChatPageInputActions on _ChatPageState {
         Tooltip(
           message: 'Generate reply ($_regenShortcutLabel)',
           child: IconButton(
-            icon: const Icon(Icons.refresh, color: Colors.orangeAccent),
+            icon: const Icon(Icons.refresh, color: AppColors.porchTerracotta),
             onPressed: () => chatService.regenerateLastMessage(),
           ),
         ),
@@ -456,7 +456,7 @@ extension _ChatPageInputActions on _ChatPageState {
                   color: chatService.isGuestBusy
                       ? AppColors.iconSecondary(context)
                       : (chatService.observerMode
-                            ? Colors.amberAccent
+                            ? AppColors.porchAmber
                             : AppColors.porchAmberOf(context)),
                 ),
                 onPressed: chatService.isLoadingSession

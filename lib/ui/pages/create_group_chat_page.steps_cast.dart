@@ -309,8 +309,8 @@ extension _GroupWizardCastSteps on _CreateGroupChatPageState {
                   Icons.movie_creation,
                   color: AppColors.resolve(
                     context,
-                    Colors.amberAccent,
-                    Colors.amber.shade700,
+                    AppColors.porchAmber,
+                    AppColors.porchAmber,
                   ),
                   size: 18,
                 ),
@@ -325,8 +325,8 @@ extension _GroupWizardCastSteps on _CreateGroupChatPageState {
             onChanged: (v) => rebuildState(() => _directorMode = v),
             activeThumbColor: AppColors.resolve(
               context,
-              Colors.amberAccent,
-              Colors.amber.shade700,
+              AppColors.porchAmber,
+              AppColors.porchAmber,
             ),
           ),
 

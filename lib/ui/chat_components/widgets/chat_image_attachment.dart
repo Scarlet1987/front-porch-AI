@@ -281,7 +281,7 @@ class _PendingImageChipState extends State<PendingImageChip> {
         Icon(
           installed ? Icons.description_outlined : Icons.visibility_off,
           size: 13,
-          color: installed ? Colors.tealAccent : Colors.orangeAccent,
+          color: installed ? Colors.tealAccent : AppColors.porchTerracotta,
         ),
         const SizedBox(width: 4),
         Flexible(
@@ -292,7 +292,7 @@ class _PendingImageChipState extends State<PendingImageChip> {
                 : "Your model can't see images — the character will reply "
                       'without seeing this photo.',
             style: TextStyle(
-              color: installed ? Colors.tealAccent : Colors.orangeAccent,
+              color: installed ? Colors.tealAccent : AppColors.porchTerracotta,
               fontSize: 11,
             ),
           ),
@@ -381,7 +381,7 @@ class _PendingImageChipState extends State<PendingImageChip> {
                 'Download failed: ${service.lastError}',
                 style: const TextStyle(
                   fontSize: 11,
-                  color: Colors.orangeAccent,
+                  color: AppColors.porchTerracotta,
                 ),
               ),
             ],

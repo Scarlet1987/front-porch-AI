@@ -72,7 +72,7 @@ class _BackupsPageState extends State<BackupsPage> {
   }
 
   Widget _disabledNotice(BuildContext context, ThemeData theme) {
-    final accent = AppColors.resolve(context, Colors.amber, Colors.amber.shade800);
+    final accent = AppColors.resolve(context, AppColors.porchAmber, AppColors.porchAmber);
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -207,7 +207,7 @@ class _BackupsPageState extends State<BackupsPage> {
         children: [
           TextButton(
             onPressed: () => _confirmRestore(context, backup.path),
-            child: const Text('Restore', style: TextStyle(color: Colors.amberAccent)),
+            child: const Text('Restore', style: TextStyle(color: AppColors.porchAmber)),
           ),
           IconButton(
             icon: const Icon(Icons.delete_outline, size: 20, color: Colors.redAccent),
@@ -292,7 +292,7 @@ class _BackupsPageState extends State<BackupsPage> {
         backgroundColor: AppColors.surfaceOf(ctx),
         title: Row(
           children: [
-            const Icon(Icons.warning_amber_rounded, color: Colors.amberAccent, size: 28),
+            const Icon(Icons.warning_amber_rounded, color: AppColors.porchAmber, size: 28),
             const SizedBox(width: 12),
             Text('Restore Backup?', style: TextStyle(color: AppColors.textPrimary(ctx))),
           ],
@@ -311,7 +311,7 @@ class _BackupsPageState extends State<BackupsPage> {
           ElevatedButton(
             onPressed: () => _restore(ctx, backupPath),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.amberAccent,
+              backgroundColor: AppColors.porchAmber,
               foregroundColor: Colors.black87,
             ),
             child: const Text('Restore'),

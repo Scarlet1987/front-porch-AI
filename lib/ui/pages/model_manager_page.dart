@@ -292,7 +292,7 @@ class _ModelManagerPageState extends State<ModelManagerPage>
                     icon: const Icon(
                       Icons.add_to_drive_rounded,
                       size: 18,
-                      color: Colors.amberAccent,
+                      color: AppColors.porchAmber,
                     ),
                     tooltip: 'Import from Computer',
                     onPressed: _importLocalModel,
@@ -304,7 +304,7 @@ class _ModelManagerPageState extends State<ModelManagerPage>
                     icon: const Icon(
                       Icons.drive_file_move_rounded,
                       size: 18,
-                      color: Colors.orangeAccent,
+                      color: AppColors.porchTerracotta,
                     ),
                     tooltip: 'Change Models Folder',
                     onPressed: _changeModelsFolder,

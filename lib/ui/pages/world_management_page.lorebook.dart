@@ -214,7 +214,7 @@ extension _WorldLorebookSection on _WorldManagementPageState {
                           ),
                         ),
                         if (e.constant)
-                          _buildBadge(ctx, 'Always Active', Colors.amberAccent),
+                          _buildBadge(ctx, 'Always Active', AppColors.porchAmber),
                         if (!e.constant)
                           _buildBadge(
                             ctx,

@@ -161,7 +161,7 @@ class _GroupObjectivesDialogState extends State<GroupObjectivesDialog> {
               padding: const EdgeInsets.fromLTRB(16, 12, 8, 8),
               child: Row(
                 children: [
-                  const Icon(Icons.flag, color: Colors.amber),
+                  const Icon(Icons.flag, color: AppColors.porchAmber),
                   const SizedBox(width: 8),
                   Text(
                     'Group Objectives',
@@ -204,7 +204,7 @@ class _GroupObjectivesDialogState extends State<GroupObjectivesDialog> {
                             shape: BoxShape.circle,
                             border: Border.all(
                               color: selected
-                                  ? Colors.amber
+                                  ? AppColors.porchAmber
                                   : Colors.transparent,
                               width: 2,
                             ),
@@ -232,7 +232,7 @@ class _GroupObjectivesDialogState extends State<GroupObjectivesDialog> {
                                 ? FontWeight.bold
                                 : FontWeight.normal,
                             color: selected
-                                ? Colors.amber
+                                ? AppColors.porchAmber
                                 : AppColors.textSecondary(context),
                           ),
                         ),

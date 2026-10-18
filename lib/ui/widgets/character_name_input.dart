@@ -35,7 +35,7 @@ class CharacterNameInput extends StatelessWidget {
             Tooltip(
               message: tooltip,
               child: IconButton(
-                icon: Icon(Icons.casino, color: Colors.amberAccent, size: 20),
+                icon: Icon(Icons.casino, color: AppColors.porchAmber, size: 20),
                 onPressed: onRandomize,
                 visualDensity: VisualDensity.compact,
               ),

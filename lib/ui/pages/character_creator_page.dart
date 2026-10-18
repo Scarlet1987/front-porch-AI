@@ -116,8 +116,8 @@ class _CharacterCreatorPageState extends State<CharacterCreatorPage> {
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.resolve(
                 ctx,
-                Colors.orangeAccent,
-                Colors.orange.shade700,
+                AppColors.porchTerracotta,
+                AppColors.porchTerracotta,
               ),
             ),
             child: const Text('Clear Everything'),
@@ -381,8 +381,8 @@ class _CharacterCreatorPageState extends State<CharacterCreatorPage> {
               Icons.auto_awesome,
               color: AppColors.resolve(
                 context,
-                Colors.amberAccent,
-                Colors.amber.shade700,
+                AppColors.porchAmber,
+                AppColors.porchAmber,
               ),
               size: 22,
             ),

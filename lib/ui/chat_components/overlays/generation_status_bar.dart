@@ -145,7 +145,7 @@ class _GenerationStatusBarState extends State<GenerationStatusBar> {
                   style: TextStyle(
                     color: AppColors.resolve(
                       context,
-                      Colors.amberAccent,
+                      AppColors.porchAmber,
                       const Color(0xFFB45309),
                     ),
                     fontSize: 11,

@@ -163,7 +163,7 @@ class SetupStep extends StatelessWidget {
                       KoboldPhase.ready => Colors.green.shade300,
                       KoboldPhase.unloaded => AppColors.slateFaintOf(ctx),
                       KoboldPhase.starting ||
-                      KoboldPhase.loading => Colors.orange.shade300,
+                      KoboldPhase.loading => AppColors.porchHoney,
                       KoboldPhase.stopped => Colors.red.shade300,
                     };
                     final label = switch (phase) {

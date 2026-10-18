@@ -131,7 +131,7 @@ extension _GroupMemberCardViews on _GroupMemberCardState {
             const Icon(
               Icons.pause_circle_outline,
               size: 12,
-              color: Colors.amberAccent,
+              color: AppColors.porchAmber,
             ),
           ],
         ],

@@ -42,7 +42,7 @@ class AutomatedConfigStep extends StatelessWidget {
   Widget build(BuildContext context) {
     final amber = AppColors.resolve(
       context,
-      Colors.amberAccent,
+      AppColors.porchAmber,
       const Color(0xFFB45309),
     );
     final pink = AppColors.resolve(

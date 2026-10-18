@@ -107,7 +107,7 @@ extension _CreateCharacterChrome on _CreateCharacterPageState {
     final color = estimatedTokens > 4000
         ? Colors.redAccent
         : estimatedTokens > 2000
-        ? Colors.orangeAccent
+        ? AppColors.porchTerracotta
         : AppColors.formMasterAccent;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),

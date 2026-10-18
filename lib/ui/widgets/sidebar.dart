@@ -127,7 +127,7 @@ class Sidebar extends StatelessWidget {
                     borderRadius: BorderRadius.circular(8),
                     child: Container(
                       decoration: BoxDecoration(
-                        color: Colors.amber.withValues(alpha: 0.08),
+                        color: AppColors.porchAmber.withValues(alpha: 0.08),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       padding: const EdgeInsets.symmetric(
@@ -144,8 +144,8 @@ class Sidebar extends StatelessWidget {
                             Icons.psychology,
                             color: AppColors.resolve(
                               context,
-                              Colors.amberAccent,
-                              Colors.amber.shade700,
+                              AppColors.porchAmber,
+                              AppColors.porchAmber,
                             ),
                             size: 22,
                           ),
@@ -156,8 +156,8 @@ class Sidebar extends StatelessWidget {
                               style: TextStyle(
                                 color: AppColors.resolve(
                                   context,
-                                  Colors.amberAccent,
-                                  Colors.amber.shade700,
+                                  AppColors.porchAmber,
+                                  AppColors.porchAmber,
                                 ),
                                 fontWeight: FontWeight.w600,
                               ),

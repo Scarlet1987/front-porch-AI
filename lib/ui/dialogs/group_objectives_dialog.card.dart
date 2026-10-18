@@ -31,7 +31,7 @@ extension _GroupObjectivesCard on _GroupObjectivesDialogState {
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
           color: isPrimary
-              ? Colors.amber.withValues(alpha: 0.4)
+              ? AppColors.porchAmber.withValues(alpha: 0.4)
               : AppColors.borderOf(context).withValues(alpha: 0.2),
         ),
       ),

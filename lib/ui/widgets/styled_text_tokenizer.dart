@@ -41,7 +41,7 @@ class StyledTextPreset {
         return (base ?? const TextStyle()).copyWith(
           color: AppColors.resolve(
             ctx,
-            Colors.amberAccent,
+            AppColors.porchAmber,
             const Color(0xFFB45309),
           ),
           fontWeight: FontWeight.w500,
@@ -76,7 +76,7 @@ class StyledTextPreset {
       return (base ?? const TextStyle()).copyWith(
         color: AppColors.resolve(
           ctx,
-          Colors.amberAccent,
+          AppColors.porchAmber,
           const Color(0xFFB45309),
         ),
         fontWeight: FontWeight.w500,

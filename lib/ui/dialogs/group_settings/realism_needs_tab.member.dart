@@ -140,8 +140,8 @@ extension _GroupRealismNeedsMemberCard on _GroupRealismNeedsTabState {
                       size: 14,
                       color: AppColors.resolve(
                         context,
-                        Colors.amber,
-                        Colors.amber,
+                        AppColors.porchAmber,
+                        AppColors.porchAmber,
                       ),
                     ),
                     const SizedBox(width: 6),

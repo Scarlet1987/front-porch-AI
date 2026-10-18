@@ -159,7 +159,7 @@ class StyledTextController extends TextEditingController
             segStyle = (style ?? const TextStyle()).copyWith(
               color: AppColors.resolve(
                 context,
-                Colors.amberAccent,
+                AppColors.porchAmber,
                 const Color(0xFFB45309),
               ),
               fontWeight: FontWeight.w500,

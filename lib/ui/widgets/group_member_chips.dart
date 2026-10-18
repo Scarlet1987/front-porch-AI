@@ -114,7 +114,7 @@ Color emotionRingColor(String emotion) {
     case 'joy':
     case 'amusement':
     case 'excitement':
-      return Colors.amber;
+      return AppColors.porchAmber;
     case 'sadness':
     case 'grief':
     case 'disappointment':
@@ -130,7 +130,7 @@ Color emotionRingColor(String emotion) {
       return Colors.pinkAccent;
     case 'anticipation':
     case 'desire':
-      return Colors.orangeAccent;
+      return AppColors.porchTerracotta;
     default:
       return Colors.grey;
   }

@@ -148,7 +148,7 @@ extension _BubbleRealism on _MessageBubbleState {
             icon = Icons.restaurant;
             color = AppColors.resolve(
               context,
-              Colors.orangeAccent,
+              AppColors.porchTerracotta,
               const Color(0xFFEA580C),
             );
             break;
@@ -329,7 +329,7 @@ extension _BubbleRealism on _MessageBubbleState {
               arousalDelta > 0 ? Icons.local_fire_department : Icons.ac_unit,
               size: 11,
               color: arousalDelta > 0
-                  ? Colors.deepOrangeAccent
+                  ? AppColors.lustAccent
                   : Colors.lightBlueAccent,
             ),
             const SizedBox(width: 4),
@@ -339,7 +339,7 @@ extension _BubbleRealism on _MessageBubbleState {
                 fontSize: 10,
                 fontWeight: FontWeight.w600,
                 color: arousalDelta > 0
-                    ? Colors.deepOrangeAccent
+                    ? AppColors.lustAccent
                     : Colors.lightBlueAccent,
               ),
             ),
