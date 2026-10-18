@@ -44,20 +44,38 @@ class _ImageQueueEntry {
 extension ImageGenServiceQueue on ImageGenService {
   /// Drop this session's WAITING image generations (a running one is
   /// left to finish — cancelling mid-flight risks backend state).
-  /// Called when a server login session ends.
+  /// Dropped entries are removed from the queue and woken so their
+  /// futures resolve null instead of hanging on a turn that will never
+  /// come. Called when a server login session ends.
   void teardownEngineSession(String sessionId) {
     var dropped = 0;
-    for (final entry in _imageQueue) {
-      if (!entry.cancelled && entry.sessionId == sessionId) {
-        entry.cancelled = true;
-        dropped++;
-      }
+    final doomed =
+        _imageQueue.where((e) => e.sessionId == sessionId).toList();
+    for (final entry in doomed) {
+      entry.cancelled = true;
+      _imageQueue.remove(entry);
+      dropped++;
+      // Wake it so its future resolves (null, via the cancelled check).
+      if (!entry.turn.isCompleted) entry.turn.complete();
     }
     if (dropped > 0) {
       debugPrint(
           '[ImageGen] session ended: $dropped queued generation(s) dropped.');
       _notify();
     }
+    _pumpImageQueue();
+  }
+
+  /// Wake the head waiter when no generation is running, keeping the queue
+  /// moving after a direct-path generation finishes or a session teardown
+  /// drops entries. The head entry stays in [_imageQueue] until its own
+  /// finally removes it, so a newcomer racing the handoff still sees a
+  /// non-empty queue and enqueues behind it instead of starting a second
+  /// concurrent generation.
+  void _pumpImageQueue() {
+    if (_isGenerating || _imageQueue.isEmpty) return;
+    final head = _imageQueue.first;
+    if (!head.turn.isCompleted) head.turn.complete();
   }
 
   /// Run [job] when its turn comes. Waiters are woken in FIFO order; the
@@ -80,7 +98,7 @@ extension ImageGenServiceQueue on ImageGenService {
       return await job();
     } finally {
       _imageQueue.remove(entry);
-      if (_imageQueue.isNotEmpty) _imageQueue.first.turn.complete();
+      _pumpImageQueue();
     }
   }
 
@@ -174,7 +192,7 @@ extension ImageGenServiceQueue on ImageGenService {
     // desktop). A session teardown drops this session's waiting queue
     // entries; used by the server edition, always null on desktop.
     String? sessionId,
-  }) {
+  }) async {
     // Backpressure: when "Never drop a generation" is on, a generation that
     // arrives while one is running (or waiting) queues FIFO instead of being
     // refused. When off, the previous behaviour stands: _generateImageImpl
@@ -198,17 +216,23 @@ extension ImageGenServiceQueue on ImageGenService {
         sessionId: sessionId,
       );
     }
-    return _generateImageImpl(
-      prompt: prompt,
-      negativePrompt: negativePrompt,
-      size: size,
-      referenceImage: referenceImage,
-      model: model,
-    isPortrait: isPortrait,
-    seed: seed,
-    denoise: denoise,
-    intent: intent,
-    editStrength: editStrength,
-  );
-}
+    try {
+      return await _generateImageImpl(
+        prompt: prompt,
+        negativePrompt: negativePrompt,
+        size: size,
+        referenceImage: referenceImage,
+        model: model,
+      isPortrait: isPortrait,
+      seed: seed,
+      denoise: denoise,
+      intent: intent,
+      editStrength: editStrength,
+      );
+    } finally {
+      // A direct-path generation finishing is what unblocks the queue:
+      // wake the head waiter, if any.
+      _pumpImageQueue();
+    }
+  }
 }
