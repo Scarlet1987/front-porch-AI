@@ -1,0 +1,487 @@
+// Copyright (C) 2026 Front Porch AI
+// SPDX-License-Identifier: AGPL-3.0-or-later
+//
+// Alice Home screen ("On your porch"): greeting header with the real
+// detail-level setting, Continue-chatting + world cards, the porch character
+// shelf, and the Advanced-only engine status. Layout follows the GUI preview
+// (front-porch-gui-preview.html, Home section, lines 682-768).
+
+import 'package:flutter/material.dart';
+import 'package:path/path.dart' as p;
+import 'package:provider/provider.dart';
+
+import 'package:front_porch_ai/models/models.dart';
+import 'package:front_porch_ai/providers/app_state.dart';
+import 'package:front_porch_ai/services/services.dart';
+import 'package:front_porch_ai/services/storage/storage.dart';
+import 'package:front_porch_ai/ui/alice/alice_widgets.dart';
+import 'package:front_porch_ai/ui/theme/app_colors.dart';
+import 'package:front_porch_ai/utils/utils.dart';
+
+part 'home/alice_home_porch.dart';
+part 'home/alice_home_engine.dart';
+
+/// Alice navigation destinations in rail order (see [AliceShell]).
+/// Kept in sync with AliceDestination: home 0, chat 1, creator 2, worlds 3.
+const _aliceChatIndex = 1;
+const _aliceCreatorIndex = 2;
+const _aliceWorldsIndex = 3;
+
+/// One recent chat session, tagged with the character it belongs to.
+class _RecentStory {
+  final CharacterCard character;
+  final String sessionId;
+  final DateTime date;
+  final String preview;
+
+  const _RecentStory({
+    required this.character,
+    required this.sessionId,
+    required this.date,
+    required this.preview,
+  });
+}
+
+/// Alice Home: "On your porch".
+class AliceHomeScreen extends StatefulWidget {
+  const AliceHomeScreen({super.key});
+
+  @override
+  State<AliceHomeScreen> createState() => _AliceHomeScreenState();
+}
+
+class _AliceHomeScreenState extends State<AliceHomeScreen> {
+  /// Blocks stacked open-chat taps while setActiveCharacter / loadSession
+  /// runs (same race home_page guards against).
+  bool _openingChat = false;
+
+  Future<List<_RecentStory>>? _recentStories;
+  int? _storiesForCharacterCount;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final characters = Provider.of<CharacterRepository>(context).characters;
+    if (_storiesForCharacterCount != characters.length) {
+      _storiesForCharacterCount = characters.length;
+      _recentStories = _loadRecentStories(characters);
+    }
+  }
+
+  /// Gathers sessions across every character, newest first, top 3.
+  /// TODO(alice): add a cross-character "most recent sessions" query to the
+  /// DB so this stops fanning out one query per character on big libraries.
+  Future<List<_RecentStory>> _loadRecentStories(
+    List<CharacterCard> characters,
+  ) async {
+    final chatService = Provider.of<ChatService>(context, listen: false);
+    final stories = <_RecentStory>[];
+    for (final character in characters) {
+      final ownerId = character.stableGroupId;
+      if (ownerId.isEmpty) continue;
+      final sessions = await chatService.getSessionsForId(ownerId);
+      for (final s in sessions) {
+        final date = s['date'];
+        if (date is! DateTime) continue;
+        stories.add(
+          _RecentStory(
+            character: character,
+            sessionId: '${s['id']}',
+            date: date,
+            preview: '${s['preview'] ?? 'New conversation'}',
+          ),
+        );
+      }
+    }
+    stories.sort((a, b) => b.date.compareTo(a.date));
+    return stories.take(3).toList();
+  }
+
+  void _goChat() =>
+      Provider.of<AppState>(context, listen: false).setIndex(_aliceChatIndex);
+
+  Future<void> _openCharacter(CharacterCard character) async {
+    if (_openingChat || !mounted) return;
+    _openingChat = true;
+    try {
+      // setActiveCharacter resumes the character's most recent session.
+      await Provider.of<ChatService>(
+        context,
+        listen: false,
+      ).setActiveCharacter(character);
+      if (!mounted) return;
+      _goChat();
+    } finally {
+      _openingChat = false;
+    }
+  }
+
+  /// Opens one specific recent session, like the old home's history dialog.
+  Future<void> _openStory(_RecentStory story) async {
+    if (_openingChat || !mounted) return;
+    _openingChat = true;
+    try {
+      final chatService = Provider.of<ChatService>(context, listen: false);
+      chatService.beginSessionLoad();
+      try {
+        await chatService.setActiveCharacter(story.character);
+        await chatService.loadSession(story.sessionId);
+      } finally {
+        chatService.endSessionLoad();
+      }
+      if (!mounted) return;
+      _goChat();
+    } finally {
+      _openingChat = false;
+    }
+  }
+
+  String _greetingWord() {
+    final hour = DateTime.now().hour;
+    if (hour < 12) return 'Good morning';
+    if (hour < 18) return 'Good afternoon';
+    return 'Good evening';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final storage = context.watch<StorageService>();
+    final detailLevel = storage.uiSettings.detailLevel;
+    final personaName = context.watch<UserPersonaService>().defaultPersona.name;
+    final characters = context.watch<CharacterRepository>().characters;
+
+    final greeting = (personaName.isNotEmpty && personaName != 'User')
+        ? '${_greetingWord()}, $personaName'
+        : _greetingWord();
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildHeader(context, greeting, detailLevel, storage),
+          const SizedBox(height: 18),
+          _buildTopCards(context),
+          const SizedBox(height: 18),
+          const AliceSectionHead(
+            title: 'On your porch',
+            subtitle: 'Tap one to open the chat',
+          ),
+          const SizedBox(height: 10),
+          _buildPorchShelf(context, characters),
+          if (detailLevel.reveals(DetailLevel.advanced)) ...[
+            const SizedBox(height: 18),
+            _buildEngineStatus(context, storage),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHeader(
+    BuildContext context,
+    String greeting,
+    DetailLevel detailLevel,
+    StorageService storage,
+  ) {
+    final theme = Theme.of(context);
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final narrow = constraints.maxWidth < 640;
+        final segBlock = Column(
+          crossAxisAlignment: narrow
+              ? CrossAxisAlignment.start
+              : CrossAxisAlignment.end,
+          children: [
+            AliceSegmentedControl<DetailLevel>(
+              values: DetailLevel.values,
+              labels: [for (final d in DetailLevel.values) d.label],
+              selected: detailLevel,
+              onChanged: storage.uiSettings.setDetailLevel,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              detailLevel.description,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.hintColor,
+              ),
+            ),
+          ],
+        );
+        if (narrow) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                greeting,
+                style: theme.textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Pick up a story where you left off, or start a new one '
+                'on the porch.',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.hintColor,
+                ),
+              ),
+              const SizedBox(height: 12),
+              segBlock,
+            ],
+          );
+        }
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    greeting,
+                    style: theme.textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Pick up a story where you left off, or start a new one '
+                    'on the porch.',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.hintColor,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 16),
+            segBlock,
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildTopCards(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final narrow = constraints.maxWidth < 860;
+        final continueCard = AliceCard(child: _buildContinueChatting(context));
+        final worldCard = AliceCard(child: _buildWorldCard(context));
+        if (narrow) {
+          return Column(
+            children: [continueCard, const SizedBox(height: 12), worldCard],
+          );
+        }
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(child: continueCard),
+            const SizedBox(width: 12),
+            Expanded(child: worldCard),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildContinueChatting(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const AliceSectionHead(
+          title: 'Continue chatting',
+          subtitle: 'Your most recent stories',
+        ),
+        const SizedBox(height: 8),
+        FutureBuilder<List<_RecentStory>>(
+          future: _recentStories,
+          builder: (context, snapshot) {
+            if (!snapshot.hasData) {
+              return const Padding(
+                padding: EdgeInsets.symmetric(vertical: 16),
+                child: Center(child: CircularProgressIndicator()),
+              );
+            }
+            final stories = snapshot.data!;
+            if (stories.isEmpty) {
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Text(
+                  'No stories yet — tap a character on your porch to '
+                  'start one.',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.hintColor,
+                  ),
+                ),
+              );
+            }
+            return Column(
+              children: [
+                for (final story in stories) _buildStoryRow(context, story),
+              ],
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStoryRow(BuildContext context, _RecentStory story) {
+    final theme = Theme.of(context);
+    return InkWell(
+      onTap: () => _openStory(story),
+      borderRadius: BorderRadius.circular(12),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: Row(
+          children: [
+            AliceAvatar(name: story.character.name, size: 44),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    story.character.name,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 14,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    story.preview,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.hintColor,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              formatRelativeTime(story.date),
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.hintColor,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// "Your world right now": breadcrumb built from the real world hierarchy
+  /// (World.tier / parentWorldId in WorldRepository).
+  /// TODO(alice): "your world right now" needs a notion of the *current*
+  /// world — right now this shows the first place world. Wire to the real
+  /// current-world selection when Alice Worlds lands.
+  Widget _buildWorldCard(BuildContext context) {
+    final theme = Theme.of(context);
+    final worlds = context.watch<WorldRepository>().placeWorlds;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const AliceSectionHead(
+          title: 'Your world right now',
+          subtitle: 'Where your stories are set',
+        ),
+        const SizedBox(height: 8),
+        if (worlds.isEmpty) ...[
+          Text(
+            'No world yet — build the stage your stories live on.',
+            style: theme.textTheme.bodyMedium?.copyWith(color: theme.hintColor),
+          ),
+        ] else ...[
+          _buildBreadcrumb(context, worlds.first),
+          const SizedBox(height: 8),
+          Text(
+            worlds.first.description.isEmpty
+                ? 'No description yet.'
+                : worlds.first.description,
+            style: theme.textTheme.bodyMedium?.copyWith(color: theme.hintColor),
+            maxLines: 3,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+        const SizedBox(height: 12),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            AliceButton(
+              label: 'Open the world',
+              ghost: true,
+              small: true,
+              onPressed: () => Provider.of<AppState>(
+                context,
+                listen: false,
+              ).setIndex(_aliceWorldsIndex),
+            ),
+            AliceButton(
+              label: 'New character',
+              ghost: true,
+              small: true,
+              onPressed: () => Provider.of<AppState>(
+                context,
+                listen: false,
+              ).setIndex(_aliceCreatorIndex),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  /// Walks the world's parent chain up to the root and renders
+  /// Stage › Universe › Planet › Continent › **Name**, bold on the leaf.
+  Widget _buildBreadcrumb(BuildContext context, World world) {
+    final repo = Provider.of<WorldRepository>(context, listen: false);
+    final chain = <World>[world];
+    var parentId = world.parentWorldId;
+    final seen = <String>{world.id};
+    while (parentId != null &&
+        parentId.isNotEmpty &&
+        !seen.contains(parentId)) {
+      final parent = repo.worldById(parentId);
+      if (parent == null) break;
+      chain.add(parent);
+      seen.add(parent.id);
+      parentId = parent.parentWorldId;
+    }
+    final ordered = chain.reversed.toList();
+    final theme = Theme.of(context);
+    return Text.rich(
+      TextSpan(
+        children: [
+          for (var i = 0; i < ordered.length; i++) ...[
+            if (i > 0)
+              TextSpan(
+                text: ' › ',
+                style: TextStyle(color: theme.hintColor),
+              ),
+            TextSpan(
+              text: ordered[i].name,
+              style: TextStyle(
+                fontWeight: i == ordered.length - 1
+                    ? FontWeight.w700
+                    : FontWeight.w500,
+                color: i == ordered.length - 1
+                    ? theme.colorScheme.onSurface
+                    : theme.hintColor,
+              ),
+            ),
+          ],
+        ],
+      ),
+      style: const TextStyle(fontSize: 13.5),
+    );
+  }
+}
