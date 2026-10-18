@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 
 import 'package:front_porch_ai/services/services.dart';
+import 'package:front_porch_ai/ui/theme/app_colors.dart';
 
 import '../widgets/eval_pill.dart';
 
@@ -114,12 +115,12 @@ class RealismProcessingOverlayState extends State<RealismProcessingOverlay>
             EvalPill(
               label: 'Emotion',
               icon: Icons.mood,
-              color: Colors.orangeAccent,
+              color: AppColors.porchTerracotta,
             ),
             EvalPill(
               label: 'Scene',
               icon: Icons.wb_twilight,
-              color: Colors.amber,
+              color: AppColors.porchAmber,
             ),
             EvalPill(
               label: 'Trust',

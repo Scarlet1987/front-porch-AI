@@ -20,6 +20,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:front_porch_ai/models/models.dart';
 import 'package:front_porch_ai/services/services.dart';
+import 'package:front_porch_ai/ui/theme/app_colors.dart';
 
 /// Dialog shown after character import to let user add/edit tags.
 /// Pre-populates with any tags from the V2 card data (e.g. from Chub.ai).
@@ -118,7 +119,7 @@ class _TagDialogState extends State<TagDialog> {
             // Header
             Row(
               children: [
-                const Icon(Icons.label_outline, color: Colors.amber, size: 24),
+                const Icon(Icons.label_outline, color: AppColors.porchAmber, size: 24),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
@@ -201,7 +202,7 @@ class _TagDialogState extends State<TagDialog> {
                   borderSide: BorderSide.none,
                 ),
                 suffixIcon: IconButton(
-                  icon: const Icon(Icons.add, color: Colors.amber),
+                  icon: const Icon(Icons.add, color: AppColors.porchAmber),
                   onPressed: () => _addTag(_controller.text),
                 ),
               ),
@@ -268,7 +269,7 @@ class _TagDialogState extends State<TagDialog> {
                   icon: const Icon(Icons.check, size: 18),
                   label: const Text('Save Tags'),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.amber.shade700,
+                    backgroundColor: AppColors.porchAmber,
                     foregroundColor: Colors.white,
                   ),
                 ),

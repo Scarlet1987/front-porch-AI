@@ -17,6 +17,7 @@
 // along with Front Porch AI. If not, see <https://www.gnu.org/licenses/>.
 
 import 'package:flutter/material.dart';
+import 'package:front_porch_ai/ui/theme/app_colors.dart';
 
 part 'emotion_labels.nuanced.dart';
 
@@ -125,7 +126,7 @@ class EmotionLabels {
       case 'joy':
       case 'amusement':
       case 'excitement':
-        return Colors.amber;
+        return AppColors.porchAmber;
       case 'sadness':
       case 'grief':
       case 'disappointment':
@@ -141,7 +142,7 @@ class EmotionLabels {
         return Colors.pinkAccent;
       case 'anticipation':
       case 'desire':
-        return Colors.orangeAccent;
+        return AppColors.porchTerracotta;
       default:
         return Colors.grey;
     }
