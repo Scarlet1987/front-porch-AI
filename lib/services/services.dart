@@ -99,6 +99,7 @@ export 'folder_service.dart';
 
 // Other frequently used
 export 'expression_classifier.dart';
+export 'hardware_audit.dart';
 export 'hardware_service.dart';
 export 'voice_manager.dart';
 export 'update_service.dart';

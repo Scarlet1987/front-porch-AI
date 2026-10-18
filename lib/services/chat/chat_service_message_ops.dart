@@ -463,7 +463,6 @@ extension ChatServiceMessageOps on ChatService {
     // cancellable too — a regen abort mid-tick must put the captured
     // clock back and drop the aborted slot's after.
     if (!_isEvaluatingRealism && !_isProcessingGreeting && !_isPostGenerating) {
-      debugPrint('[Realism] Cancel request ignored — no active realism eval.');
       return;
     }
 

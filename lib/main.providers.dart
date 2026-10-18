@@ -242,6 +242,10 @@ Widget _buildRootWidget(AppDatabase db, bool needsMigration) {
         ChangeNotifierProxyProvider<StorageService, BackendManager>(
           create: (context) => BackendManager(
             Provider.of<StorageService>(context, listen: false),
+            hardwareService: Provider.of<HardwareService>(
+              context,
+              listen: false,
+            ),
           ),
           update: (context, storage, previous) =>
               previous ?? BackendManager(storage),

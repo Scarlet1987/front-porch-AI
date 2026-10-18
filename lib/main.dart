@@ -108,6 +108,13 @@ void main(List<String> args) async {
   // never reorder (see the phase functions' own comments for why each
   // must precede the next).
   _installSignalHandlers();
+  // Hardware audit FIRST: the app needs to know its limits (GPU vendor,
+  // VRAM, CPU) before any backend initializes or spawns its own probes.
+  // HardwareService and BackendManager consume HardwareAudit.current
+  // instead of re-probing. Every probe has a fallback — a machine the
+  // audit has never seen still launches.
+  await HardwareAudit.run();
+  _mark('HardwareAudit.run');
   await _healPrefsAndConsolidateFiles();
   final boot = await _openDatabaseGuarded();
   if (boot == null) return; // DbInitErrorApp is already running
@@ -306,137 +313,141 @@ class _MyAppState extends State<MyApp> with WindowListener {
             debugShowCheckedModeBanner: false,
             theme: buildPorchThemeData(isDark: isDark, oledBlack: oledBlack),
             home: Builder(
-            builder: (context) {
-              // Trigger update check once after first build
-              if (!_updateChecked) {
-                _updateChecked = true;
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  // A settings reset must never be silent — especially the
-                  // custom storage folder, whose loss makes the library look
-                  // empty until the user re-selects it in Settings.
-                  if (PrefsRecovery.recovered) {
-                    showWarmDialog<void>(
-                      context,
-                      title: 'Your settings were reset',
-                      icon: Icons.settings_backup_restore_rounded,
-                      content: const WarmDialogText(
-                        'Front Porch AI found its settings file damaged — '
-                        'this can happen after a crash or power loss — and '
-                        'started fresh so the app could open. Your '
-                        'characters and chats are unaffected.\n\n'
-                        'If you had moved your storage folder, point the '
-                        'app back at it in Settings and everything will '
-                        'reappear.',
-                      ),
-                      actions: [warmDialogCancel(context, label: 'OK')],
-                    );
-                  }
-                  _checkForUpdates(context).then((_) {
-                    if (context.mounted) _checkKoboldEngine(context);
-                  });
-                  _autoStartWebServer(context);
-                  // Start auto-backup (always on, every 10 minutes)
-                  BackupService.startAutoBackup();
-                  // Wire TtsService into ChatService (can't be done during provider
-                  // creation because TtsService is registered later in the tree)
-                  try {
-                    final chatService = Provider.of<ChatService>(
-                      context,
-                      listen: false,
-                    );
-                    final tts = Provider.of<TtsService>(context, listen: false);
-                    chatService.setTtsService(tts);
-                  } catch (_) {}
-                  // Wire ExpressionClassifierService into ChatService
-                  try {
-                    final chatService = Provider.of<ChatService>(
-                      context,
-                      listen: false,
-                    );
-                    final classifier = Provider.of<ExpressionClassifierService>(
-                      context,
-                      listen: false,
-                    );
-                    chatService.setExpressionClassifierService(classifier);
-                  } catch (_) {}
-                  // Wire ImageGenService into ChatService for Scene Guest
-                  // background portraits (previously done in the legacy web
-                  // server provider's create, removed at cutover).
-                  try {
-                    final chatService = Provider.of<ChatService>(
-                      context,
-                      listen: false,
-                    );
-                    chatService.setImageGenService(
-                      Provider.of<ImageGenService>(context, listen: false),
-                    );
-                  } catch (_) {}
-                  // Wire UpdateService shutdown callback so child processes
-                  // (KoboldCPP, web server, embedding sidecar) are stopped
-                  // before exit(0) in installNow(), which bypasses onWindowClose.
-                  try {
-                    final updateService = Provider.of<UpdateService>(
-                      context,
-                      listen: false,
-                    );
-                    updateService.setShutdownCallback(() async {
-                      try {
-                        final kobold = Provider.of<KoboldService>(
-                          context,
-                          listen: false,
-                        );
-                        if (kobold.isRunning || kobold.isStarting) {
-                          await kobold.stopKobold();
-                        }
-                      } catch (_) {}
-                      try {
-                        final webServer = Provider.of<WebServerHost>(
-                          context,
-                          listen: false,
-                        );
-                        if (webServer.isRunning) await webServer.stop();
-                      } catch (_) {}
+              builder: (context) {
+                // Trigger update check once after first build
+                if (!_updateChecked) {
+                  _updateChecked = true;
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    // A settings reset must never be silent — especially the
+                    // custom storage folder, whose loss makes the library look
+                    // empty until the user re-selects it in Settings.
+                    if (PrefsRecovery.recovered) {
+                      showWarmDialog<void>(
+                        context,
+                        title: 'Your settings were reset',
+                        icon: Icons.settings_backup_restore_rounded,
+                        content: const WarmDialogText(
+                          'Front Porch AI found its settings file damaged — '
+                          'this can happen after a crash or power loss — and '
+                          'started fresh so the app could open. Your '
+                          'characters and chats are unaffected.\n\n'
+                          'If you had moved your storage folder, point the '
+                          'app back at it in Settings and everything will '
+                          'reappear.',
+                        ),
+                        actions: [warmDialogCancel(context, label: 'OK')],
+                      );
+                    }
+                    _checkForUpdates(context).then((_) {
+                      if (context.mounted) _checkKoboldEngine(context);
                     });
-                  } catch (_) {}
-                });
-              }
+                    _autoStartWebServer(context);
+                    // Start auto-backup (always on, every 10 minutes)
+                    BackupService.startAutoBackup();
+                    // Wire TtsService into ChatService (can't be done during provider
+                    // creation because TtsService is registered later in the tree)
+                    try {
+                      final chatService = Provider.of<ChatService>(
+                        context,
+                        listen: false,
+                      );
+                      final tts = Provider.of<TtsService>(
+                        context,
+                        listen: false,
+                      );
+                      chatService.setTtsService(tts);
+                    } catch (_) {}
+                    // Wire ExpressionClassifierService into ChatService
+                    try {
+                      final chatService = Provider.of<ChatService>(
+                        context,
+                        listen: false,
+                      );
+                      final classifier =
+                          Provider.of<ExpressionClassifierService>(
+                            context,
+                            listen: false,
+                          );
+                      chatService.setExpressionClassifierService(classifier);
+                    } catch (_) {}
+                    // Wire ImageGenService into ChatService for Scene Guest
+                    // background portraits (previously done in the legacy web
+                    // server provider's create, removed at cutover).
+                    try {
+                      final chatService = Provider.of<ChatService>(
+                        context,
+                        listen: false,
+                      );
+                      chatService.setImageGenService(
+                        Provider.of<ImageGenService>(context, listen: false),
+                      );
+                    } catch (_) {}
+                    // Wire UpdateService shutdown callback so child processes
+                    // (KoboldCPP, web server, embedding sidecar) are stopped
+                    // before exit(0) in installNow(), which bypasses onWindowClose.
+                    try {
+                      final updateService = Provider.of<UpdateService>(
+                        context,
+                        listen: false,
+                      );
+                      updateService.setShutdownCallback(() async {
+                        try {
+                          final kobold = Provider.of<KoboldService>(
+                            context,
+                            listen: false,
+                          );
+                          if (kobold.isRunning || kobold.isStarting) {
+                            await kobold.stopKobold();
+                          }
+                        } catch (_) {}
+                        try {
+                          final webServer = Provider.of<WebServerHost>(
+                            context,
+                            listen: false,
+                          );
+                          if (webServer.isRunning) await webServer.stop();
+                        } catch (_) {}
+                      });
+                    } catch (_) {}
+                  });
+                }
 
-              final storage = Provider.of<StorageService>(context);
-              final width = MediaQuery.of(context).size.width;
+                final storage = Provider.of<StorageService>(context);
+                final width = MediaQuery.of(context).size.width;
 
-              // Scale text relative to base design width of 1280px
-              // Clamp responsive base between 0.85 and 1.5
-              final responsiveScale = (width / 1280).clamp(0.85, 1.5);
+                // Scale text relative to base design width of 1280px
+                // Clamp responsive base between 0.85 and 1.5
+                final responsiveScale = (width / 1280).clamp(0.85, 1.5);
 
-              // Combine with user preference
-              final effectiveScale =
-                  responsiveScale * storage.uiSettings.textScale;
+                // Combine with user preference
+                final effectiveScale =
+                    responsiveScale * storage.uiSettings.textScale;
 
-              return MediaQuery(
-                data: MediaQuery.of(
-                  context,
-                ).copyWith(textScaler: TextScaler.linear(effectiveScale)),
-                child: Stack(
-                  children: [
-                    const AliceShell(),
-                    // Mounted one frame late ON PURPOSE: SetupOverlay reads
-                    // SetupService/BackendManager and RemoteLockOverlay
-                    // consumes WebServerHost — whose provider reads ~15
-                    // others — so building them in the FIRST frame defeated
-                    // every lazy provider and constructed the whole service
-                    // graph (process spawns, dir scans, DB loads) before
-                    // anything had painted. One frame (~16 ms) later is
-                    // imperceptible; first paint no longer waits on it.
-                    if (_overlaysArmed) const SetupOverlay(),
-                    if (_overlaysArmed) const RemoteLockOverlay(),
-                    if (_isDbCorrupt) _buildCorruptionOverlay(),
-                    if (_isMigrating) _buildMigrationOverlay(),
-                    if (_isReunifying) _buildReunificationOverlay(),
-                  ],
-                ),
-              );
-            },
-          ),
+                return MediaQuery(
+                  data: MediaQuery.of(
+                    context,
+                  ).copyWith(textScaler: TextScaler.linear(effectiveScale)),
+                  child: Stack(
+                    children: [
+                      const AliceShell(),
+                      // Mounted one frame late ON PURPOSE: SetupOverlay reads
+                      // SetupService/BackendManager and RemoteLockOverlay
+                      // consumes WebServerHost — whose provider reads ~15
+                      // others — so building them in the FIRST frame defeated
+                      // every lazy provider and constructed the whole service
+                      // graph (process spawns, dir scans, DB loads) before
+                      // anything had painted. One frame (~16 ms) later is
+                      // imperceptible; first paint no longer waits on it.
+                      if (_overlaysArmed) const SetupOverlay(),
+                      if (_overlaysArmed) const RemoteLockOverlay(),
+                      if (_isDbCorrupt) _buildCorruptionOverlay(),
+                      if (_isMigrating) _buildMigrationOverlay(),
+                      if (_isReunifying) _buildReunificationOverlay(),
+                    ],
+                  ),
+                );
+              },
+            ),
           ),
         );
       },

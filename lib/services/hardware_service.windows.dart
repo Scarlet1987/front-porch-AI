@@ -22,6 +22,27 @@ part of 'hardware_service.dart';
 /// (nvidia-smi, registry, WMI, nvidia-smi sweep) plus shared-memory
 /// (iGPU/APU) resolution.
 extension HardwareServiceWindows on HardwareService {
+  /// Lightweight vendor-only probe via a single registry read. Used by
+  /// [detectHardware] BEFORE [_checkDrivers] so the nvidia-smi probe can be
+  /// skipped on AMD/Intel hardware. Returns the vendor or null when the
+  /// probe fails (caller falls back to probing).
+  Future<String?> _probeWindowsVendor() async {
+    try {
+      final result = await Process.run('powershell', [
+        '-command',
+        r"Get-ItemProperty 'HKLM:\SYSTEM\ControlSet001\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\*' -ErrorAction SilentlyContinue | Select-Object -ExpandProperty DriverDesc",
+      ]);
+      final output = result.stdout.toString();
+      for (final line in output.split('\n')) {
+        final vendor = _vendorFromName(line.trim());
+        if (vendor != 'Unknown') return vendor;
+      }
+      return null;
+    } catch (_) {
+      return null;
+    }
+  }
+
   Future<void> _detectWindows() async {
     String gpuName = 'Unknown GPU';
     int vramMb = 0;

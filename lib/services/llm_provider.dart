@@ -335,7 +335,26 @@ class LLMProvider extends ChangeNotifier {
   }
 
   void _syncFromStorage() {
-    final typeStr = _storageService.backendSettings.backendType;
+    final settings = _storageService.backendSettings;
+    // Dedup: skip the whole reconfiguration when nothing this method reads
+    // has changed since the last run. Startup fires this 3-4 times
+    // (constructor, storage-init notify, superGrok-load notify) with
+    // identical inputs — each one reconfigured backends and pinged the
+    // remote endpoint for nothing. The worker vault key is included: a key
+    // typed into the vault must still reconfigure the worker remote
+    // (see _syncWorkerFromStorage's identity, which keys on it too).
+    final workerUrl = _storageService.workerRemoteApiUrl;
+    final workerKey = _storageService.remoteApiKeyFor(workerUrl);
+    final syncKey =
+        '${settings.backendType}|${settings.remoteApiUrl}|'
+        '${settings.remoteModelName}|${settings.remoteApiKey}|'
+        '${settings.activeKcppsPath}|${settings.lastUsedModelPath}|'
+        '${_storageService.workerBackendType}|'
+        '$workerUrl|$workerKey';
+    if (syncKey == _lastSyncKey) return;
+    _lastSyncKey = syncKey;
+
+    final typeStr = settings.backendType;
     BackendType newType;
     switch (typeStr) {
       case 'openRouter':
@@ -400,6 +419,12 @@ class LLMProvider extends ChangeNotifier {
   /// Last model-identity string synced from storage; used to clear stale
   /// capability verdicts on change (see [_syncFromStorage]).
   String? _lastModelIdentity;
+
+  /// Snapshot of every storage input [_syncFromStorage] reads, used to skip
+  /// redundant syncs. Startup fires this method 3-4 times (constructor call,
+  /// storage-init notify, superGrok-load notify) with identical inputs — each
+  /// one reconfigures backends and pings the remote endpoint for nothing.
+  String? _lastSyncKey;
 
   /// Switch the active backend and persist the choice.
   /// Does NOT start or stop any processes — that is handled by the caller (UI).

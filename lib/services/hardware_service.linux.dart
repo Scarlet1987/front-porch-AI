@@ -21,6 +21,36 @@ part of 'hardware_service.dart';
 /// Linux GPU / VRAM / RAM detection (lspci, sysfs, nvidia-smi) and the
 /// distro-family probe the backend downloader keys off.
 extension HardwareServiceLinux on HardwareService {
+  /// Lightweight vendor-only probe (lspci + name matching). Used by
+  /// [detectHardware] BEFORE [_checkDrivers] so the nvidia-smi probe can be
+  /// skipped entirely on AMD/Intel hardware — no wasted process spawn, no
+  /// noisy "nvidia-smi not on PATH" log on every launch.
+  /// Returns 'Nvidia', 'AMD', 'Intel', 'Unknown', or null when lspci is
+  /// unavailable (caller then falls back to probing).
+  Future<String?> _probeLinuxVendor() async {
+    try {
+      final lspci = await Process.run('lspci', []);
+      if (lspci.exitCode != 0) return null;
+      final lines = lspci.stdout.toString().split('\n');
+      String? vgaCandidate;
+      String? threeDCandidate;
+      for (final line in lines) {
+        if (line.contains('VGA') || line.contains('Display controller')) {
+          vgaCandidate ??= line;
+        } else if (line.contains('3D controller')) {
+          threeDCandidate ??= line;
+        }
+      }
+      final gpuLine = threeDCandidate ?? vgaCandidate;
+      if (gpuLine == null) return null;
+      var gpuName = gpuLine.substring(gpuLine.indexOf(':') + 1).trim();
+      gpuName = gpuName.replaceAll(RegExp(r'\[.*?\]'), '').trim();
+      return _vendorFromName(gpuName);
+    } catch (_) {
+      return null;
+    }
+  }
+
   Future<void> _detectLinux() async {
     String gpuName = 'Unknown GPU';
     int vramMb = 0;

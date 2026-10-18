@@ -23,6 +23,7 @@ import 'package:flutter/widgets.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:front_porch_ai/app_version.dart';
 import 'package:front_porch_ai/models/models.dart';
+import 'package:front_porch_ai/services/hardware_audit.dart';
 import 'package:front_porch_ai/utils/utils.dart';
 
 // HardwareInfo moved to models/hardware_info.dart (this file was one edit
@@ -183,7 +184,33 @@ class HardwareService extends ChangeNotifier {
     notifyListeners();
     final traceStart = DateTime.now();
 
-    await _checkDrivers();
+    // Prefer the startup hardware audit when it ran: it already probed
+    // vendor, VRAM, RAM, CUDA, and ROCm with fallbacks, so re-probing here
+    // would just spawn duplicate subprocesses. Fall back to local probing
+    // when the audit didn't run (tests, headless use).
+    final audit = HardwareAudit.current;
+    String? vendor = audit?.gpuVendor;
+    if (audit != null) {
+      _hasCuda = audit.hasCuda;
+      _hasRocm = audit.hasRocm;
+      StartupTrace.mark('HardwareService: consumed HardwareAudit');
+    }
+    // Vendor probe (skipped when the audit already named the vendor):
+    // _checkDrivers() spawns nvidia-smi, which is wasted and noisy on
+    // AMD/Intel machines. Knowing the vendor upfront skips it entirely
+    // on non-NVIDIA hardware.
+    if (vendor == null || vendor == 'Unknown' || vendor == 'None') {
+      if (Platform.isLinux) {
+        vendor = await _probeLinuxVendor();
+      } else if (Platform.isWindows) {
+        vendor = await _probeWindowsVendor();
+      }
+    }
+    // Driver probe (skipped when the audit already answered): sets _hasCuda
+    // / _hasRocm via nvidia-smi / rocminfo.
+    if (audit == null) {
+      await _checkDrivers(vendor: vendor);
+    }
     StartupTrace.mark('HardwareService._checkDrivers');
 
     try {
@@ -220,6 +247,14 @@ class HardwareService extends ChangeNotifier {
 
   bool _hasCuda = false;
   bool _hasRocm = false;
+
+  /// Whether an NVIDIA GPU with working drivers was detected (nvidia-smi).
+  /// Read by BackendManager to pick the right KoboldCpp binary — it no
+  /// longer spawns its own duplicate nvidia-smi probe.
+  bool get hasCuda => _hasCuda;
+
+  /// Whether the ROCm runtime was detected (Linux, advisory only).
+  bool get hasRocm => _hasRocm;
 
   /// Whether two GPU names coming from different Windows sources describe the
   /// same adapter.
@@ -286,14 +321,18 @@ class HardwareService extends ChangeNotifier {
     return 'Unknown';
   }
 
-  Future<void> _checkDrivers() async {
+  Future<void> _checkDrivers({String? vendor}) async {
     _hasCuda = false;
     _hasRocm = false;
 
-    // CUDA Check (nvidia-smi) — skip on macOS where it doesn't exist.
+    // CUDA Check (nvidia-smi) — skip on macOS where it doesn't exist, and
+    // skip entirely when the vendor probe already told us this isn't NVIDIA
+    // hardware (AMD/Intel boxes were spawning nvidia-smi just to watch it
+    // fail, on every launch).
     // Use _runNvidiaSmi() so we still detect CUDA when the driver installed
     // nvidia-smi only under NVSMI/ (not in PATH).
-    if (!Platform.isMacOS) {
+    final isNvidia = vendor == null || vendor == 'Nvidia';
+    if (!Platform.isMacOS && isNvidia) {
       final res = await _runNvidiaSmi([]);
       if (res != null) _hasCuda = true;
     }

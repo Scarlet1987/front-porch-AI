@@ -25,6 +25,7 @@ import 'package:path/path.dart' as path;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:front_porch_ai/services/kobold/kobold.dart';
 import 'package:front_porch_ai/services/storage_service.dart';
+import 'package:front_porch_ai/services/hardware_service.dart';
 import 'package:front_porch_ai/services/update_service.dart';
 import 'package:front_porch_ai/utils/utils.dart';
 
@@ -62,7 +63,12 @@ class BackendManager extends ChangeNotifier {
   /// the start-up gate reads [backendPath] only after this.
   final Completer<void> _engineChecked = Completer<void>();
   bool _useRocm = false;
-  bool _hasCuda = false;
+
+  /// CUDA availability, sourced from HardwareService when wired (it already
+  /// probes nvidia-smi once during its own detection). Falls back to false
+  /// when HardwareService isn't available — the download logic then picks
+  /// the universal nocuda binary, which runs everywhere.
+  bool get _hasCuda => _hardwareService?.hasCuda ?? false;
   // Detected once. When the CPU lacks AVX2 (older/low-end PCs), KoboldCpp's
   // standard + nocuda builds crash on launch, so we fetch its `oldpc` build
   // instead (per KoboldCpp: "Cuda11 + AVX1" — it keeps CUDA 11 GPU offload for
@@ -121,14 +127,34 @@ class BackendManager extends ChangeNotifier {
   final bool _onMac;
   final Future<String?> Function() _readArch;
 
+  /// HardwareService, when provided (production wiring in main.providers.dart).
+  /// Used for CUDA/ROCm status instead of spawning duplicate nvidia-smi /
+  /// rocminfo probes — HardwareService already does that detection once.
+  /// Null in tests that don't wire it; [_hasCuda] then stays false (safe:
+  /// download logic picks the universal nocuda binary).
+  final HardwareService? _hardwareService;
+
   /// [onMac] and [readArch] stand in for the machine in tests.
+  /// [hardwareService] supplies CUDA/ROCm status in production (wired in
+  /// main.providers.dart) so BackendManager doesn't spawn duplicate probes.
   BackendManager(
     this._storageService, {
     @visibleForTesting bool? onMac,
     @visibleForTesting Future<String?> Function()? readArch,
+    HardwareService? hardwareService,
   }) : _onMac = onMac ?? Platform.isMacOS,
-       _readArch = readArch ?? _uname {
-    _init();
+       _readArch = readArch ?? _uname,
+       _hardwareService = hardwareService {
+    // Don't _init() here: _storageService.backendSettings reads null until
+    // StorageService finishes loading, so the first init saw useRocm=null
+    // (logged false) and the storage-ready notify re-ran it (logged true) —
+    // the ROCm flip-flop. Defer until storage is ready; the
+    // _onStorageChanged listener below still catches later mutations.
+    unawaited(
+      _storageService.initialized.then((_) {
+        if (!_disposed) _init();
+      }),
+    );
     _storageService.addListener(_onStorageChanged); // React to path changes
   }
 
@@ -182,17 +208,9 @@ class BackendManager extends ChangeNotifier {
     } else if (!_archRead.isCompleted) {
       _archRead.complete();
     }
-    // Detect GPU acceleration availability on Linux
+    // GPU acceleration status comes from HardwareService (which probes once
+    // during its own detection) — no duplicate nvidia-smi spawn here.
     if (Platform.isLinux) {
-      // Check for NVIDIA/CUDA
-      try {
-        final cudaRes = await Process.run('nvidia-smi', []);
-        _hasCuda = cudaRes.exitCode == 0;
-        print('AG_DEBUG: CUDA detected: $_hasCuda');
-      } catch (_) {
-        _hasCuda = false;
-        print('AG_DEBUG: CUDA not found (nvidia-smi not available)');
-      }
       // ROCm is an explicit expert opt-in ONLY (see GpuBackendResolver's
       // policy note) — rocminfo succeeding is not proof koboldcpp's hipblas
       // kernels support the card, and auto-selecting it used to hand AMD
