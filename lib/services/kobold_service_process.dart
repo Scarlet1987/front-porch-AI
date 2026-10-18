@@ -98,6 +98,12 @@ extension KoboldServiceProcess on KoboldService {
       final unusable = await _unusableStart(executablePath, modelPath);
       if (unusable != null) return _refuse(unusable);
 
+      // Harness memory budget: refuse a start the budget cannot hold, after
+      // giving idle engines a chance to make room. Model weights are not in
+      // this number — the VRAM budget owns those.
+      final budgetRefusal = await _memoryBudgetRefusal();
+      if (budgetRefusal != null) return _refuse(budgetRefusal);
+
       // Store the executable path for cleanup
       _executablePath = executablePath;
 
@@ -231,6 +237,42 @@ extension KoboldServiceProcess on KoboldService {
     );
   }
 
+  /// Null when the harness budget holds another engine start; otherwise
+  /// plain words saying so. Over budget, idle engines are asked to release
+  /// memory first (the image engine parks its weights), then it is checked
+  /// again — a start is never refused for memory another engine was holding
+  /// idly. A broken reading fails open: the budget is advisory, the VRAM
+  /// fit math still guards the launch.
+  Future<String?> _memoryBudgetRefusal() async {
+    int budget;
+    try {
+      budget = _storageService.engineResourcesSettings.totalMemoryBudgetMb;
+    } catch (e) {
+      debugPrint('[Memory] budget unreadable, start allowed: $e');
+      return null;
+    }
+    bool fits() =>
+        MemoryBudget.estimateNow().totalMb + kKoboldHarnessOverheadMb <= budget;
+    if (fits()) return null;
+    final usedMb = MemoryBudget.estimateNow().totalMb;
+    debugPrint(
+      '[Memory] over harness budget '
+      '(${(usedMb / 1024).toStringAsFixed(1)}GB > '
+      '${(budget / 1024).toStringAsFixed(1)}GB), freeing idle engines',
+    );
+    final free = freeEnginesForBudget;
+    if (free != null) {
+      try {
+        await free();
+      } catch (e) {
+        debugPrint('[Memory] freeing idle engines failed: $e');
+      }
+    }
+    if (fits()) return null;
+    return MemoryBudget.estimateNow().shortfallMessage(budget) ??
+        'The engine could not start: memory is over budget.';
+  }
+
   /// Spawns the process and wires its output, readiness and exit. A program
   /// that cannot be run is a refusal, not a throw. [generation] is the start's
   /// own number: a Stop pressed while it was being prepared changed it, and
@@ -269,6 +311,10 @@ extension KoboldServiceProcess on KoboldService {
       _isRunning = true;
       _modelLoadingStatus = 'Initializing model...';
       _modelReady = false;
+      MemoryBudget.reportEngine(
+        MemoryBudget.textEngine,
+        const EngineFootprint(ramMb: kKoboldHarnessOverheadMb),
+      );
       _speed.loads.started();
       _loadedModelPath = modelPath.isNotEmpty
           ? modelPath
@@ -333,6 +379,7 @@ extension KoboldServiceProcess on KoboldService {
         _isRunning = false;
         _process = null;
         _residentKey = null;
+        MemoryBudget.clearEngine(MemoryBudget.textEngine);
         _loadGeneration++;
         _idleStop(); // as a stop does: nothing to unload or load back
 
@@ -457,6 +504,7 @@ extension KoboldServiceProcess on KoboldService {
     _isRunning = false;
     _modelLoadingStatus = '';
     _modelReady = false;
+    MemoryBudget.clearEngine(MemoryBudget.textEngine);
     _loadedModelPath = null;
     _loadedKcppsPath = null;
     _residentKey = null;

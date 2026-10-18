@@ -21,6 +21,7 @@ import 'package:front_porch_ai/ui/settings/widgets/dead_dove/dead_dove_panel.dar
 import 'package:front_porch_ai/ui/theme/app_colors.dart';
 
 part 'alice_settings_engine.dart';
+part 'alice_settings_engine_budget.dart';
 part 'alice_settings_zones.dart';
 part 'alice_settings_about.dart';
 

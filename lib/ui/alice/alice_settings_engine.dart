@@ -39,6 +39,8 @@ class AliceEngineResourcesCard extends StatelessWidget {
           const SizedBox(height: 14),
           const _LiveMemoryBars(),
           const SizedBox(height: 14),
+          const _MemoryBudgetSection(),
+          const SizedBox(height: 14),
           _PlacementRow(
             title: 'Text engine placement',
             helper:

@@ -32,6 +32,7 @@ import 'package:front_porch_ai/models/models.dart';
 import 'package:front_porch_ai/services/llm_service.dart';
 import 'package:front_porch_ai/services/kobold_service.dart';
 import 'package:front_porch_ai/services/hardware_service.dart';
+import 'package:front_porch_ai/services/memory_budget.dart';
 import 'package:front_porch_ai/services/grpc/draw_things_grpc_service.dart';
 import 'package:front_porch_ai/services/image_prompt/image_prompt.dart';
 import 'package:front_porch_ai/services/comfy_ui_service.dart';
@@ -154,7 +155,6 @@ class ImageGenService extends ChangeNotifier {
   /// creator pack's "Switching to edit model" stage). No-op on every other
   /// backend — DT/remote load-unload per request on their own.
   Future<void> nudgeComfyFree() => _nudgeComfyFreeImpl();
-
 
   /// Fetch available image models.
   ///
@@ -394,6 +394,38 @@ class ImageGenService extends ChangeNotifier {
   /// Returns true if the server acknowledged the unload (HTTP 200).
   Future<bool> unloadLocalModel(String baseUrl) =>
       _unloadLocalModelImpl(baseUrl);
+
+  /// Best-effort memory release for the harness budget: when no generation
+  /// is running, ask the local image server to drop its weights from VRAM
+  /// (ComfyUI /free, A1111 / Draw Things unload-checkpoint). Remote
+  /// backends hold nothing local. Returns true when anything was released.
+  /// Used by the budget gate before a text-engine start and the Settings
+  /// "Free up memory" button — never mid-generation.
+  Future<bool> releaseMemoryForBudget() async {
+    if (_isGenerating) return false;
+    final backend = ImageGenBackend.fromKey(
+      _storage.imageGenSettings.imageGenBackend,
+    );
+    try {
+      switch (backend) {
+        case ImageGenBackend.comfyUi:
+          await _comfyUi?.freeMemory();
+        case ImageGenBackend.a1111:
+        case ImageGenBackend.drawThings:
+          final url = _storage.imageGenSettings.localImageGenUrl;
+          if (url.isEmpty) return false;
+          await unloadLocalModel(url);
+        case ImageGenBackend.remote:
+          return false;
+      }
+    } catch (e) {
+      debugPrint('[Memory] image weight release failed: $e');
+      return false;
+    }
+    MemoryBudget.clearEngine(MemoryBudget.imageEngine);
+    debugPrint('[Memory] image engine weights released for the budget.');
+    return true;
+  }
 
   /// Switch the active checkpoint on a local A1111 / Draw Things server.
   ///

@@ -101,6 +101,10 @@ extension _ImageGenGenerate on ImageGenService {
     );
     try {
       Uint8List imageBytes;
+      // Harness budget pressure runs before the VRAM arbitration: an idle
+      // text engine unloads when the app is over budget. Nested pack frames
+      // skip too — the flight already handled it.
+      if (!nested) await _releaseForHarnessBudget(backend);
       // Dual-engine arbitration: before a local backend touches VRAM, make
       // sure the text engine isn't squatting on it. Remote backends skip.
       // Nested pack frames skip too — the flight already arbitrated.

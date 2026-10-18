@@ -8,6 +8,8 @@
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 
+import 'package:front_porch_ai/services/memory_budget.dart';
+
 import 'settings_base.dart';
 
 /// Where an engine keeps its heavyweight memory.
@@ -66,10 +68,23 @@ class EngineResourcesSettings with SettingsBase {
   /// split with safety headroom).
   int _vramBudgetMb = 0;
 
+  /// Total harness memory budget in MB for the whole app: its own RAM plus
+  /// the engines' harness-side overhead. Default 2048 (2 GB); the user can
+  /// raise it in Settings → Engine resources. Model weights and KV cache
+  /// are NOT in this number — they live in the VRAM budget above.
+  int _totalMemoryBudgetMb = kDefaultMemoryBudgetMb;
+
+  /// Free VRAM headroom in MB a local image model wants before a generation
+  /// unloads the idle text engine to make room. Was a hardcoded constant in
+  /// the arbitration; a setting now so the threshold is visible and tunable.
+  int _imageModelHeadroomMb = 2048;
+
   EngineMemoryPlacement get textKvCache => _textKvCache;
   EngineMemoryPlacement get imageWeights => _imageWeights;
   bool get queueWithBackpressure => _queueWithBackpressure;
   int get vramBudgetMb => _vramBudgetMb;
+  int get totalMemoryBudgetMb => _totalMemoryBudgetMb;
+  int get imageModelHeadroomMb => _imageModelHeadroomMb;
 
   void load() {
     _textKvCache = EngineMemoryPlacementLabel.fromName(
@@ -81,6 +96,11 @@ class EngineResourcesSettings with SettingsBase {
     _queueWithBackpressure =
         prefs?.getBool(k('engine_queue_backpressure')) ?? true;
     _vramBudgetMb = prefs?.getInt(k('engine_vram_budget_mb')) ?? 0;
+    _totalMemoryBudgetMb =
+        prefs?.getInt(k('engine_total_memory_budget_mb')) ??
+        kDefaultMemoryBudgetMb;
+    _imageModelHeadroomMb =
+        prefs?.getInt(k('engine_image_headroom_mb')) ?? 2048;
   }
 
   Future<void> setTextKvCache(EngineMemoryPlacement value) async {
@@ -123,6 +143,22 @@ class EngineResourcesSettings with SettingsBase {
     if (_vramBudgetMb == v) return;
     _vramBudgetMb = v;
     await prefs?.setInt(k('engine_vram_budget_mb'), v);
+    notify();
+  }
+
+  Future<void> setTotalMemoryBudgetMb(int value) async {
+    final v = value.clamp(512, 131072);
+    if (_totalMemoryBudgetMb == v) return;
+    _totalMemoryBudgetMb = v;
+    await prefs?.setInt(k('engine_total_memory_budget_mb'), v);
+    notify();
+  }
+
+  Future<void> setImageModelHeadroomMb(int value) async {
+    final v = value.clamp(0, 65536);
+    if (_imageModelHeadroomMb == v) return;
+    _imageModelHeadroomMb = v;
+    await prefs?.setInt(k('engine_image_headroom_mb'), v);
     notify();
   }
 }

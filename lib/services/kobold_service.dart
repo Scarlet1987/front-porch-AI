@@ -30,6 +30,7 @@ import 'package:front_porch_ai/services/kobold_launch_args.dart';
 import 'package:front_porch_ai/services/kobold_process_control.dart';
 import 'package:front_porch_ai/services/kobold_system_role.dart';
 import 'package:front_porch_ai/services/live_gen_progress.dart';
+import 'package:front_porch_ai/services/memory_budget.dart';
 import 'package:front_porch_ai/services/model_file_check.dart';
 import 'package:front_porch_ai/services/storage_service.dart';
 import 'package:front_porch_ai/services/llm_service.dart';
@@ -106,6 +107,11 @@ class KoboldService extends ChangeNotifier
 
   /// Reads the free graphics and system memory, before a launch.
   Future<FreeMemoryMb?> Function()? readFreeMemory;
+
+  /// Asked to release other engines' memory before a start the harness
+  /// budget cannot hold (the image service parks its weights through this).
+  /// Wired in main.providers.dart; null in tests that don't wire it.
+  Future<bool> Function()? freeEnginesForBudget;
 
   /// What [readFreeMemory] said before the running engine started: what
   /// the model loaded into. Swaps tune with it too, so a swap back to the
@@ -229,6 +235,7 @@ class KoboldService extends ChangeNotifier
       return false;
     }
   }
+
   @override
   String get backendName => 'KoboldCPP';
 

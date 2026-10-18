@@ -21,6 +21,7 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:front_porch_ai/services/gpu_backend_resolver.dart';
+import 'package:front_porch_ai/services/memory_budget.dart';
 
 /// Capability tiers by VRAM. Elaina's 8GB baseline sits at the top of
 /// 'standard' — the tier the engine budget enforcement is tuned for.
@@ -132,6 +133,31 @@ class HardwareProfile {
     return 'Not enough VRAM for $what: it needs ${needGb}GB but this '
         'machine has ${haveGb}GB. Try a smaller model, or switch to a '
         'remote backend in Settings.';
+  }
+
+  /// Alice's harness memory budget in MB: the app itself (its process,
+  /// caches, queued work) plus the engines' harness-side overhead stays
+  /// within 2 GB. Model weights and KV cache are NOT in this number — they
+  /// live in the VRAM budget the fit math manages. A getter, not a field:
+  /// the cap is a product decision, not per-machine hardware. The user can
+  /// raise it in Settings → Engine resources.
+  int get memoryBudgetMb => 2048;
+
+  /// True when a harness-side allocation of [ramMb] system RAM plus [vramMb]
+  /// VRAM fits inside the [memoryBudgetMb] cap. This is the app's budget,
+  /// not the machine's capacity — it says nothing about what the hardware
+  /// has free.
+  bool fitsInBudget({required int ramMb, required int vramMb}) =>
+      ramMb + vramMb <= memoryBudgetMb;
+
+  /// Plain words when an allocation does not fit the budget, for the UI or
+  /// a log line instead of a crash. Null when it fits.
+  String? budgetShortfallMessage({required int ramMb, required int vramMb}) {
+    if (fitsInBudget(ramMb: ramMb, vramMb: vramMb)) return null;
+    return MemoryBudget.shortfallMessage(
+      usedMb: ramMb + vramMb,
+      budgetMb: memoryBudgetMb,
+    );
   }
 
   @override

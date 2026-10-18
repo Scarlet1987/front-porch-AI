@@ -449,6 +449,12 @@ Widget _buildRootWidget(AppDatabase db, bool needsMigration) {
             service.setHardwareService(
               Provider.of<HardwareService>(context, listen: false),
             );
+            // Budget gate: before a text-engine start the harness budget
+            // cannot hold, the image engine is asked to park its weights.
+            Provider.of<KoboldService>(
+              context,
+              listen: false,
+            ).freeEnginesForBudget = service.releaseMemoryForBudget;
             return service;
           },
           update: (context, storage, previous) {
@@ -459,6 +465,10 @@ Widget _buildRootWidget(AppDatabase db, bool needsMigration) {
             service.setHardwareService(
               Provider.of<HardwareService>(context, listen: false),
             );
+            Provider.of<KoboldService>(
+              context,
+              listen: false,
+            ).freeEnginesForBudget = service.releaseMemoryForBudget;
             return service;
           },
         ),

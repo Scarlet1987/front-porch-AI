@@ -49,8 +49,7 @@ extension ImageGenServiceQueue on ImageGenService {
   /// come. Called when a server login session ends.
   void teardownEngineSession(String sessionId) {
     var dropped = 0;
-    final doomed =
-        _imageQueue.where((e) => e.sessionId == sessionId).toList();
+    final doomed = _imageQueue.where((e) => e.sessionId == sessionId).toList();
     for (final entry in doomed) {
       entry.cancelled = true;
       _imageQueue.remove(entry);
@@ -60,7 +59,8 @@ extension ImageGenServiceQueue on ImageGenService {
     }
     if (dropped > 0) {
       debugPrint(
-          '[ImageGen] session ended: $dropped queued generation(s) dropped.');
+        '[ImageGen] session ended: $dropped queued generation(s) dropped.',
+      );
       _notify();
     }
     _pumpImageQueue();
@@ -102,6 +102,25 @@ extension ImageGenServiceQueue on ImageGenService {
     }
   }
 
+  /// Harness-budget pressure on the image path: when the app is over its
+  /// memory budget, the idle text engine unloads first (the same unload
+  /// the idle timer uses). The generation itself is never refused for
+  /// memory — the backpressure queue holds it until there is room.
+  Future<void> _releaseForHarnessBudget(ImageGenBackend backend) async {
+    if (backend == ImageGenBackend.remote) return;
+    final kobold = _koboldService;
+    if (kobold == null) return;
+    final budget = _storage.engineResourcesSettings.totalMemoryBudgetMb;
+    if (MemoryBudget.estimateNow().fitsInBudget(budget)) return;
+    final usedMb = MemoryBudget.estimateNow().totalMb;
+    debugPrint(
+      '[Memory] over harness budget '
+      '(${(usedMb / 1024).toStringAsFixed(1)}GB > '
+      '${(budget / 1024).toStringAsFixed(1)}GB), unloading idle text engine',
+    );
+    await kobold.unloadForEngineHandoff();
+  }
+
   /// Dual-engine VRAM arbitration, run when a LOCAL image generation
   /// starts. If KoboldCpp holds its model and free VRAM is below what an
   /// image model needs, unload the text engine first — the next text
@@ -120,9 +139,11 @@ extension ImageGenServiceQueue on ImageGenService {
       debugPrint('[ImageGen] VRAM read failed, skipping arbitration: $e');
       return;
     }
-    // Conservative headroom: an image model wants at least this much free.
-    const needMb = 2048;
-    if ((free.graphics ?? 0) >= needMb) return;
+    // Headroom a local image model wants free before it unloads the text
+    // engine to make room — a setting now, so the threshold is visible and
+    // tunable instead of a hardcoded constant.
+    final headroomMb = _storage.engineResourcesSettings.imageModelHeadroomMb;
+    if ((free.graphics ?? 0) >= headroomMb) return;
     _statusMessage = 'Freeing graphics memory from the text engine…';
     _notify();
     final unloaded = await kobold.unloadForEngineHandoff();
@@ -223,11 +244,11 @@ extension ImageGenServiceQueue on ImageGenService {
         size: size,
         referenceImage: referenceImage,
         model: model,
-      isPortrait: isPortrait,
-      seed: seed,
-      denoise: denoise,
-      intent: intent,
-      editStrength: editStrength,
+        isPortrait: isPortrait,
+        seed: seed,
+        denoise: denoise,
+        intent: intent,
+        editStrength: editStrength,
       );
     } finally {
       // A direct-path generation finishing is what unblocks the queue:
