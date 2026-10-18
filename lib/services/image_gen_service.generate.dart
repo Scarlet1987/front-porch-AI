@@ -96,12 +96,11 @@ extension _ImageGenGenerate on ImageGenService {
       if (w > h) size = '${h}x$w';
     }
 
+    final backend = ImageGenBackend.fromKey(
+      _storage.imageGenSettings.imageGenBackend,
+    );
     try {
       Uint8List imageBytes;
-
-      final backend = ImageGenBackend.fromKey(
-        _storage.imageGenSettings.imageGenBackend,
-      );
       // Dual-engine arbitration: before a local backend touches VRAM, make
       // sure the text engine isn't squatting on it. Remote backends skip.
       // Nested pack frames skip too — the flight already arbitrated.

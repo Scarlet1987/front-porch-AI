@@ -211,3 +211,4 @@ extension ImageGenServiceQueue on ImageGenService {
     editStrength: editStrength,
   );
 }
+}
