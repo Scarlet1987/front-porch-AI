@@ -1,0 +1,486 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Rabbit Hole — Alice edition of Front Porch AI</title>
+<style>
+  :root{
+    --bg:#04231f; --card:#08302a; --surface:#0b3a33; --sunken:#03201b;
+    --border:#1c554b; --border-soft:#123f37;
+    --ink:#f2faf8; --ink-2:rgba(255,255,255,.74); --ink-3:rgba(255,255,255,.48);
+    --teal:#2dd4bf; --teal-dark:#0e7a6d; --teal-ink:#032520;
+    --pink:#fb8fab; --blue:#7dd3fc; --rose:#f472b6;
+    --good:#4ade80; --warn:#facc15;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:var(--bg); color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,"Helvetica Neue",Arial,sans-serif;
+    line-height:1.6; -webkit-font-smoothing:antialiased;
+  }
+  a{color:var(--teal); text-decoration:none;}
+  a:hover{text-decoration:underline;}
+
+  .wrap{max-width:1080px; margin:0 auto; padding:0 24px;}
+
+  /* ── Nav ── */
+  nav{
+    position:sticky; top:0; z-index:50;
+    background:rgba(4,35,31,.92); backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--border-soft);
+  }
+  nav .wrap{display:flex; align-items:center; gap:28px; height:64px;}
+  .brand{display:flex; align-items:center; gap:12px; font-weight:800; font-size:1.15rem; color:var(--ink);}
+  .brand:hover{text-decoration:none;}
+  .brand .hole{
+    width:32px; height:32px; border-radius:50%;
+    background:radial-gradient(circle at 50% 42%, #03201b 0 34%, var(--teal) 35% 58%, var(--teal-dark) 59% 100%);
+    box-shadow:0 0 18px rgba(45,212,191,.45);
+    flex:none;
+  }
+  nav .links{margin-left:auto; display:flex; gap:22px; font-size:.95rem;}
+  nav .links a{color:var(--ink-2);}
+  nav .links a:hover{color:var(--teal); text-decoration:none;}
+  @media(max-width:640px){ nav .links{display:none;} }
+
+  /* ── Hero ── */
+  .hero{padding:96px 0 72px; text-align:center; position:relative; overflow:hidden;}
+  .hero::before{
+    content:""; position:absolute; inset:-40%;
+    background:radial-gradient(ellipse at 50% 0%, rgba(45,212,191,.14), transparent 55%);
+    pointer-events:none;
+  }
+  .hero .kicker{
+    display:inline-block; font-size:.8rem; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--teal); border:1px solid var(--border); border-radius:999px;
+    padding:6px 16px; margin-bottom:24px; background:rgba(45,212,191,.06);
+  }
+  .hero h1{font-size:clamp(2.4rem,6vw,4rem); font-weight:800; letter-spacing:-.02em; line-height:1.1;}
+  .hero h1 .teal{color:var(--teal);}
+  .hero p.sub{max-width:640px; margin:20px auto 0; font-size:1.15rem; color:var(--ink-2);}
+  .hero .cta{margin-top:36px; display:flex; gap:14px; justify-content:center; flex-wrap:wrap;}
+  .btn{
+    display:inline-flex; align-items:center; gap:10px;
+    padding:14px 28px; border-radius:12px; font-weight:700; font-size:1rem;
+    transition:transform .12s ease, box-shadow .12s ease;
+  }
+  .btn:hover{text-decoration:none; transform:translateY(-1px);}
+  .btn-primary{background:var(--teal); color:var(--teal-ink); box-shadow:0 8px 24px rgba(45,212,191,.28);}
+  .btn-primary:hover{box-shadow:0 12px 32px rgba(45,212,191,.38);}
+  .btn-ghost{border:1px solid var(--border); color:var(--ink); background:rgba(255,255,255,.03);}
+  .btn-ghost:hover{border-color:var(--teal);}
+  .hero .meta{margin-top:22px; font-size:.85rem; color:var(--ink-3);}
+  .hero .meta code{
+    background:var(--sunken); border:1px solid var(--border-soft); border-radius:6px;
+    padding:2px 8px; font-size:.82rem; color:var(--teal);
+  }
+
+  /* ── Sections ── */
+  section{padding:72px 0;}
+  section.alt{background:var(--sunken); border-top:1px solid var(--border-soft); border-bottom:1px solid var(--border-soft);}
+  .sec-head{max-width:680px; margin-bottom:44px;}
+  .sec-head .eyebrow{font-size:.8rem; letter-spacing:.14em; text-transform:uppercase; color:var(--teal); margin-bottom:10px;}
+  .sec-head h2{font-size:clamp(1.6rem,3.5vw,2.3rem); font-weight:800; letter-spacing:-.01em;}
+  .sec-head p{color:var(--ink-2); margin-top:12px;}
+
+  /* ── Screenshots ── */
+  .shots{display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:20px;}
+  .shot{
+    background:var(--card); border:1px solid var(--border-soft); border-radius:16px;
+    overflow:hidden;
+  }
+  .shot .frame{
+    aspect-ratio:16/10; background:var(--sunken);
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px;
+    border-bottom:1px solid var(--border-soft); padding:24px; text-align:center;
+  }
+  .shot .frame .icon{font-size:2rem; opacity:.9;}
+  .shot .frame .ph{font-size:.85rem; color:var(--ink-3); max-width:220px;}
+  .shot .frame .mock{width:70%; height:8px; border-radius:4px; background:var(--surface);}
+  .shot .frame .mock.w40{width:40%;}
+  .shot .frame .mock.teal{background:rgba(45,212,191,.35);}
+  .shot .body{padding:16px 18px;}
+  .shot .body h3{font-size:1.02rem; font-weight:700;}
+  .shot .body p{font-size:.88rem; color:var(--ink-2); margin-top:6px;}
+  .shots-note{
+    margin-top:20px; font-size:.85rem; color:var(--ink-3);
+    border:1px dashed var(--border); border-radius:12px; padding:14px 18px;
+  }
+
+  /* ── Features ── */
+  .feats{display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:20px;}
+  .feat{
+    background:var(--card); border:1px solid var(--border-soft); border-radius:16px; padding:24px;
+  }
+  .feat .tag{
+    display:inline-block; font-size:.72rem; letter-spacing:.1em; text-transform:uppercase;
+    padding:4px 10px; border-radius:999px; margin-bottom:14px; font-weight:700;
+  }
+  .tag.engine{background:rgba(45,212,191,.12); color:var(--teal);}
+  .tag.ui{background:rgba(125,211,252,.12); color:var(--blue);}
+  .tag.safety{background:rgba(251,143,171,.12); color:var(--pink);}
+  .feat h3{font-size:1.08rem; margin-bottom:8px;}
+  .feat p, .feat li{font-size:.92rem; color:var(--ink-2);}
+  .feat ul{list-style:none; margin-top:10px; display:grid; gap:8px;}
+  .feat li{padding-left:22px; position:relative;}
+  .feat li::before{content:"✓"; position:absolute; left:0; color:var(--teal); font-weight:700;}
+
+  /* ── Install ── */
+  .install-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(320px,1fr)); gap:20px;}
+  .install-card{
+    background:var(--card); border:1px solid var(--border-soft); border-radius:16px; padding:28px;
+  }
+  .install-card h3{font-size:1.15rem; margin-bottom:6px; display:flex; align-items:center; gap:10px;}
+  .install-card .why{font-size:.88rem; color:var(--ink-2); margin-bottom:18px;}
+  .cmd{position:relative; background:#02120f; border:1px solid var(--border-soft); border-radius:10px; padding:16px 56px 16px 16px; margin:10px 0;}
+  .cmd code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.86rem; color:var(--teal); word-break:break-all;}
+  .cmd button{
+    position:absolute; right:10px; top:50%; transform:translateY(-50%);
+    background:var(--surface); border:1px solid var(--border); color:var(--ink-2);
+    border-radius:8px; padding:6px 12px; font-size:.78rem; cursor:pointer;
+  }
+  .cmd button:hover{color:var(--teal); border-color:var(--teal);}
+  .badge{
+    display:inline-block; font-size:.72rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase;
+    background:rgba(45,212,191,.12); color:var(--teal); border-radius:6px; padding:3px 10px; margin-left:8px;
+  }
+  .badge.soon{background:rgba(250,204,21,.1); color:var(--warn);}
+
+  /* ── Zones ── */
+  .zones{display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:20px; margin-top:8px;}
+  .zone{background:var(--card); border:1px solid var(--border-soft); border-radius:16px; padding:24px;}
+  .zone h3{font-size:1.05rem; margin-bottom:6px;}
+  .zone p{font-size:.9rem; color:var(--ink-2);}
+  .zone .level{font-size:.75rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; margin-bottom:10px; display:block;}
+  .zone.safe .level{color:var(--good);}
+  .zone.nsfw .level{color:var(--blue);}
+  .zone.dove .level{color:var(--pink);}
+
+  /* ── Credits ── */
+  .credit-card{
+    background:var(--card); border:1px solid var(--border); border-radius:20px; padding:40px;
+    text-align:center; max-width:720px; margin:0 auto;
+  }
+  .credit-card .avatar{
+    width:72px; height:72px; border-radius:50%; margin:0 auto 18px;
+    background:linear-gradient(135deg, var(--teal), var(--teal-dark));
+    display:flex; align-items:center; justify-content:center;
+    font-size:1.6rem; font-weight:800; color:var(--teal-ink);
+  }
+  .credit-card h3{font-size:1.4rem;}
+  .credit-card .role{color:var(--teal); font-weight:600; margin:6px 0 14px;}
+  .credit-card p{color:var(--ink-2); font-size:.95rem; max-width:560px; margin:0 auto;}
+
+  /* ── Links / footer ── */
+  .link-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:16px;}
+  .link-card{
+    background:var(--card); border:1px solid var(--border-soft); border-radius:14px; padding:20px;
+    display:block; color:var(--ink); transition:border-color .12s ease;
+  }
+  .link-card:hover{text-decoration:none; border-color:var(--teal);}
+  .link-card h3{font-size:1rem; margin-bottom:4px;}
+  .link-card p{font-size:.85rem; color:var(--ink-2);}
+  footer{border-top:1px solid var(--border-soft); padding:36px 0; margin-top:24px;}
+  footer .wrap{display:flex; flex-wrap:wrap; gap:16px; align-items:center; justify-content:space-between;}
+  footer p{font-size:.85rem; color:var(--ink-3);}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <a class="brand" href="#"><span class="hole"></span>Rabbit Hole</a>
+    <div class="links">
+      <a href="#screens">Screens</a>
+      <a href="#features">Features</a>
+      <a href="#install">Install</a>
+      <a href="#credits">Credits</a>
+      <a href="https://github.com/Scarlet1987/front-porch-AI/releases" target="_blank" rel="noopener">Releases</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ═══ HERO ═══ -->
+<header class="hero">
+  <div class="wrap">
+    <span class="kicker">Alice edition · v1.5.0-alice5</span>
+    <h1>Down the <span class="teal">Rabbit Hole</span></h1>
+    <p class="sub">Local-first AI character chat, re-engineered for speed and clarity. The app Front Porch AI was supposed to be — lightning-fast, laser-organized, honest about what it's doing.</p>
+    <div class="cta">
+      <a class="btn btn-primary" href="#install">⬇&nbsp; Get Rabbit Hole</a>
+      <a class="btn btn-ghost" href="https://github.com/Scarlet1987/front-porch-AI" target="_blank" rel="noopener">View source</a>
+    </div>
+    <p class="meta">Flatpak <code>io.github.scarlet1987.RabbitHole</code> · .deb for Debian/Ubuntu · AGPL-3.0</p>
+  </div>
+</header>
+
+<!-- ═══ SCREENS ═══ -->
+<section id="screens">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="eyebrow">The interface</div>
+      <h2>Designed, not decorated</h2>
+      <p>Five screens built from the ground up around one rule: if it doesn't make sense to the user, the user will complain or ignore it. No jargon walls, no buried settings.</p>
+    </div>
+    <div class="shots">
+      <div class="shot">
+        <div class="frame">
+          <div class="icon">🏠</div>
+          <div class="mock teal"></div><div class="mock"></div><div class="mock w40"></div>
+          <p class="ph">Screenshot placeholder — Home screen</p>
+        </div>
+        <div class="body">
+          <h3>Home — "On your porch"</h3>
+          <p>Your characters, recent sessions, and worlds at a glance. The front door, not a dashboard.</p>
+        </div>
+      </div>
+      <div class="shot">
+        <div class="frame">
+          <div class="icon">💬</div>
+          <div class="mock teal"></div><div class="mock w40"></div><div class="mock"></div>
+          <p class="ph">Screenshot placeholder — Chat screen</p>
+        </div>
+        <div class="body">
+          <h3>Chat</h3>
+          <p>Clean conversation view with mood, bond, and trust meters, journal access, and NPC join — nothing in the way of the story.</p>
+        </div>
+      </div>
+      <div class="shot">
+        <div class="frame">
+          <div class="icon">🎭</div>
+          <div class="mock"></div><div class="mock teal"></div><div class="mock w40"></div>
+          <p class="ph">Screenshot placeholder — Character Creator</p>
+        </div>
+        <div class="body">
+          <h3>Character Creator — MC / NPC / You</h3>
+          <p>Three tabs, zero confusion. Build your Main Character (Kardashev scale, gear, personality), draft NPCs with AI help, define yourself.</p>
+        </div>
+      </div>
+      <div class="shot">
+        <div class="frame">
+          <div class="icon">🌍</div>
+          <div class="mock w40"></div><div class="mock teal"></div><div class="mock"></div>
+          <p class="ph">Screenshot placeholder — Worlds screen</p>
+        </div>
+        <div class="body">
+          <h3>Worlds</h3>
+          <p>Stage → Universe → Planet → Continent → City. Your settings organized as a hierarchy you can actually navigate.</p>
+        </div>
+      </div>
+      <div class="shot">
+        <div class="frame">
+          <div class="icon">⚙️</div>
+          <div class="mock"></div><div class="mock"></div><div class="mock teal w40"></div>
+          <p class="ph">Screenshot placeholder — Settings screen</p>
+        </div>
+        <div class="body">
+          <h3>Settings</h3>
+          <p>Engine resources with live VRAM bars, content zones, the Dead Dove checklist, and pairing — all in plain language.</p>
+        </div>
+      </div>
+    </div>
+    <div class="shots-note">
+      📸 <strong>Screenshot slots are placeholders.</strong> Real captures from the running app go in each <code>.frame</code> above — replace the mock bars with <code>&lt;img&gt;</code> tags pointing at the five screen captures (recommended: 1600×1000 PNG).
+    </div>
+  </div>
+</section>
+
+<!-- ═══ FEATURES ═══ -->
+<section id="features" class="alt">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="eyebrow">Under the hood</div>
+      <h2>Good bones, rebuilt plumbing</h2>
+      <p>The original had the right vision and heavy execution. Alice keeps the vision and guts the engine room — the result is, in testing, lightning fast.</p>
+    </div>
+    <div class="feats">
+      <div class="feat">
+        <span class="tag engine">Engine</span>
+        <h3>FIFO queue with backpressure</h3>
+        <p>Image generations queue in order and never get dropped. No silent failures, no lost work.</p>
+      </div>
+      <div class="feat">
+        <span class="tag engine">Engine</span>
+        <h3>Dual-engine VRAM arbitration</h3>
+        <p>Text and image engines share 8 GB gracefully. Image weights park in RAM and stream to VRAM only during generation. Live health monitoring in the UI.</p>
+      </div>
+      <div class="feat">
+        <span class="tag engine">Engine</span>
+        <h3>Local-first, always</h3>
+        <p>Your models, worlds, and characters live on your machine. KoboldCpp managed in-app. No cloud required, no account needed.</p>
+      </div>
+      <div class="feat">
+        <span class="tag ui">Interface</span>
+        <h3>Three detail levels</h3>
+        <p>Simple, Balanced, Advanced — with progressive disclosure both ways. A mode is a default, never a cage.</p>
+      </div>
+      <div class="feat">
+        <span class="tag ui">Interface</span>
+        <h3>Main Character board</h3>
+        <p>Collapsible sections: Kardashev scale (with live gear checks), personality, appearance, voice, world. AI writes NPCs — you author the MC.</p>
+      </div>
+      <div class="feat">
+        <span class="tag ui">Interface</span>
+        <h3>Plain-English glossary</h3>
+        <p>MC, NPC, User — defined in-app, in words a new user actually understands. No jargon walls.</p>
+      </div>
+      <div class="feat">
+        <span class="tag safety">Content zones</span>
+        <h3>Your boundaries, your definitions</h3>
+        <p>Three zones at account creation (18+ gated where appropriate):</p>
+        <ul>
+          <li><strong>Safe Commons</strong> — full SFW guardrails</li>
+          <li><strong>NSFW</strong> — light guardrails</li>
+          <li><strong>Dead Dove</strong> — no app-added rails; you negotiate hard / soft / yellow limits plus Allow / Don't-allow lists</li>
+        </ul>
+      </div>
+      <div class="feat">
+        <span class="tag safety">Safety floor</span>
+        <h3>One invariant, total flexibility inside it</h3>
+        <p>A single non-negotiable floor — nothing enables sexual content involving minors, in any zone. Everything else is yours to define.</p>
+      </div>
+      <div class="feat">
+        <span class="tag ui">Design</span>
+        <h3>Flat, fast theme</h3>
+        <p>Deep teal, white, pink/blue accents. No runtime font fetching, no expensive per-card shadows. A skin should be colors, not compute.</p>
+      </div>
+    </div>
+
+    <div class="sec-head" style="margin-top:56px;">
+      <div class="eyebrow">Content zones</div>
+      <h2>Pick your porch</h2>
+    </div>
+    <div class="zones">
+      <div class="zone safe">
+        <span class="level">All ages</span>
+        <h3>Safe Commons</h3>
+        <p>Full SFW guardrails. The front porch everyone can sit on.</p>
+      </div>
+      <div class="zone nsfw">
+        <span class="level">18+</span>
+        <h3>NSFW</h3>
+        <p>Light guardrails for adult storytelling. Your characters, your call.</p>
+      </div>
+      <div class="zone dove">
+        <span class="level">18+</span>
+        <h3>Dead Dove</h3>
+        <p>Zero app-added rails. Negotiate your own limits — hard, soft, yellow — compiled into the model's instructions. Framed like consent negotiation, because that's what it is.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ INSTALL ═══ -->
+<section id="install">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="eyebrow">Get it</div>
+      <h2>One file, every distro</h2>
+      <p>Rabbit Hole ships as a Flatpak — a single universal installer for all of Linux. A .deb is available for Debian/Ubuntu-family systems.</p>
+    </div>
+    <div class="install-grid">
+      <div class="install-card">
+        <h3>📦 Flatpak <span class="badge">Recommended</span></h3>
+        <p class="why">Universal Linux installer. No root needed. Works on Debian, Fedora, Arch, openSUSE — all of them.</p>
+        <div class="cmd"><code>flatpak install --user RabbitHole.flatpak</code><button onclick="copyCmd(this)">Copy</button></div>
+        <div class="cmd"><code>flatpak run io.github.scarlet1987.RabbitHole</code><button onclick="copyCmd(this)">Copy</button></div>
+        <p class="why" style="margin:14px 0 0;">Or grab it from the <a href="https://github.com/Scarlet1987/front-porch-AI/releases" target="_blank" rel="noopener">releases page</a>. Flathub listing <span class="badge soon">Coming soon</span></p>
+      </div>
+      <div class="install-card">
+        <h3>🐧 .deb <span class="badge">Debian / Ubuntu</span></h3>
+        <p class="why">For Pop!_OS, Ubuntu, Mint, Debian. Installs to <code>/opt</code>, launcher in your app menu.</p>
+        <div class="cmd"><code>sudo apt install ./front-porch-ai_1.5.0-alice5_amd64.deb</code><button onclick="copyCmd(this)">Copy</button></div>
+        <div class="cmd"><code>front-porch-ai</code><button onclick="copyCmd(this)">Copy</button></div>
+        <p class="why" style="margin:14px 0 0;">Uninstalls cleanly with <code>sudo apt remove front-porch-ai</code>. Your data in <code>~/.local/share</code> is preserved unless you clear it.</p>
+      </div>
+    </div>
+    <div class="sec-head" style="margin-top:48px;">
+      <div class="eyebrow">Requirements</div>
+      <h2>What you need</h2>
+    </div>
+    <div class="feats">
+      <div class="feat"><h3>🖥️ Linux x86_64</h3><p>Any modern distro (Flatpak) or Debian-family (.deb).</p></div>
+      <div class="feat"><h3>🎮 8 GB VRAM</h3><p>Recommended. The engine layer enforces a budget so it stays smooth on ordinary hardware.</p></div>
+      <div class="feat"><h3>🧠 KoboldCpp</h3><p>Backend for text generation — managed in-app, no separate setup.</p></div>
+      <div class="feat"><h3>🎨 Image backend <span style="color:var(--ink-3); font-weight:400;">(optional)</span></h3><p>A1111, Forge, or ComfyUI running locally for image generation.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ CREDITS ═══ -->
+<section id="credits" class="alt">
+  <div class="wrap">
+    <div class="sec-head" style="text-align:center; margin-left:auto; margin-right:auto;">
+      <div class="eyebrow">Credits</div>
+      <h2>The review that should have happened</h2>
+    </div>
+    <div class="credit-card">
+      <div class="avatar">S</div>
+      <h3>Scarlet1987</h3>
+      <div class="role">Alice edition design lead</div>
+      <p>Engine overhaul · GUI redesign · Dead Dove negotiated-limits model · Main Character board · Kardashev system. Every "this doesn't make sense to the user," every bug caught in a terminal dump at 1am, every "no, do it right" — that was the review the original never got.</p>
+      <p style="margin-top:16px;"><a href="https://github.com/Scarlet1987" target="_blank" rel="noopener">github.com/Scarlet1987</a></p>
+    </div>
+    <p style="text-align:center; margin-top:24px; color:var(--ink-3); font-size:.88rem;">
+      Based on <a href="https://github.com/linux4life1/front-porch-AI" target="_blank" rel="noopener">Front Porch AI</a> by linux4life1 · AGPL-3.0-or-later · The code stays open.
+    </p>
+  </div>
+</section>
+
+<!-- ═══ LINKS ═══ -->
+<section id="links">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="eyebrow">Go deeper</div>
+      <h2>Links</h2>
+    </div>
+    <div class="link-grid">
+      <a class="link-card" href="https://github.com/Scarlet1987/front-porch-AI/releases" target="_blank" rel="noopener">
+        <h3>📥 Releases</h3><p>Download Rabbit Hole — Flatpak and .deb, every version.</p>
+      </a>
+      <a class="link-card" href="https://github.com/Scarlet1987/front-porch-AI/tree/Alice" target="_blank" rel="noopener">
+        <h3>🌿 Alice branch</h3><p>The source. Engine wiring, screens, and tests.</p>
+      </a>
+      <a class="link-card" href="https://github.com/Scarlet1987/front-porch-AI/tree/Wonderland" target="_blank" rel="noopener">
+        <h3>🐇 Wonderland branch</h3><p>The server edition — per-user sessions, remote access.</p>
+      </a>
+      <a class="link-card" href="#" onclick="return false;" style="opacity:.55;">
+        <h3>📦 Flathub <span class="badge soon">Coming soon</span></h3><p>One-click install from the Flathub store. In review.</p>
+      </a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <p>Rabbit Hole — the Alice edition of Front Porch AI · AGPL-3.0-or-later</p>
+    <p>Design lead: <a href="https://github.com/Scarlet1987" target="_blank" rel="noopener">Scarlet1987</a></p>
+  </div>
+</footer>
+
+<script>
+function copyCmd(btn){
+  const code = btn.parentElement.querySelector('code').innerText;
+  const done = () => {
+    const old = btn.innerText; btn.innerText = 'Copied ✓';
+    setTimeout(()=>{ btn.innerText = old; }, 1400);
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(code).then(done).catch(()=>fallbackCopy(code, done));
+  } else {
+    fallbackCopy(code, done);
+  }
+}
+function fallbackCopy(text, done){
+  const ta = document.createElement('textarea');
+  ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+  document.body.appendChild(ta); ta.select();
+  try { document.execCommand('copy'); } catch(e){}
+  document.body.removeChild(ta);
+  done();
+}
+</script>
+</body>
+</html>
