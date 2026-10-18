@@ -493,6 +493,8 @@ class GeneralTab extends StatelessWidget {
 
           const SectionHeader('About & License'),
           _buildAboutSection(context),
+          const SizedBox(height: 12),
+          _buildAliceCreditsSection(context),
         ],
       ),
     );

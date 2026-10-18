@@ -3,6 +3,15 @@
   <img src="docs/assets/porch-banner-light.svg" alt="Front Porch AI — a local-first AI companion for character chat &amp; roleplay" width="100%">
 </picture>
 
+> ## The Alice edition
+>
+> This branch is the **Alice edition** — a ground-up re-engineering of
+> Front Porch AI, directed by **Scarlet1987**: the engine overhaul under
+> the hood, the full interface redesign (teal/white with blue and pink),
+> the Dead Dove negotiated-limits model, the Main Character board, and the
+> Kardashev civilization system. She gave it the review the original
+> never got.
+
 <p align="center">
   <a href="https://github.com/linux4life1/front-porch-AI/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/linux4life1/front-porch-AI/actions/workflows/ci.yml/badge.svg"></a>
   <img alt="License: AGPL v3" src="https://img.shields.io/badge/License-AGPLv3-B45309?labelColor=2B1B0C">
