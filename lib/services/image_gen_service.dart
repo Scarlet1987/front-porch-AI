@@ -17,6 +17,7 @@
 // along with Front Porch AI. If not, see <https://www.gnu.org/licenses/>.
 
 import 'dart:async';
+import 'dart:collection';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
@@ -25,8 +26,12 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as path;
 import 'package:front_porch_ai/services/storage_service.dart';
+import 'package:front_porch_ai/services/storage/storage.dart';
 import 'package:front_porch_ai/services/storage/settings/image_gen_settings.dart';
+import 'package:front_porch_ai/models/models.dart';
 import 'package:front_porch_ai/services/llm_service.dart';
+import 'package:front_porch_ai/services/kobold_service.dart';
+import 'package:front_porch_ai/services/hardware_service.dart';
 import 'package:front_porch_ai/services/grpc/draw_things_grpc_service.dart';
 import 'package:front_porch_ai/services/image_prompt/image_prompt.dart';
 import 'package:front_porch_ai/services/comfy_ui_service.dart';
@@ -39,6 +44,7 @@ import 'package:front_porch_ai/services/capability/capability.dart';
 export 'image/image_gen_types.dart';
 
 part 'image_gen_service.generate.dart';
+part 'image_gen_service.queue.dart';
 part 'image_gen_service.studio.dart';
 part 'image_gen_service.prompt.dart';
 part 'image_gen_service.local_admin.dart';
@@ -121,54 +127,34 @@ class ImageGenService extends ChangeNotifier {
 
   ImageGenService(this._storage);
 
+  /// The text engine, wired by the app shell (see main.dart). Used for
+  /// dual-engine VRAM arbitration: image generation unloads KoboldCpp's
+  /// model first when VRAM is tight. Null until wired or in tests.
+  KoboldService? _koboldService;
+
+  /// Hardware readings for arbitration. Null until wired or in tests.
+  HardwareService? _hardwareService;
+
+  /// Wire collaborators. Follows the setImageGenService pattern.
+  void setKoboldService(KoboldService service) => _koboldService = service;
+  void setHardwareService(HardwareService service) =>
+      _hardwareService = service;
+
+  /// FIFO of image generations waiting for the running one. Only used
+  /// when "Never drop a generation" is on; otherwise a busy engine
+  /// refuses (the previous behaviour). Entries carry an optional
+  /// session id so a server login teardown can drop its own waiting
+  /// jobs (see image_gen_service.queue.dart).
+  final Queue<_ImageQueueEntry> _imageQueue = Queue();
+
+  /// Generations running or waiting, for the engine health row.
+  int get imageQueueDepth => _imageQueue.length + (_isGenerating ? 1 : 0);
+
   /// Best-effort ComfyUI VRAM nudge before a create→edit model swap (the
   /// creator pack's "Switching to edit model" stage). No-op on every other
   /// backend — DT/remote load-unload per request on their own.
   Future<void> nudgeComfyFree() => _nudgeComfyFreeImpl();
 
-  /// Generate an image from a prompt.
-  ///
-  /// Routes to the configured remote API (OpenRouter, Nano-GPT, etc.).
-  ///
-  /// Returns the image bytes on success, or null on failure.
-  Future<Uint8List?> generateImage({
-    required String prompt,
-    String? negativePrompt,
-    String? size,
-    Uint8List?
-    referenceImage, // img2img reference: honored by all three local backends
-    // (Draw Things, A1111, ComfyUI) at imageGenDenoise strength; remote APIs
-    // have no img2img endpoint here, so they ignore it.
-    String? model,
-    bool isPortrait = false,
-    // Per-call overrides for the stored seed/denoise settings; used by batch
-    // flows (expression packs) that need a shared fixed seed and fixed denoise
-    // across every image without touching the user's persisted settings.
-    // Remote APIs ignore them (no seed/denoise support on those endpoints).
-    int? seed,
-    double? denoise,
-    // Which surface asked. Create (default) keeps every existing path
-    // byte-identical; Edit routes an edit-capable model to edit-conditioning
-    // and resolves the EDIT model slot. Passed by the Studio's Edit tab and
-    // by edit-first expression packs (Studio dialog + the creator panel).
-    StudioIntent intent = StudioIntent.create,
-    // Edit-only: how strongly the instruction changes the reference (higher =
-    // more change). Overrides the edit profile's default strength when set, so
-    // the Edit tab can offer a "how much should change" control. Ignored outside
-    // the edit path.
-    double? editStrength,
-  }) => _generateImageImpl(
-    prompt: prompt,
-    negativePrompt: negativePrompt,
-    size: size,
-    referenceImage: referenceImage,
-    model: model,
-    isPortrait: isPortrait,
-    seed: seed,
-    denoise: denoise,
-    intent: intent,
-    editStrength: editStrength,
-  );
 
   /// Fetch available image models.
   ///

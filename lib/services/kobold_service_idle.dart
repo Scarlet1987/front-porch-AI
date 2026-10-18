@@ -165,24 +165,31 @@ extension KoboldServiceIdle on KoboldService {
         return _idleTouch();
       }
       await adminSwapLock.enqueue(() async {
-        final restore = await _idleRestorePoint();
         // A request or a swap may have come in meanwhile.
         if (!_idleDue) return;
-        final asked = DateTime.now();
-        await koboldAdminRetry(_idleAdmin.unload);
-        _idle.unloaded = restore;
-        final words = koboldIdleUnloadedWords(minutes);
-        _addLog(words);
-        _clearReady(words);
-        try {
-          await waitForUnload(since: asked);
-        } on KoboldSwapTimeout catch (e) {
-          _addLog('KoboldCpp has not confirmed the unload: $e');
-        }
+        await _doUnload(koboldIdleUnloadedWords(minutes));
       });
     } on Object catch (e) {
       _addLog('The model could not be unloaded to free graphics memory: $e');
       _idleTouch();
+    }
+  }
+
+  /// The actual unload, shared by idle unload and engine handoffs (image
+  /// generation needing VRAM): snapshot the restore point, ask the engine
+  /// to unload, record it so the next request loads it back, and wait for
+  /// the engine to confirm.
+  Future<void> _doUnload(String words) async {
+    final restore = await _idleRestorePoint();
+    final asked = DateTime.now();
+    await koboldAdminRetry(_idleAdmin.unload);
+    _idle.unloaded = restore;
+    _addLog(words);
+    _clearReady(words);
+    try {
+      await waitForUnload(since: asked);
+    } on KoboldSwapTimeout catch (e) {
+      _addLog('KoboldCpp has not confirmed the unload: $e');
     }
   }
 

@@ -102,6 +102,10 @@ extension _ImageGenGenerate on ImageGenService {
       final backend = ImageGenBackend.fromKey(
         _storage.imageGenSettings.imageGenBackend,
       );
+      // Dual-engine arbitration: before a local backend touches VRAM, make
+      // sure the text engine isn't squatting on it. Remote backends skip.
+      // Nested pack frames skip too — the flight already arbitrated.
+      if (!nested) await _arbitrateVramForImage(backend);
       final remoteAccount = backend == ImageGenBackend.remote
           ? _imageRemoteAccount
           : null;
@@ -416,6 +420,10 @@ extension _ImageGenGenerate on ImageGenService {
       _genProgress = null;
       _genPreview = null;
       _notify();
+      // Park image weights back in RAM when the placement knob asks for
+      // it (best-effort; remote backends skip). Runs after the lock is
+      // released so a queued generation can start loading immediately.
+      await _parkImageWeights(backend);
     }
   }
 }

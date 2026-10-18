@@ -433,12 +433,29 @@ Widget _buildRootWidget(AppDatabase db, bool needsMigration) {
         ),
         ChangeNotifierProxyProvider<StorageService, ImageGenService>(
           create: (context) {
-            return ImageGenService(
+            final service = ImageGenService(
               Provider.of<StorageService>(context, listen: false),
             );
+            // Dual-engine VRAM arbitration needs the text engine and
+            // hardware readings; setter injection follows the
+            // setImageGenService pattern used elsewhere.
+            service.setKoboldService(
+              Provider.of<KoboldService>(context, listen: false),
+            );
+            service.setHardwareService(
+              Provider.of<HardwareService>(context, listen: false),
+            );
+            return service;
           },
           update: (context, storage, previous) {
-            return previous ?? ImageGenService(storage);
+            final service = previous ?? ImageGenService(storage);
+            service.setKoboldService(
+              Provider.of<KoboldService>(context, listen: false),
+            );
+            service.setHardwareService(
+              Provider.of<HardwareService>(context, listen: false),
+            );
+            return service;
           },
         ),
         // Porch Stories: repository + pipeline must be above WebServerHost

@@ -281,6 +281,7 @@ Future<Map<String, dynamic>> koboldLaunchMap({
       kvQuant: b.kvQuant,
       mlock: knobs?.mlock ?? b.mlockEnabled,
       rocmFlashAttentionFailed: b.rocmFlashAttentionFailed,
+      textPlacement: storage.engineResourcesSettings.textKvCache,
     ),
     model: KoboldModelFacts(
       isMoe: info?.isMoe ?? false,

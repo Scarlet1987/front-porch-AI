@@ -8,6 +8,8 @@
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -19,11 +21,11 @@ import 'package:front_porch_ai/ui/widgets/detail_level_control.dart';
 
 /// Settings → Backend: the Engine resources card.
 ///
-/// Dual-engine memory policy, surfaced as knobs: where the text engine keeps
-/// its KV cache / context memory and where the image engine parks model
-/// weights between generations, over auto-detected VRAM/RAM. Stability
-/// first: generations queue with backpressure instead of being dropped.
-/// The knobs persist here; the engines apply them at launch.
+/// Dual-engine memory policy, surfaced as knobs: where the text engine
+/// places model layers (VRAM vs system RAM) and where the image engine
+/// parks model weights between generations, over auto-detected VRAM/RAM.
+/// Stability first: generations queue with backpressure instead of being
+/// dropped. The knobs persist here; the engines apply them at launch.
 class EngineResourcesCard extends StatelessWidget {
   const EngineResourcesCard({super.key});
 
@@ -111,8 +113,11 @@ class EngineResourcesCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: PorchSpacing.lg),
-          // Engine health: stable when the queue-don't-drop policy holds;
-          // the scheduler note explains what's happening in plain language.
+          // Live memory: refreshes while engines run, not read-once.
+          const _LiveMemoryRow(),
+          const SizedBox(height: PorchSpacing.md),
+          // Engine health: live state from both engines; the scheduler
+          // note explains what's happening in plain language.
           _HealthRow(engines: engines),
           const SizedBox(height: PorchSpacing.md),
           // Character cards are data, not models: one resident model serves
@@ -146,10 +151,12 @@ class EngineResourcesCard extends StatelessWidget {
           ),
           const SizedBox(height: PorchSpacing.lg),
           _PlacementRow(
-            title: 'Text engine — KV cache',
+            title: 'Text engine — layer placement',
             helper:
-                'Where the model keeps conversation memory. System RAM frees '
-                'VRAM for active compute.',
+                'Where the model\u2019s layers live. System RAM offloads '
+                'layers (and their KV cache — layers travel with their '
+                'cache) to free VRAM for active compute. Applies on next '
+                'launch.',
             value: engines.textKvCache,
             onChanged: engines.setTextKvCache,
           ),
@@ -180,40 +187,13 @@ class EngineResourcesCard extends StatelessWidget {
             value: engines.queueWithBackpressure,
             onChanged: engines.setQueueWithBackpressure,
           ),
-          // Advanced: micro-model role routing + detail→context linkage.
+          // Advanced: detail→context linkage.
           DetailGate(
             required: DetailLevel.advanced,
             label: 'Show engine tuning',
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SizedBox(height: PorchSpacing.md),
-                Text(
-                  'Model roles',
-                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary(context),
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  'Assign models to roles: a small, fast model for NPC '
-                  'dialogue, the main model for MC narrative. Empty uses '
-                  'the default model. Swaps queue — never mid-generation.',
-                  style: PorchType.caption(context),
-                ),
-                const SizedBox(height: PorchSpacing.sm),
-                _ModelIdField(
-                  label: 'NPC chatter model',
-                  value: engines.npcRoleModelId,
-                  onChanged: engines.setNpcRoleModelId,
-                ),
-                const SizedBox(height: PorchSpacing.sm),
-                _ModelIdField(
-                  label: 'MC narrative model',
-                  value: engines.mcRoleModelId,
-                  onChanged: engines.setMcRoleModelId,
-                ),
                 const SizedBox(height: PorchSpacing.md),
                 Text(
                   'Detail level → context',
@@ -244,17 +224,111 @@ class EngineResourcesCard extends StatelessWidget {
   }
 }
 
-class _HealthRow extends StatelessWidget {
-  const _HealthRow({required this.engines});
+/// Live free-memory readout. Polls the hardware service every few seconds
+/// while this card is visible so the numbers track engines loading and
+/// unloading — not a read-once snapshot.
+class _LiveMemoryRow extends StatefulWidget {
+  const _LiveMemoryRow();
+
+  @override
+  State<_LiveMemoryRow> createState() => _LiveMemoryRowState();
+}
+
+class _LiveMemoryRowState extends State<_LiveMemoryRow> {
+  Timer? _timer;
+  FreeMemoryMb? _free;
+
+  @override
+  void initState() {
+    super.initState();
+    _poll();
+    _timer = Timer.periodic(const Duration(seconds: 5), (_) => _poll());
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _poll() async {
+    if (!mounted) return;
+    try {
+      final hw = Provider.of<HardwareService>(context, listen: false);
+      final free = await hw.readFreeMemory();
+      if (mounted) setState(() => _free = free);
+    } catch (_) {
+      // Best-effort: leave the last reading up.
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final free = _free;
+    return Container(
+      padding: const EdgeInsets.all(PorchSpacing.md),
+      decoration: BoxDecoration(
+        color: AppColors.sunkenSurfaceOf(context),
+        borderRadius: BorderRadius.circular(PorchRadius.md),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.monitor_heart_outlined,
+            size: 20,
+            color: AppColors.porchAmberOf(context),
+          ),
+          const SizedBox(width: PorchSpacing.md),
+          Expanded(
+            child: Text(
+              free == null
+                  ? 'Reading live memory…'
+                  : '${EngineResourcesCard._gb(free.graphics ?? 0)} VRAM free'
+                      ' · ${EngineResourcesCard._gb(free.system ?? 0)} RAM free',
+              style: PorchType.caption(context),
+            ),
+          ),
+          const SizedBox(width: PorchSpacing.sm),
+          Text('live', style: PorchType.caption(context)),
+        ],
+      ),
+    );
+  }
+}
+
+class _HealthRow extends StatelessWidget {  const _HealthRow({required this.engines});
 
   final EngineResourcesSettings engines;
 
   @override
   Widget build(BuildContext context) {
-    final stable = engines.queueWithBackpressure;
+    // Live engine state, not just the toggle: text engine phase plus
+    // image queue depth and current status.
+    final koboldPhase = context.select<KoboldService, KoboldPhase>(
+      (k) => k.phase,
+    );
+    final imgDepth = context.select<ImageGenService, int>(
+      (i) => i.imageQueueDepth,
+    );
+    final imgStatus = context.select<ImageGenService, String>(
+      (i) => i.statusMessage,
+    );
+    final textUp = koboldPhase == KoboldPhase.ready;
+    final queueOn = engines.queueWithBackpressure;
+    final stable = queueOn && (textUp || imgDepth == 0);
     final color = stable
         ? AppColors.bondHighOf(context)
         : AppColors.negativeAccentOf(context);
+    final detail = StringBuffer();
+    detail.write('Text engine: ${koboldPhase.name}. ');
+    if (imgDepth > 0) {
+      detail.write('Image: $imgDepth queued/active. ');
+    }
+    if (imgStatus.isNotEmpty) detail.write(imgStatus);
+    if (!queueOn) {
+      detail.write('Queue-don\u2019t-drop is off: a busy engine may fail '
+          'a generation instead of queueing it.');
+    }
     return Container(
       padding: const EdgeInsets.all(PorchSpacing.md),
       decoration: BoxDecoration(
@@ -275,7 +349,7 @@ class _HealthRow extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  stable ? 'Engines stable' : 'Engines degraded',
+                  stable ? 'Engines stable' : 'Engines busy',
                   style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                     fontWeight: FontWeight.w600,
                     color: AppColors.textPrimary(context),
@@ -283,11 +357,7 @@ class _HealthRow extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  stable
-                      ? 'Scheduler: steady queue, one thing at a time when '
-                            'memory is tight. Nothing gets dropped.'
-                      : 'Queue-don\u2019t-drop is off: a busy engine may fail '
-                            'a generation instead of queueing it.',
+                  detail.toString().trim(),
                   style: PorchType.caption(context),
                 ),
               ],
@@ -295,52 +365,6 @@ class _HealthRow extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-}
-
-class _ModelIdField extends StatefulWidget {
-  const _ModelIdField({
-    required this.label,
-    required this.value,
-    required this.onChanged,
-  });
-
-  final String label;
-  final String value;
-  final ValueChanged<String> onChanged;
-
-  @override
-  State<_ModelIdField> createState() => _ModelIdFieldState();
-}
-
-class _ModelIdFieldState extends State<_ModelIdField> {
-  late final TextEditingController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = TextEditingController(text: widget.value);
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return TextField(
-      controller: _controller,
-      decoration: InputDecoration(
-        labelText: widget.label,
-        hintText: 'Model ID (empty = default)',
-        border: const OutlineInputBorder(),
-        isDense: true,
-      ),
-      style: TextStyle(color: AppColors.textPrimary(context), fontSize: 13),
-      onSubmitted: widget.onChanged,
     );
   }
 }
