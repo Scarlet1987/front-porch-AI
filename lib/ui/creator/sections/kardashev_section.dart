@@ -84,6 +84,9 @@ class KardashevSection extends StatefulWidget {
     required this.locked,
     required this.onSelect,
     required this.onUnlock,
+    this.beyondNameController,
+    this.beyondScopeController,
+    this.beyondGearController,
   });
 
   final KardashevType selected;
@@ -91,18 +94,35 @@ class KardashevSection extends StatefulWidget {
   final ValueChanged<KardashevType> onSelect;
   final VoidCallback onUnlock;
 
+  /// Optional external controllers so a parent screen can read the
+  /// user-defined Beyond definition when saving. Internal controllers are
+  /// used when these are null.
+  final TextEditingController? beyondNameController;
+  final TextEditingController? beyondScopeController;
+  final TextEditingController? beyondGearController;
+
   @override
   State<KardashevSection> createState() => _KardashevSectionState();
 }
 
 class _KardashevSectionState extends State<KardashevSection> {
-  final _beyondNameCtrl = TextEditingController();
-  final _beyondScopeCtrl = TextEditingController();
+  late final TextEditingController _beyondNameCtrl;
+  late final TextEditingController _beyondScopeCtrl;
+  late final TextEditingController _beyondGearCtrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _beyondNameCtrl = widget.beyondNameController ?? TextEditingController();
+    _beyondScopeCtrl = widget.beyondScopeController ?? TextEditingController();
+    _beyondGearCtrl = widget.beyondGearController ?? TextEditingController();
+  }
 
   @override
   void dispose() {
-    _beyondNameCtrl.dispose();
-    _beyondScopeCtrl.dispose();
+    if (widget.beyondNameController == null) _beyondNameCtrl.dispose();
+    if (widget.beyondScopeController == null) _beyondScopeCtrl.dispose();
+    if (widget.beyondGearController == null) _beyondGearCtrl.dispose();
     super.dispose();
   }
 
@@ -120,9 +140,7 @@ class _KardashevSectionState extends State<KardashevSection> {
         const SizedBox(height: PorchSpacing.sm),
         PorchSegmentedControl<KardashevType>(
           options: KardashevType.values
-              .map(
-                (t) => PorchSegmentOption(value: t, label: t.label),
-              )
+              .map((t) => PorchSegmentOption(value: t, label: t.label))
               .toList(),
           value: widget.selected,
           onChanged: (t) {
@@ -130,10 +148,7 @@ class _KardashevSectionState extends State<KardashevSection> {
           },
         ),
         const SizedBox(height: PorchSpacing.sm),
-        Text(
-          widget.selected.description,
-          style: PorchType.bodySmall(context),
-        ),
+        Text(widget.selected.description, style: PorchType.bodySmall(context)),
         if (widget.selected == KardashevType.beyond) ...[
           const SizedBox(height: PorchSpacing.sm),
           TextField(
@@ -153,6 +168,18 @@ class _KardashevSectionState extends State<KardashevSection> {
             decoration: const InputDecoration(
               labelText: 'What it commands',
               hintText: 'e.g. a whole universe\u2019s energy…',
+              border: OutlineInputBorder(),
+              isDense: true,
+            ),
+          ),
+          const SizedBox(height: PorchSpacing.sm),
+          TextField(
+            controller: _beyondGearCtrl,
+            enabled: !widget.locked,
+            maxLines: 2,
+            decoration: const InputDecoration(
+              labelText: 'What that means for gear',
+              hintText: 'e.g. tools that reshape planets…',
               border: OutlineInputBorder(),
               isDense: true,
             ),

@@ -67,24 +67,44 @@ GearVerdict checkGear(String text, KardashevType type) {
 
 /// Gear loadout section.
 class GearSection extends StatefulWidget {
-  const GearSection({super.key, required this.kardashevType});
+  const GearSection({
+    super.key,
+    required this.kardashevType,
+    this.offensiveController,
+    this.defensiveController,
+    this.clothingController,
+  });
 
   final KardashevType kardashevType;
+
+  /// Optional external controllers so a parent screen can read the gear
+  /// text when saving the card. When null, internal controllers are used.
+  final TextEditingController? offensiveController;
+  final TextEditingController? defensiveController;
+  final TextEditingController? clothingController;
 
   @override
   State<GearSection> createState() => _GearSectionState();
 }
 
 class _GearSectionState extends State<GearSection> {
-  final _offenseCtrl = TextEditingController();
-  final _defenseCtrl = TextEditingController();
-  final _clothingCtrl = TextEditingController();
+  late final TextEditingController _offenseCtrl;
+  late final TextEditingController _defenseCtrl;
+  late final TextEditingController _clothingCtrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _offenseCtrl = widget.offensiveController ?? TextEditingController();
+    _defenseCtrl = widget.defensiveController ?? TextEditingController();
+    _clothingCtrl = widget.clothingController ?? TextEditingController();
+  }
 
   @override
   void dispose() {
-    _offenseCtrl.dispose();
-    _defenseCtrl.dispose();
-    _clothingCtrl.dispose();
+    if (widget.offensiveController == null) _offenseCtrl.dispose();
+    if (widget.defensiveController == null) _defenseCtrl.dispose();
+    if (widget.clothingController == null) _clothingCtrl.dispose();
     super.dispose();
   }
 
@@ -153,6 +173,14 @@ class _GearBoxState extends State<_GearBox> {
   }
 
   @override
+  void didUpdateWidget(covariant _GearBox oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // The scale selector lives in a sibling section, so the type can
+    // change while the text stays put — recheck against the new type.
+    if (oldWidget.kardashevType != widget.kardashevType) _recheck();
+  }
+
+  @override
   void dispose() {
     widget.controller.removeListener(_recheck);
     super.dispose();
@@ -205,10 +233,10 @@ class _GearBoxState extends State<_GearBox> {
                   child: Text(
                     _verdict == GearVerdict.godMode
                         ? 'God-mode flag: an extinction-level attack in a '
-                          'starting loadout — power is reached through the '
-                          'story, step by step.'
+                              'starting loadout — power is reached through the '
+                              'story, step by step.'
                         : 'Over scale: this looks beyond what a '
-                          '${widget.kardashevType.label} civilization fields.',
+                              '${widget.kardashevType.label} civilization fields.',
                     style: PorchType.caption(context).copyWith(
                       color: _verdict == GearVerdict.godMode
                           ? AppColors.negativeAccentOf(context)
