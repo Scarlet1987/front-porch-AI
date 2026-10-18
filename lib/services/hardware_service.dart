@@ -349,7 +349,10 @@ class HardwareService extends ChangeNotifier {
     // Windows AMD users belong on Vulkan.
     if (Platform.isLinux) {
       try {
-        final res = await Process.run('rocminfo', []);
+        final res = await Process.run(
+          'rocminfo',
+          [],
+        ).timeout(const Duration(seconds: 10));
         if (res.exitCode == 0) _hasRocm = true;
       } catch (_) {}
     }
