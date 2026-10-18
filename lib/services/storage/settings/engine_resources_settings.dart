@@ -86,15 +86,29 @@ class EngineResourcesSettings with SettingsBase {
   Future<void> setTextKvCache(EngineMemoryPlacement value) async {
     if (_textKvCache == value) return;
     _textKvCache = value;
-    await prefs?.setString(k('engine_text_kv_cache'), value.name);
+    // Notify synchronously so the UI updates immediately, even if the
+    // prefs write below is slow or fails. Persistence is best-effort.
     notify();
+    try {
+      await prefs?.setString(k('engine_text_kv_cache'), value.name);
+    } catch (_) {
+      // Best-effort persistence: the in-memory value is already updated
+      // and the UI already reflects it.
+    }
   }
 
   Future<void> setImageWeights(EngineMemoryPlacement value) async {
     if (_imageWeights == value) return;
     _imageWeights = value;
-    await prefs?.setString(k('engine_image_weights'), value.name);
+    // Notify synchronously so the UI updates immediately, even if the
+    // prefs write below is slow or fails. Persistence is best-effort.
     notify();
+    try {
+      await prefs?.setString(k('engine_image_weights'), value.name);
+    } catch (_) {
+      // Best-effort persistence: the in-memory value is already updated
+      // and the UI already reflects it.
+    }
   }
 
   Future<void> setQueueWithBackpressure(bool value) async {
