@@ -51,7 +51,7 @@ extension _ChatPageImageConsent on _ChatPageState {
       context: context,
       barrierDismissible: false,
       builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF1E293B),
+        backgroundColor: AppColors.cardOf(ctx),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         icon: const Icon(
           Icons.shield_outlined,

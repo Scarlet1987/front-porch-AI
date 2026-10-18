@@ -20,6 +20,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:front_porch_ai/ui/theme/app_colors.dart';
+
 /// Shows a dialog with distro-specific ROCm installation instructions.
 /// Returns true if the dialog was shown, false if suppressed by user preference.
 Future<bool> showRocmGuidanceDialog(
@@ -57,7 +59,7 @@ class _RocmGuidanceDialogState extends State<_RocmGuidanceDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      backgroundColor: const Color(0xFF1E293B),
+      backgroundColor: AppColors.cardOf(context),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       title: Row(
         children: [

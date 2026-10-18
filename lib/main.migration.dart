@@ -63,7 +63,7 @@ extension _MainMigration on _MyAppState {
   Widget _buildMigrationOverlay() {
     return Positioned.fill(
       child: Material(
-        color: const Color(0xFF0F172A),
+        color: AppColors.backgroundOf(context),
         child: Center(
           child: SizedBox(
             width: 420,
@@ -83,7 +83,9 @@ extension _MainMigration on _MyAppState {
                     borderRadius: BorderRadius.circular(20),
                     boxShadow: [
                       BoxShadow(
-                        color: AppColors.formMasterAccent.withValues(alpha: 0.3),
+                        color: AppColors.formMasterAccent.withValues(
+                          alpha: 0.3,
+                        ),
                         blurRadius: 24,
                         spreadRadius: 4,
                       ),

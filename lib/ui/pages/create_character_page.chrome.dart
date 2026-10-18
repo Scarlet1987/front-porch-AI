@@ -112,7 +112,7 @@ extension _CreateCharacterChrome on _CreateCharacterPageState {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: const Color(0xFF1E293B),
+        color: AppColors.cardOf(context),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: color.withValues(alpha: 0.4)),
         boxShadow: [

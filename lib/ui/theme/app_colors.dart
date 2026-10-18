@@ -34,61 +34,61 @@ class AppColors {
   ) => isOled(context) ? oled : resolve(context, dark, light);
 
   /// Surface background for dialogs, containers, and panels.
-  static const Color surface = Color(0xFF1F2937);
+  static const Color surface = Color(0xFF0B3A33);
 
   /// Deep background for scaffolds and page-level backgrounds.
-  static const Color background = Color(0xFF0F172A);
+  static const Color background = Color(0xFF04231F);
 
   /// Card/container background for cards, dropdowns, and elevated surfaces.
-  static const Color card = Color(0xFF1E293B);
+  static const Color card = Color(0xFF08302A);
 
   // ---------------------------------------------------------------------------
   // Chat appearance defaults
   // ---------------------------------------------------------------------------
 
   /// Default color for the user's message bubbles.
-  static const Color userBubble = Color(0xFF3B82F6);
+  static const Color userBubble = Color(0xFF2F7FE0);
 
   /// Default color for the user's message text.
   static const Color userText = Colors.white;
 
   /// Default color for the AI's message bubbles.
-  static const Color aiBubble = Color(0xFF374151);
+  static const Color aiBubble = Color(0xFF0E3F38);
 
   /// Default color for the AI's message text.
   static const Color aiText = Colors.white;
 
   /// Default color for quoted/dialogue text ("...").
-  static const Color dialogue = Colors.amberAccent;
+  static const Color dialogue = Color(0xFFF9A8D4);
 
   /// Default color for action/emote text (*...*).
-  static const Color action = Color(0xFF90CAF9);
+  static const Color action = Color(0xFF93C5FD);
 
   // ---------------------------------------------------------------------------
   // Light-mode backgrounds
   // ---------------------------------------------------------------------------
 
-  /// Light-mode scaffold background (warmer paper tone for long-session comfort; chosen to eliminate glare).
-  static const Color lightBackground = Color(0xFFF8F4ED);
+  /// Light-mode scaffold background (mint-white for long-session comfort).
+  static const Color lightBackground = Color(0xFFF4FAF8);
 
   /// Light-mode card/container background.
   static const Color lightCard = Colors.white;
 
-  /// Light-mode surface background for dialogs and panels (warmer paper tone).
-  static const Color lightSurface = Color(0xFFF0EBE3);
+  /// Light-mode surface background for dialogs and panels (mint tint).
+  static const Color lightSurface = Color(0xFFE7F3F0);
 
   // ---------------------------------------------------------------------------
   // Container surface for dropdowns, dialogs, and input fields
   // ---------------------------------------------------------------------------
 
   /// Dark container surface (slightly lighter than [card] for visual layering).
-  static const Color surfaceContainer = Color(0xFF374151);
+  static const Color surfaceContainer = Color(0xFF0B3A33);
 
-  /// Light container surface for the same purpose (warmer paper tone).
-  static const Color surfaceContainerLight = Color(0xFFEDE7DF);
+  /// Light container surface for the same purpose (mint tint).
+  static const Color surfaceContainerLight = Color(0xFFEEF7F4);
 
-  /// Subtle border color for cards/panels in light mode (defines shape without harsh contrast on paper bg).
-  static const Color lightBorder = Color(0xFFD4CFC6);
+  /// Subtle border color for cards/panels in light mode (defines shape without harsh contrast).
+  static const Color lightBorder = Color(0xFFB9D8D1);
 
   /// Brightness-aware container surface.
   static Color surfaceContainerOf(BuildContext context) =>
@@ -111,7 +111,7 @@ class AppColors {
   static const Color aiTextLight = Colors.black87;
 
   /// Default dialogue color in light mode.
-  static const Color dialogueLight = Color(0xFFB45309);
+  static const Color dialogueLight = Color(0xFFB03060);
 
   /// Default action color in light mode.
   static const Color actionLight = Color(0xFF1565C0);
@@ -162,7 +162,7 @@ class AppColors {
 
   /// Subtle border color for the current brightness (reuses resolve scaffold; no new logic).
   static Color borderOf(BuildContext context) =>
-      resolve(context, const Color(0xFF334155), lightBorder);
+      resolve(context, const Color(0xFF1C554B), lightBorder);
 
   // ---------------------------------------------------------------------------
   // Process log / terminal output colors
@@ -248,11 +248,11 @@ class AppColors {
       resolve(context, trustHigh, trustHighLight);
 
   /// Generic "primary accent" for forms, dialogs, Image Studio, and the
-  /// avatar gallery (icons, badges, borders, primary buttons). Warm-porch:
-  /// this is now porch amber (was Colors.blueAccent) so the ~30 files that key
-  /// off it warm up in one place. It is a single const (not brightness-aware);
-  /// on an amber button background use [onChaosAccent] for the foreground so
-  /// text stays readable in dark mode (white-on-amber is too low-contrast).
+  /// avatar gallery (icons, badges, borders, primary buttons). Teal primary:
+  /// this is now teal (was warm amber) so the ~30 files that key
+  /// off it cool down in one place. It is a single const (not brightness-aware);
+  /// on a teal button background use [onChaosAccent] for the foreground so
+  /// text stays readable in dark mode.
   static const Color formMasterAccent = porchAmber;
 
   static const Color relationshipAccent = Colors.pinkAccent;
@@ -284,77 +284,76 @@ class AppColors {
   // exactly one token below; all have deliberate light variants.
   // ---------------------------------------------------------------------------
 
-  /// 🎭 Character State section accent (warm terracotta).
-  static const Color porchTerracotta = Color(0xFFE29578);
-  static const Color porchTerracottaLight = Color(0xFF9C4B2F);
+  /// 🎭 Character State section accent (soft pink).
+  static const Color porchTerracotta = Color(0xFFFB8FAB);
+  static const Color porchTerracottaLight = Color(0xFFB83A6E);
   static Color porchTerracottaOf(BuildContext context) =>
       resolve(context, porchTerracotta, porchTerracottaLight);
 
-  /// 🎲 Story Tools section accent (warm honey).
-  static const Color porchHoney = Color(0xFFE9C46A);
-  static const Color porchHoneyLight = Color(0xFF8F6400);
+  /// 🎲 Story Tools section accent (sky blue).
+  static const Color porchHoney = Color(0xFF7DD3FC);
+  static const Color porchHoneyLight = Color(0xFF1D6FB8);
   static Color porchHoneyOf(BuildContext context) =>
       resolve(context, porchHoney, porchHoneyLight);
 
-  /// Generic warm accent for buttons/badges in the sidebar family.
-  static const Color porchAmber = Color(0xFFF4A259);
-  static const Color porchAmberLight = Color(0xFFB45309);
+  /// Generic primary accent for buttons/badges — teal (was warm amber).
+  static const Color porchAmber = Color(0xFF2DD4BF);
+  static const Color porchAmberLight = Color(0xFF0E7A6D);
   static Color porchAmberOf(BuildContext context) =>
       resolve(context, porchAmber, porchAmberLight);
 
-  /// 📖 Journal & Memory section accent — the recap, RAG, and evolution
-  /// controls share this single supporting cool tone ("porch sage").
-  static const Color journalAccent = Color(0xFF4DB6AC);
-  static const Color journalAccentLight = Color(0xFF00796B);
+  /// 📖 Journal & Memory section accent — mint teal.
+  static const Color journalAccent = Color(0xFF5EEAD4);
+  static const Color journalAccentLight = Color(0xFF0E7A6D);
   static Color journalAccentOf(BuildContext context) =>
       resolve(context, journalAccent, journalAccentLight);
 
-  /// Lust bar / spicy toggles / NSFW headers (warm rose).
-  static const Color lustAccent = Color(0xFFFB7185);
-  static const Color lustAccentLight = Color(0xFFBE123C);
+  /// Lust bar / spicy toggles / NSFW headers (pink).
+  static const Color lustAccent = Color(0xFFF472B6);
+  static const Color lustAccentLight = Color(0xFFDB2777);
   static Color lustAccentOf(BuildContext context) =>
       resolve(context, lustAccent, lustAccentLight);
 
   /// Lust "fire" state (arousal tier >= 6).
-  static const Color lustDeep = Color(0xFFF43F5E);
-  static const Color lustDeepLight = Color(0xFF9F1239);
+  static const Color lustDeep = Color(0xFFEC4899);
+  static const Color lustDeepLight = Color(0xFF9D174D);
   static Color lustDeepOf(BuildContext context) =>
       resolve(context, lustDeep, lustDeepLight);
 
   /// Negative arousal / refractory chill.
   static const Color frostAccent = Color(0xFF38BDF8);
-  static const Color frostAccentLight = Color(0xFF1D4ED8);
+  static const Color frostAccentLight = Color(0xFF2563EB);
   static Color frostAccentOf(BuildContext context) =>
       resolve(context, frostAccent, frostAccentLight);
 
-  /// Chaos Mode gold (switch, spin button).
-  static const Color chaosAccent = Color(0xFFFFD166);
-  static const Color chaosAccentLight = Color(0xFF9A6B15);
+  /// Chaos Mode accent (pink).
+  static const Color chaosAccent = Color(0xFFF9A8D4);
+  static const Color chaosAccentLight = Color(0xFFC2437F);
   static Color chaosAccentOf(BuildContext context) =>
       resolve(context, chaosAccent, chaosAccentLight);
 
   /// Spin-button gradient second stop.
-  static const Color chaosAccentDim = Color(0xFFFFC233);
-  static const Color chaosAccentDimLight = Color(0xFFB8860B);
+  static const Color chaosAccentDim = Color(0xFFF472B6);
+  static const Color chaosAccentDimLight = Color(0xFFDB2777);
   static Color chaosAccentDimOf(BuildContext context) =>
       resolve(context, chaosAccentDim, chaosAccentDimLight);
 
-  /// Text/icon color on the chaos gold button (both modes).
-  static const Color onChaosAccent = Color(0xFF1A1200);
+  /// Text/icon color on the chaos accent button (both modes).
+  static const Color onChaosAccent = Color(0xFF032520);
 
-  /// Chaos pressure-lerp start (calm) and end (hot).
-  static const Color chaosCalm = Color(0xFF2EC4B6);
-  static const Color chaosCalmLight = Color(0xFF0F766E);
+  /// Chaos pressure-lerp start (calm teal) and end (hot pink).
+  static const Color chaosCalm = Color(0xFF2DD4BF);
+  static const Color chaosCalmLight = Color(0xFF0E7A6D);
   static Color chaosCalmOf(BuildContext context) =>
       resolve(context, chaosCalm, chaosCalmLight);
-  static const Color chaosHot = Color(0xFFE63946);
-  static const Color chaosHotLight = Color(0xFFB3261E);
+  static const Color chaosHot = Color(0xFFF472B6);
+  static const Color chaosHotLight = Color(0xFFDB2777);
   static Color chaosHotOf(BuildContext context) =>
       resolve(context, chaosHot, chaosHotLight);
 
   /// Positive trust bar/icon accent.
-  static const Color trustAccent = Color(0xFFFFB300);
-  static const Color trustAccentLight = Color(0xFFB45309);
+  static const Color trustAccent = Color(0xFF5EEAD4);
+  static const Color trustAccentLight = Color(0xFF0E7A6D);
   static Color trustAccentOf(BuildContext context) =>
       resolve(context, trustAccent, trustAccentLight);
 
@@ -370,15 +369,15 @@ class AppColors {
   static Color fixationAccentOf(BuildContext context) =>
       resolve(context, fixationAccent, fixationAccentLight);
 
-  /// Inset wells (settings panels, sunken sub-surfaces). Light = warm paper.
-  static const Color sunkenSurface = Color(0xFF111827);
-  static const Color sunkenSurfaceLight = Color(0xFFE9E2D8);
+  /// Inset wells (settings panels, sunken sub-surfaces). Light = mint paper.
+  static const Color sunkenSurface = Color(0xFF03201B);
+  static const Color sunkenSurfaceLight = Color(0xFFE9F4F1);
   static Color sunkenSurfaceOf(BuildContext context) =>
       resolveOled(context, sunkenSurface, sunkenSurfaceLight, oledBackground);
 
   /// Read-only text wells (deepest inset, e.g. evolution "original" text).
-  static const Color deepWell = Color(0xFF0D1117);
-  static const Color deepWellLight = Color(0xFFF0EBE3);
+  static const Color deepWell = Color(0xFF03201B);
+  static const Color deepWellLight = Color(0xFFEEF7F4);
   static Color deepWellOf(BuildContext context) =>
       resolveOled(context, deepWell, deepWellLight, oledBackground);
 
@@ -386,8 +385,8 @@ class AppColors {
   // 2026-10-04): slate text, an inset panel, and the parts of the preset
   // editor's memory bar (kcpps_memory_bar.dart; the old one in Settings →
   // Hardware & GPU is gone).
-  static const Color insetPanel = Color(0xFF172033);
-  static const Color insetPanelLight = Color(0xFFF3EEE6);
+  static const Color insetPanel = Color(0xFF0B3A33);
+  static const Color insetPanelLight = Color(0xFFE7F3F0);
   static Color insetPanelOf(BuildContext context) =>
       resolveOled(context, insetPanel, insetPanelLight, oledSurface);
   static const Color slateInk = Color(0xFFF3F4F6);

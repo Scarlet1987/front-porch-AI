@@ -349,7 +349,7 @@ extension _ChatPageInput on _ChatPageState {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF1E293B),
+        backgroundColor: AppColors.cardOf(context),
         icon: const Icon(Icons.mic_off, color: Colors.redAccent, size: 40),
         title: const Text(
           'No Microphone Detected',

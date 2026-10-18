@@ -56,7 +56,7 @@ extension _MainDbRecovery on _MyAppState {
   Widget _buildCorruptionOverlay() {
     return Positioned.fill(
       child: Material(
-        color: const Color(0xFF0F172A),
+        color: AppColors.backgroundOf(context),
         child: Center(
           child: SizedBox(
             width: 460,
@@ -115,7 +115,7 @@ extension _MainDbRecovery on _MyAppState {
                     constraints: const BoxConstraints(maxHeight: 220),
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF1E293B),
+                      color: AppColors.cardOf(context),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
                         color: Colors.white.withValues(alpha: 0.1),
@@ -210,7 +210,7 @@ extension _MainDbRecovery on _MyAppState {
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF1E293B),
+                      color: AppColors.cardOf(context),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
                         color: Colors.orange.withValues(alpha: 0.3),

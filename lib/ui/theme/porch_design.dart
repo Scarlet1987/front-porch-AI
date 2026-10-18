@@ -51,11 +51,10 @@ class PorchType {
     context,
   ).textTheme.displaySmall!.copyWith(fontWeight: FontWeight.w700);
 
-  static TextStyle headline(BuildContext context) =>
-      Theme.of(context).textTheme.headlineSmall!.copyWith(
-        fontWeight: FontWeight.w700,
-        letterSpacing: -0.2,
-      );
+  static TextStyle headline(BuildContext context) => Theme.of(context)
+      .textTheme
+      .headlineSmall!
+      .copyWith(fontWeight: FontWeight.w700, letterSpacing: -0.2);
 
   static TextStyle title(BuildContext context) =>
       Theme.of(context).textTheme.titleMedium!.copyWith(
@@ -78,11 +77,10 @@ class PorchType {
     context,
   ).textTheme.bodySmall!.copyWith(color: AppColors.textSecondary(context));
 
-  static TextStyle caption(BuildContext context) =>
-      Theme.of(context).textTheme.labelSmall!.copyWith(
-        color: AppColors.textTertiary(context),
-        letterSpacing: 0.3,
-      );
+  static TextStyle caption(BuildContext context) => Theme.of(context)
+      .textTheme
+      .labelSmall!
+      .copyWith(color: AppColors.textTertiary(context), letterSpacing: 0.3);
 
   static TextStyle hint(BuildContext context) => Theme.of(
     context,
@@ -91,19 +89,16 @@ class PorchType {
 
 /// Builds the app [ThemeData]. [oledBlack] swaps dark surfaces for true black
 /// (OLED-friendly); it only applies in dark mode.
-ThemeData buildPorchThemeData({
-  required bool isDark,
-  required bool oledBlack,
-}) {
+ThemeData buildPorchThemeData({required bool isDark, required bool oledBlack}) {
   final oled = isDark && oledBlack;
   final bg = oled ? AppColors.oledBackground : AppColors.background;
   final card = oled ? AppColors.oledCard : AppColors.card;
   final surface = oled ? AppColors.oledSurface : AppColors.surface;
   return ThemeData(
     brightness: isDark ? Brightness.dark : Brightness.light,
-    // Warm-porch app-wide accent: seed the Material 3 color scheme from porch
-    // amber so default controls warm up; surfaces are pinned to the app's
-    // slate/warm-paper (or OLED black) grounds.
+    // Teal app-wide accent: seed the Material 3 color scheme from the teal
+    // primary so default controls pick it up; surfaces are pinned to the
+    // app's deep-teal (or OLED black) grounds.
     colorScheme:
         ColorScheme.fromSeed(
           seedColor: AppColors.porchAmber,
@@ -299,10 +294,8 @@ class PorchSegmentedControl<T> extends StatelessWidget {
       builder: (context, constraints) {
         // The container pads its content and draws a 1px border: divide the
         // *inner* width so the segments never overflow the pill.
-        final innerWidth =
-            constraints.maxWidth - PorchSpacing.xs * 2 - 2;
-        final segmentWidth =
-            innerWidth / options.length.clamp(1, 99);
+        final innerWidth = constraints.maxWidth - PorchSpacing.xs * 2 - 2;
+        final segmentWidth = innerWidth / options.length.clamp(1, 99);
         final selectedIndex = options.indexWhere((o) => o.value == value);
         return Container(
           padding: const EdgeInsets.all(PorchSpacing.xs),
@@ -432,9 +425,7 @@ class PorchPrimaryButton extends StatelessWidget {
         ),
       ),
     );
-    return expanded
-        ? SizedBox(width: double.infinity, child: button)
-        : button;
+    return expanded ? SizedBox(width: double.infinity, child: button) : button;
   }
 }
 

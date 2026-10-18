@@ -213,7 +213,7 @@ extension _MainReunification on _MyAppState {
   Widget _buildReunificationOverlay() {
     return Positioned.fill(
       child: Material(
-        color: const Color(0xFF0F172A),
+        color: AppColors.backgroundOf(context),
         child: Center(
           child: SizedBox(
             width: 420,
@@ -226,17 +226,16 @@ extension _MainReunification on _MyAppState {
                   height: 80,
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
-                      colors: [
-                        AppColors.porchAmberLight,
-                        AppColors.porchAmber,
-                      ],
+                      colors: [AppColors.porchAmberLight, AppColors.porchAmber],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
                     borderRadius: BorderRadius.circular(20),
                     boxShadow: [
                       BoxShadow(
-                        color: AppColors.formMasterAccent.withValues(alpha: 0.3),
+                        color: AppColors.formMasterAccent.withValues(
+                          alpha: 0.3,
+                        ),
                         blurRadius: 24,
                         spreadRadius: 4,
                       ),
@@ -275,10 +274,12 @@ extension _MainReunification on _MyAppState {
                   Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF1E293B),
+                      color: AppColors.cardOf(context),
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
-                        color: AppColors.formMasterAccent.withValues(alpha: 0.3),
+                        color: AppColors.formMasterAccent.withValues(
+                          alpha: 0.3,
+                        ),
                       ),
                     ),
                     child: Column(
