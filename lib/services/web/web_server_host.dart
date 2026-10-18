@@ -59,6 +59,7 @@ class WebServerHost extends ChangeNotifier {
   ModelManager? _modelManager;
   HardwareService? _hardwareService;
   ImageGenService? _imageGenService;
+  EngineSessionTracker? _sessionTracker;
   KoboldService? _koboldService;
   TtsService? _ttsService;
   SttService? _sttService;
@@ -259,6 +260,8 @@ class WebServerHost extends ChangeNotifier {
   void setImageGenService(ImageGenService service) =>
       _imageGenService = service;
   void setKoboldService(KoboldService service) => _koboldService = service;
+  void setSessionTracker(EngineSessionTracker tracker) =>
+      _sessionTracker = tracker;
   void setTtsService(TtsService service) => _ttsService = service;
   void setSttService(SttService service) => _sttService = service;
   void setStoryRepository(StoryRepository repo) => _storyRepository = repo;

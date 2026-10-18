@@ -373,7 +373,13 @@ class ImageFacade {
 
   /// Generate an image from [prompt] using the configured backend. Returns the
   /// image as a base64 data URL plus the on-disk save path, or null on failure.
-  Future<Map<String, dynamic>?> generate(Map<String, dynamic> f) async {
+  ///
+  /// [sessionId] scopes the generation to a server login session so a
+  /// logout can drop its queued entries (server edition; null on desktop).
+  Future<Map<String, dynamic>?> generate(
+    Map<String, dynamic> f, {
+    String? sessionId,
+  }) async {
     final prompt = f['prompt']?.toString().trim() ?? '';
     if (prompt.isEmpty) return null;
     // Edit changes a picture: it needs one, and it runs the Edit graph and
@@ -396,6 +402,7 @@ class ImageFacade {
         referenceImage: reference,
         intent: edit ? StudioIntent.edit : StudioIntent.create,
         editStrength: (f['editStrength'] as num?)?.toDouble(),
+        sessionId: sessionId,
       ),
     );
     if (bytes == null) return null;

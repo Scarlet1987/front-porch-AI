@@ -242,6 +242,7 @@ extension WebServerHostWiring on WebServerHost {
       storyExportFacade: storyExportFacade,
       tunnelManager: tunnelManager,
       onClientActive: markClientActive,
+      sessionTracker: _sessionTracker,
     );
 
     // Direct binds (localhost or LAN) are always plain HTTP — never a

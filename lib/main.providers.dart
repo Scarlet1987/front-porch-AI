@@ -107,6 +107,9 @@ Widget _buildRootWidget(AppDatabase db, bool needsMigration) {
     host.setImageGenService(
       Provider.of<ImageGenService>(context, listen: false),
     );
+    host.setSessionTracker(
+      Provider.of<EngineSessionTracker>(context, listen: false),
+    );
     host.setTtsService(Provider.of<TtsService>(context, listen: false));
     host.setSttService(Provider.of<SttService>(context, listen: false));
     host.setStoryRepository(
@@ -456,6 +459,21 @@ Widget _buildRootWidget(AppDatabase db, bool needsMigration) {
               Provider.of<HardwareService>(context, listen: false),
             );
             return service;
+          },
+        ),
+        // Server edition: per-user session slices. Tracks logins so a
+        // logout tears down that user's queued generations, and the last
+        // logout unloads the engines.
+        ChangeNotifierProvider(
+          create: (context) {
+            final tracker = EngineSessionTracker();
+            tracker.setImageGenService(
+              Provider.of<ImageGenService>(context, listen: false),
+            );
+            tracker.setKoboldService(
+              Provider.of<KoboldService>(context, listen: false),
+            );
+            return tracker;
           },
         ),
         // Porch Stories: repository + pipeline must be above WebServerHost

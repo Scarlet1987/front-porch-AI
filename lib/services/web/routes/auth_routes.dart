@@ -162,9 +162,15 @@ class WebAuthRoutes {
     );
     switch (result.status) {
       case LoginStatus.success:
+        final token = result.token!;
+        // Server edition: a login starts a per-user engine session slice.
+        final loginUserId = await _auth.sessions.validate(token);
+        if (loginUserId != null) {
+          _deps.sessionTracker?.sessionStarted(loginUserId);
+        }
         return JsonResponse.ok(
           {'ok': true},
-          extraHeaders: {'Set-Cookie': _setCookie(request, result.token!)},
+          extraHeaders: {'Set-Cookie': _setCookie(request, token)},
         );
       case LoginStatus.totpRequired:
         return JsonResponse.error(
@@ -191,7 +197,15 @@ class WebAuthRoutes {
 
   Future<shelf.Response> _logout(shelf.Request request) async {
     final token = Cookies.sessionToken(request);
+    // Resolve the user before revoking — revoke doesn't return it.
+    final logoutUserId =
+        token == null ? null : await _auth.sessions.validate(token);
     if (token != null) await _auth.logout(token);
+    if (logoutUserId != null) {
+      // Server edition: ending the last session tears down the user's
+      // engine slice; the last user out unloads the engines.
+      await _deps.sessionTracker?.sessionEnded(logoutUserId);
+    }
     _deps.stoopFacade?.clearAssetToken(token);
     return JsonResponse.ok(
       {'ok': true},
@@ -246,8 +260,12 @@ class WebAuthRoutes {
     }
     if (body['all'] == true) {
       await _auth.sessions.revokeAllFor(userId);
+      // Server edition: all of this user's sessions just died.
+      await _deps.sessionTracker?.revokeAllSessions(userId);
     } else if (body['id'] != null) {
       await _auth.sessions.revokeById(body['id'].toString());
+      // "This device" UI: the revoked session belongs to the caller.
+      await _deps.sessionTracker?.sessionEnded(userId);
     } else {
       return JsonResponse.badRequest('Provide "id" or "all"');
     }

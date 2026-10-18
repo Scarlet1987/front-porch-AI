@@ -22,6 +22,7 @@ import 'package:shelf_router/shelf_router.dart';
 import 'package:front_porch_ai/services/image/studio_model_roots.dart';
 import 'package:front_porch_ai/services/kobold/kobold.dart';
 import 'package:front_porch_ai/services/web/facade/facades.dart';
+import 'package:front_porch_ai/services/web/middleware/auth_middleware.dart';
 import 'package:front_porch_ai/services/web/routes/civitai_routes.dart';
 import 'package:front_porch_ai/services/web/routes/expression_pack_routes.dart';
 import 'package:front_porch_ai/services/web/routes/image_desk_routes.dart';
@@ -383,7 +384,11 @@ class WebBackendRoutes {
     }
     final Map<String, dynamic>? result;
     try {
-      result = await _image!.generate(body);
+      // Server edition: scope the generation to this login session so a
+      // logout drops its queued entries. Null when unauthenticated.
+      final sessionId =
+          request.context[kAuthUserIdContextKey]?.toString();
+      result = await _image!.generate(body, sessionId: sessionId);
     } on DeskRefused catch (e) {
       return ImageDeskRoutes.refused(e);
     }

@@ -42,6 +42,16 @@ class _ImageQueueEntry {
 
 /// Queue, arbitration, and session-teardown members of [ImageGenService].
 extension ImageGenServiceQueue on ImageGenService {
+  /// Park image weights back in RAM (best-effort) when the last server
+  /// session ends. Public so [EngineSessionTracker] can idle the image
+  /// engine without a generation in flight.
+  Future<void> parkWeightsForSessionEnd() async {
+    final backend = ImageGenBackend.fromKey(
+      _storage.imageGenSettings.imageGenBackend,
+    );
+    await _parkImageWeights(backend);
+  }
+
   /// Drop this session's WAITING image generations (a running one is
   /// left to finish — cancelling mid-flight risks backend state).
   /// Called when a server login session ends.

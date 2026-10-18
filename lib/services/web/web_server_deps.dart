@@ -59,11 +59,16 @@ class WebServerDeps {
     this.storyExportFacade,
     this.tunnelManager,
     this.onClientActive,
+    this.sessionTracker,
   });
 
   final StorageService storage;
   final AppDatabase db;
   final AuthService auth;
+
+  /// Server edition: per-user session slices. Null on the individual
+  /// edition (no login sessions there).
+  final EngineSessionTracker? sessionTracker;
 
   /// WebSocket fan-out. Null when no ChatService has been injected (auth-only
   /// boot); the stream route is registered only when this is present.

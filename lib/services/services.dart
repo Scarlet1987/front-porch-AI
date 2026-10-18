@@ -33,6 +33,7 @@
 
 export 'desktop_spell_check_service.dart';
 export 'engine_health.dart';
+export 'engine_session_tracker.dart';
 export 'expression_pack_base.dart';
 export 'expression_pack_base_check.dart';
 export 'expression_pack_convert.dart';
