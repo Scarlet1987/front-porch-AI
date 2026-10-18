@@ -1,0 +1,213 @@
+// Copyright (C) 2026 Front Porch AI
+// SPDX-License-Identifier: AGPL-3.0-or-later
+//
+// Alice edition app shell: nav rail + the five Alice screens.
+// This is the real Alice frontend — not a recolor of the old app.
+
+import 'package:flutter/material.dart';
+import 'package:front_porch_ai/providers/app_state.dart';
+import 'package:front_porch_ai/ui/alice/alice_chat.dart';
+import 'package:front_porch_ai/ui/alice/alice_creator.dart';
+import 'package:front_porch_ai/ui/alice/alice_home.dart';
+import 'package:front_porch_ai/ui/alice/alice_settings.dart';
+import 'package:front_porch_ai/ui/alice/alice_worlds.dart';
+import 'package:front_porch_ai/ui/theme/app_colors.dart';
+import 'package:provider/provider.dart';
+
+/// Alice navigation destinations, in rail order.
+enum AliceDestination { home, chat, creator, worlds, settings }
+
+class AliceShell extends StatelessWidget {
+  const AliceShell({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final appState = Provider.of<AppState>(context);
+    final index = appState.selectedIndex.clamp(0, 4);
+
+    return Scaffold(
+      body: Row(
+        children: [
+          _AliceNavRail(selected: index, onSelect: (i) => appState.setIndex(i)),
+          Expanded(
+            child: IndexedStack(
+              index: index,
+              children: const [
+                AliceHomeScreen(),
+                AliceChatScreen(),
+                AliceCreatorScreen(),
+                AliceWorldsScreen(),
+                AliceSettingsScreen(),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AliceNavRail extends StatelessWidget {
+  final int selected;
+  final ValueChanged<int> onSelect;
+
+  const _AliceNavRail({required this.selected, required this.onSelect});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      width: 228,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+      decoration: BoxDecoration(
+        border: Border(right: BorderSide(color: AppColors.borderOf(context))),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Brand
+          Padding(
+            padding: const EdgeInsets.fromLTRB(8, 2, 8, 12),
+            child: Row(
+              children: [
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(10),
+                    gradient: const LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        Color(0xFF5EEAD4),
+                        Color(0xFF14B8A6),
+                        Color(0xFF0F766E),
+                      ],
+                    ),
+                  ),
+                  alignment: Alignment.center,
+                  child: const Text(
+                    '❋',
+                    style: TextStyle(color: Colors.white, fontSize: 20),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Front Porch',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: -0.2,
+                      ),
+                    ),
+                    Text(
+                      'Alice edition',
+                      style: TextStyle(fontSize: 11.5, color: theme.hintColor),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          _navButton(context, 0, Icons.home_rounded, 'Home'),
+          _navButton(context, 1, Icons.chat_bubble_rounded, 'Chat'),
+          _navButton(context, 2, Icons.person_add_rounded, 'Creator'),
+          _navButton(context, 3, Icons.public_rounded, 'Worlds'),
+          _navButton(context, 4, Icons.settings_rounded, 'Settings'),
+          const Spacer(),
+          // Backend status card at the bottom of the rail
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: AppColors.cardOf(context),
+              border: Border.all(color: AppColors.borderOf(context)),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      width: 9,
+                      height: 9,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: theme.hintColor,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    const Text(
+                      'Backend',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(top: 5, bottom: 10),
+                  child: Text(
+                    'Engines start on demand and unload when idle.',
+                    style: TextStyle(fontSize: 12.5, color: theme.hintColor),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _navButton(
+    BuildContext context,
+    int index,
+    IconData icon,
+    String label,
+  ) {
+    final isOn = selected == index;
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: InkWell(
+        onTap: () => onSelect(index),
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 8),
+          decoration: BoxDecoration(
+            color: isOn ? AppColors.surfaceOf(context) : Colors.transparent,
+            borderRadius: BorderRadius.circular(12),
+            border: isOn
+                ? Border(
+                    left: BorderSide(color: AppColors.porchAmber, width: 3),
+                  )
+                : null,
+          ),
+          child: Row(
+            children: [
+              Icon(
+                icon,
+                size: 20,
+                color: isOn ? theme.colorScheme.onSurface : theme.hintColor,
+              ),
+              const SizedBox(width: 11),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 14.5,
+                  fontWeight: isOn ? FontWeight.w600 : FontWeight.w500,
+                  color: isOn ? theme.colorScheme.onSurface : theme.hintColor,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}

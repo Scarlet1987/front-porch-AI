@@ -42,10 +42,9 @@ class AliceWorldsScreen extends StatelessWidget {
                 padding: const EdgeInsets.only(bottom: 14),
                 child: _WorldCard(
                   chain: chain,
-                  characterCount: (world_model.World w) =>
-                      charRepo.characters
-                          .where((c) => c.worldNames.contains(w.name))
-                          .length,
+                  characterCount: (world_model.World w) => charRepo.characters
+                      .where((c) => c.worldNames.contains(w.name))
+                      .length,
                 ),
               ),
             if (detail == DetailLevel.advanced) _contextPagingCard(),
@@ -90,10 +89,9 @@ List<List<_ChainRow>> _rootChains(List<world_model.World> worlds) {
   }
   for (final kids in childrenOf.values) {
     kids.sort(
-      (a, b) =>
-          a.tier.index.compareTo(b.tier.index) != 0
-              ? a.tier.index.compareTo(b.tier.index)
-              : a.name.compareTo(b.name),
+      (a, b) => a.tier.index.compareTo(b.tier.index) != 0
+          ? a.tier.index.compareTo(b.tier.index)
+          : a.name.compareTo(b.name),
     );
   }
 
@@ -176,9 +174,7 @@ class _EmptyState extends StatelessWidget {
             'Worlds nest widest to narrowest: Stage → Universe → Planet → '
             'Continent → City/Village/Town. Add a top-level world first, '
             'then hang places beneath it.',
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.hintColor,
-            ),
+            style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor),
           ),
           const SizedBox(height: 12),
           AliceButton(label: 'New world', onPressed: onNewWorld, block: true),
@@ -197,8 +193,7 @@ class _WorldCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final root = chain.first.world;
-    final breadcrumb =
-        chain.map((r) => r.world.tier.label).toSet().join(' → ');
+    final breadcrumb = chain.map((r) => r.world.tier.label).toSet().join(' → ');
     return AliceCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -285,8 +280,7 @@ class _TierRow extends StatelessWidget {
                         label: 'Visit in chat',
                         ghost: true,
                         small: true,
-                        onPressed: () =>
-                            context.read<AppState>().setIndex(1),
+                        onPressed: () => context.read<AppState>().setIndex(1),
                       ),
                     ],
                   ),
@@ -312,10 +306,7 @@ Widget _contextPagingCard() {
               'How much of the hierarchy enters context per scene, by detail level',
         ),
         SizedBox(height: 8),
-        AliceKeyValue(
-          label: 'Simple',
-          value: "Current town + the MC's card",
-        ),
+        AliceKeyValue(label: 'Simple', value: "Current town + the MC's card"),
         AliceKeyValue(
           label: 'Balanced',
           value: 'Town + continent, lorebook on keyword',
@@ -361,21 +352,15 @@ void _showNewWorldDialog(BuildContext context, WorldRepository repo) {
                   decoration: const InputDecoration(labelText: 'Tier'),
                   items: [
                     for (final t in world_model.WorldTier.values)
-                      DropdownMenuItem(
-                        value: t,
-                        child: Text(t.label),
-                      ),
+                      DropdownMenuItem(value: t, child: Text(t.label)),
                   ],
-                  onChanged: (t) =>
-                      setDialogState(() => tier = t ?? tier),
+                  onChanged: (t) => setDialogState(() => tier = t ?? tier),
                 ),
                 const SizedBox(height: 12),
                 TextField(
                   controller: descController,
                   maxLines: 3,
-                  decoration: const InputDecoration(
-                    labelText: 'Description',
-                  ),
+                  decoration: const InputDecoration(labelText: 'Description'),
                 ),
                 const SizedBox(height: 8),
                 Text(

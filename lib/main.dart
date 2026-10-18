@@ -44,7 +44,7 @@ import 'package:front_porch_ai/ui/theme/porch_theme_scope.dart';
 import 'package:front_porch_ai/ui/window_chrome.dart';
 import 'package:front_porch_ai/ui/window_size_env.dart';
 import 'package:front_porch_ai/services/backporch/backporch.dart';
-import 'package:front_porch_ai/ui/layout/main_layout.dart'; // Keep original import for MainLayout
+import 'package:front_porch_ai/ui/alice/alice_shell.dart';
 import 'package:front_porch_ai/app_version.dart';
 import 'package:front_porch_ai/utils/native_exit.dart';
 import 'package:front_porch_ai/utils/utils.dart' show StartupTrace;
@@ -418,7 +418,7 @@ class _MyAppState extends State<MyApp> with WindowListener {
                 ).copyWith(textScaler: TextScaler.linear(effectiveScale)),
                 child: Stack(
                   children: [
-                    const MainLayout(),
+                    const AliceShell(),
                     // Mounted one frame late ON PURPOSE: SetupOverlay reads
                     // SetupService/BackendManager and RemoteLockOverlay
                     // consumes WebServerHost — whose provider reads ~15
