@@ -22,6 +22,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import 'package:front_porch_ai/app_version.dart';
 import 'package:front_porch_ai/services/services.dart';
+import 'package:front_porch_ai/ui/alice/alice_settings.dart';
 import 'package:front_porch_ai/ui/theme/theme.dart';
 import 'package:front_porch_ai/ui/widgets/widgets.dart';
 import 'package:front_porch_ai/ui/settings/widgets/widgets.dart';

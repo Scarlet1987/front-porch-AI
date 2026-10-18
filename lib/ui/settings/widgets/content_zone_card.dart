@@ -27,12 +27,11 @@ import 'package:provider/provider.dart';
 import 'package:front_porch_ai/models/models.dart';
 import 'package:front_porch_ai/services/services.dart';
 import 'package:front_porch_ai/services/storage/storage.dart';
-import 'package:front_porch_ai/ui/settings/widgets/dead_dove/dead_dove_disclaimer_dialog.dart';
+import 'package:front_porch_ai/ui/settings/widgets/content_zone_select.dart';
 import 'package:front_porch_ai/ui/settings/widgets/dead_dove/dead_dove_panel.dart';
 import 'package:front_porch_ai/ui/theme/app_colors.dart';
 import 'package:front_porch_ai/ui/theme/porch_design.dart';
 import 'package:front_porch_ai/ui/widgets/detail_level_control.dart';
-import 'package:front_porch_ai/ui/widgets/warm_dialog.dart';
 
 class ContentZoneCard extends StatelessWidget {
   const ContentZoneCard({super.key});
@@ -94,58 +93,7 @@ class ContentZoneCard extends StatelessWidget {
     BuildContext context,
     UiSettings uiSettings,
     ContentZone zone,
-  ) async {
-    if (zone == uiSettings.contentZone) return;
-    // Adult zones require 18+ verification; downgrade is always free.
-    if (zone.requiresAdult && !uiSettings.adultVerified) {
-      final verified = await _verifyAdult(context);
-      if (!verified) return;
-      await uiSettings.setAdultVerified(true);
-    }
-    // Dead Dove opens the disclaimer + own-model loader first.
-    if (zone == ContentZone.deadDove) {
-      final confirmed = await showDeadDoveDisclaimer(context);
-      if (!confirmed) return;
-    }
-    await uiSettings.setContentZone(zone);
-  }
-
-  /// Simple 18+ verification: the user enters their birthdate; 18+ passes.
-  Future<bool> _verifyAdult(BuildContext context) async {
-    DateTime? birthdate;
-    final confirmed = await showWarmDialog<bool>(
-      context,
-      title: '18+ verification',
-      icon: Icons.verified_user_outlined,
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'The NSFW and Dead Dove zones allow adult content. '
-            'Please confirm you are 18 or older.',
-            style: PorchType.body(context),
-          ),
-          const SizedBox(height: PorchSpacing.md),
-          _BirthdateField(onChanged: (d) => birthdate = d),
-        ],
-      ),
-      actions: [
-        warmDialogCancel(context),
-        warmDialogConfirm(
-          context,
-          label: 'Verify',
-          onPressed: () {
-            final d = birthdate;
-            final adult =
-                d != null && DateTime.now().difference(d).inDays >= 18 * 365;
-            Navigator.of(context).pop(adult);
-          },
-        ),
-      ],
-    );
-    return confirmed ?? false;
-  }
+  ) => selectContentZone(context, uiSettings, zone);
 }
 
 class _ZoneTile extends StatelessWidget {
@@ -244,50 +192,6 @@ class _ZoneTile extends StatelessWidget {
               ),
             ],
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class _BirthdateField extends StatefulWidget {
-  const _BirthdateField({required this.onChanged});
-
-  final ValueChanged<DateTime?> onChanged;
-
-  @override
-  State<_BirthdateField> createState() => _BirthdateFieldState();
-}
-
-class _BirthdateFieldState extends State<_BirthdateField> {
-  DateTime? _date;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: () async {
-        final now = DateTime.now();
-        final picked = await showDatePicker(
-          context: context,
-          initialDate: DateTime(now.year - 20, now.month, now.day),
-          firstDate: DateTime(now.year - 120),
-          lastDate: now,
-        );
-        if (picked != null) {
-          setState(() => _date = picked);
-          widget.onChanged(picked);
-        }
-      },
-      child: InputDecorator(
-        decoration: const InputDecoration(
-          labelText: 'Birthdate',
-          border: OutlineInputBorder(),
-        ),
-        child: Text(
-          _date == null
-              ? 'Tap to select'
-              : '${_date!.year}-${_date!.month.toString().padLeft(2, '0')}-'
-                    '${_date!.day.toString().padLeft(2, '0')}',
         ),
       ),
     );

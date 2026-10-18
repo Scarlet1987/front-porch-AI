@@ -133,54 +133,10 @@ extension _GeneralTabAbout on GeneralTab {
     );
   }
 
-  /// Credits for the Alice edition re-engineering: the design lead who
-  /// directed the engine overhaul, the GUI redesign, and the creator
-  /// systems. Shown on the Alice branch only.
+  /// Credits for the Alice edition re-engineering. The card itself lives in
+  /// [AliceEditionCreditsCard] so the Alice Settings screen reuses it —
+  /// shown on the Alice branch only.
   Widget _buildAliceCreditsSection(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.cardOf(context),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppColors.porchAmberOf(context), width: 1),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(
-                Icons.auto_awesome_outlined,
-                size: 18,
-                color: AppColors.porchAmberOf(context),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                'The Alice edition',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary(context),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'This build is the Alice edition — a ground-up re-engineering '
-            'of Front Porch AI, directed by Scarlet1987: the engine overhaul '
-            'under the hood, the full interface redesign, the Dead Dove '
-            'negotiated-limits model, the Main Character board, and the '
-            'Kardashev civilization system. She gave it the review the '
-            'original never got.',
-            style: TextStyle(
-              color: AppColors.textSecondary(context),
-              fontSize: 12,
-              height: 1.4,
-            ),
-          ),
-        ],
-      ),
-    );
+    return const AliceEditionCreditsCard();
   }
 }
