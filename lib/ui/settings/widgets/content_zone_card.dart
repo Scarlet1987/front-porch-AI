@@ -27,6 +27,8 @@ import 'package:provider/provider.dart';
 import 'package:front_porch_ai/models/models.dart';
 import 'package:front_porch_ai/services/services.dart';
 import 'package:front_porch_ai/services/storage/storage.dart';
+import 'package:front_porch_ai/ui/settings/widgets/dead_dove/dead_dove_disclaimer_dialog.dart';
+import 'package:front_porch_ai/ui/settings/widgets/dead_dove/dead_dove_panel.dart';
 import 'package:front_porch_ai/ui/theme/app_colors.dart';
 import 'package:front_porch_ai/ui/theme/porch_design.dart';
 import 'package:front_porch_ai/ui/widgets/detail_level_control.dart';
@@ -72,6 +74,11 @@ class ContentZoneCard extends StatelessWidget {
             ),
             const SizedBox(height: PorchSpacing.sm),
           ],
+          if (zone == ContentZone.deadDove) ...[
+            const SizedBox(height: PorchSpacing.sm),
+            const DeadDovePanel(),
+            const SizedBox(height: PorchSpacing.sm),
+          ],
           Text(
             'The minor-safety boundary holds in every zone, no exceptions.',
             style: PorchType.hint(
@@ -94,6 +101,11 @@ class ContentZoneCard extends StatelessWidget {
       final verified = await _verifyAdult(context);
       if (!verified) return;
       await uiSettings.setAdultVerified(true);
+    }
+    // Dead Dove opens the disclaimer + own-model loader first.
+    if (zone == ContentZone.deadDove) {
+      final confirmed = await showDeadDoveDisclaimer(context);
+      if (!confirmed) return;
     }
     await uiSettings.setContentZone(zone);
   }
