@@ -158,20 +158,64 @@
   .zone.nsfw .level{color:var(--blue);}
   .zone.dove .level{color:var(--pink);}
 
-  /* ── Credits ── */
-  .credit-card{
-    background:var(--card); border:1px solid var(--border); border-radius:20px; padding:40px;
-    text-align:center; max-width:720px; margin:0 auto;
+  /* ── 3-column layout with sidebars ── */
+  .layout{
+    max-width:1420px; margin:0 auto; padding:0 24px;
+    display:grid; grid-template-columns:270px minmax(0,1fr) 300px; gap:36px;
+    align-items:start;
   }
-  .credit-card .avatar{
-    width:72px; height:72px; border-radius:50%; margin:0 auto 18px;
+  .sidebar{
+    position:sticky; top:88px;
+    max-height:calc(100vh - 110px); overflow-y:auto;
+    scrollbar-width:thin; padding-bottom:8px;
+  }
+  .side-card{
+    background:var(--card); border:1px solid var(--border-soft); border-radius:16px;
+    padding:22px; margin-bottom:18px;
+  }
+  .side-card h4{
+    font-size:.76rem; letter-spacing:.13em; text-transform:uppercase;
+    color:var(--teal); margin-bottom:14px; font-weight:800;
+  }
+  .model-group{
+    font-size:.72rem; letter-spacing:.1em; text-transform:uppercase;
+    color:var(--ink-3); margin:16px 0 4px; font-weight:700;
+  }
+  .model-group:first-of-type{margin-top:0;}
+  .model{padding:11px 0; border-bottom:1px solid var(--border-soft);}
+  .model:last-child{border-bottom:none; padding-bottom:0;}
+  .model .name{font-weight:700; font-size:.94rem;}
+  .model .cat{
+    display:inline-block; font-size:.68rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase;
+    padding:2px 9px; border-radius:999px; margin-left:8px; vertical-align:1px;
+  }
+  .cat.img{background:rgba(125,211,252,.12); color:var(--blue);}
+  .cat.voice{background:rgba(251,143,171,.12); color:var(--pink);}
+  .cat.text{background:rgba(45,212,191,.12); color:var(--teal);}
+  .model .desc{font-size:.82rem; color:var(--ink-2); margin-top:3px;}
+  .cred-head{display:flex; align-items:center; gap:14px; margin-bottom:12px;}
+  .cred-head .avatar{
+    width:52px; height:52px; border-radius:50%; flex:none;
     background:linear-gradient(135deg, var(--teal), var(--teal-dark));
     display:flex; align-items:center; justify-content:center;
-    font-size:1.6rem; font-weight:800; color:var(--teal-ink);
+    font-size:1.2rem; font-weight:800; color:var(--teal-ink);
   }
-  .credit-card h3{font-size:1.4rem;}
-  .credit-card .role{color:var(--teal); font-weight:600; margin:6px 0 14px;}
-  .credit-card p{color:var(--ink-2); font-size:.95rem; max-width:560px; margin:0 auto;}
+  .cred-head .role{color:var(--teal); font-size:.85rem; font-weight:600;}
+  .side-card .tagline{font-size:.88rem; color:var(--ink-2); font-style:italic;}
+  .cred-list{list-style:none; display:grid; gap:9px;}
+  .cred-list li{font-size:.88rem; color:var(--ink-2); padding-left:20px; position:relative;}
+  .cred-list li::before{content:"→"; position:absolute; left:0; color:var(--teal);}
+  .side-card .small{font-size:.84rem; color:var(--ink-2);}
+  /* content column: sections sit tighter inside the grid */
+  .content{min-width:0;}
+  .content section{padding:56px 0;}
+  .content section:first-child{padding-top:8px;}
+  .content .wrap{max-width:none; padding:0;}
+  .content section.alt{background:none; border:none; border-top:1px solid var(--border-soft);}
+  @media(max-width:1100px){
+    .layout{grid-template-columns:1fr; max-width:1080px;}
+    .sidebar{position:static; max-height:none; overflow:visible;}
+  }
 
   /* ── Links / footer ── */
   .link-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:16px;}
@@ -216,6 +260,30 @@
   </div>
 </header>
 
+<!-- ═══ 3-COLUMN LAYOUT ═══ -->
+<div class="layout">
+  <aside class="sidebar left" id="models" aria-label="Model catalog">
+    <div class="side-card">
+      <h4>🧠 Models</h4>
+      <div class="model-group">Images</div>
+      <div class="model"><span class="name">FLUX.1 Schnell</span><span class="cat img">Image</span><p class="desc">Fast, sharp local image generation.</p></div>
+      <div class="model"><span class="name">SD 3.5 Medium</span><span class="cat img">Image</span><p class="desc">Balanced quality-to-VRAM ratio.</p></div>
+      <div class="model"><span class="name">SDXL Turbo</span><span class="cat img">Image</span><p class="desc">Speed-first diffusion.</p></div>
+      <div class="model"><span class="name">Qwen-Image</span><span class="cat img">Image</span><p class="desc">Multilingual-aware generation.</p></div>
+      <div class="model-group">Voice</div>
+      <div class="model"><span class="name">Qwen3-TTS 1.7B</span><span class="cat voice">Voice</span><p class="desc">Lightweight local text-to-speech.</p></div>
+      <div class="model"><span class="name">PersonaPlex-7B</span><span class="cat voice">Voice</span><p class="desc">Expressive character voices.</p></div>
+      <div class="model"><span class="name">Voilà</span><span class="cat voice">Voice</span><p class="desc">Local-first voice models.</p></div>
+      <div class="model-group">Text</div>
+      <div class="model"><span class="name">Qwen3 8B</span><span class="cat text">Text</span><p class="desc">The story engine, via KoboldCpp — managed in-app.</p></div>
+    </div>
+    <div class="side-card">
+      <h4>⚡ Engine budget</h4>
+      <p class="small">8 GB VRAM baseline. Image weights park in RAM and stream to VRAM only during generation — the budget is enforced, not suggested.</p>
+    </div>
+  </aside>
+
+  <main class="content">
 <!-- ═══ SCREENS ═══ -->
 <section id="screens">
   <div class="wrap">
@@ -409,25 +477,34 @@
   </div>
 </section>
 
-<!-- ═══ CREDITS ═══ -->
-<section id="credits" class="alt">
-  <div class="wrap">
-    <div class="sec-head" style="text-align:center; margin-left:auto; margin-right:auto;">
-      <div class="eyebrow">Credits</div>
-      <h2>The review that should have happened</h2>
+  </main>
+
+  <aside class="sidebar right" id="credits" aria-label="Credits">
+    <div class="side-card">
+      <h4>Built by</h4>
+      <div class="cred-head">
+        <div class="avatar">S</div>
+        <div><strong>Scarlet1987</strong><br><span class="role">Alice edition design lead</span></div>
+      </div>
+      <p class="tagline">"The review the original never got."</p>
+      <p class="small" style="margin-top:10px;"><a href="https://github.com/Scarlet1987" target="_blank" rel="noopener">github.com/Scarlet1987</a></p>
     </div>
-    <div class="credit-card">
-      <div class="avatar">S</div>
-      <h3>Scarlet1987</h3>
-      <div class="role">Alice edition design lead</div>
-      <p>Engine overhaul · GUI redesign · Dead Dove negotiated-limits model · Main Character board · Kardashev system. Every "this doesn't make sense to the user," every bug caught in a terminal dump at 1am, every "no, do it right" — that was the review the original never got.</p>
-      <p style="margin-top:16px;"><a href="https://github.com/Scarlet1987" target="_blank" rel="noopener">github.com/Scarlet1987</a></p>
+    <div class="side-card">
+      <h4>What she did</h4>
+      <ul class="cred-list">
+        <li>Engine overhaul — FIFO queue, VRAM arbitration</li>
+        <li>Full interface redesign</li>
+        <li>Dead Dove negotiated-limits model</li>
+        <li>Main Character board</li>
+        <li>Kardashev system with live gear checks</li>
+      </ul>
     </div>
-    <p style="text-align:center; margin-top:24px; color:var(--ink-3); font-size:.88rem;">
-      Based on <a href="https://github.com/linux4life1/front-porch-AI" target="_blank" rel="noopener">Front Porch AI</a> by linux4life1 · AGPL-3.0-or-later · The code stays open.
-    </p>
-  </div>
-</section>
+    <div class="side-card">
+      <h4>Upstream</h4>
+      <p class="small">Based on <a href="https://github.com/linux4life1/front-porch-AI" target="_blank" rel="noopener">Front Porch AI</a> by linux4life1 · AGPL-3.0-or-later. The code stays open.</p>
+    </div>
+  </aside>
+</div><!-- /.layout -->
 
 <!-- ═══ LINKS ═══ -->
 <section id="links">
