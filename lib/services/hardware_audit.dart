@@ -195,14 +195,22 @@ class HardwareAudit {
     final lspciOutput = await _lspciOutput();
     final vendor = await _probeVendor(lspciOutput);
     final gpuName = _gpuNameFromLspciOutput(lspciOutput);
-    final vramMb = await _probeVram(vendor);
+    final vramRes = await _probeVram(vendor);
+    final vramMb = vramRes.vramMb;
     final systemRamMb = await _probeSystemRam();
     final cpuCores = Platform.numberOfProcessors;
-    final hasCuda = await _probeCuda(vendor);
-    final hasRocm = await _probeRocm(vendor);
+    // CUDA is viable exactly when nvidia-smi ran successfully — _probeVram
+    // already determined that above, so no second spawn. Never true on macOS.
+    final hasCuda =
+        !Platform.isMacOS &&
+        (vendor == 'Nvidia' || vendor == 'Unknown') &&
+        vramRes.nvidiaSmiOk;
+    final rocm = await _probeRocm(vendor);
+    final hasRocm = rocm.present;
     // Gfx arch matters for ROCm viability: Polaris (gfx803) has a rocminfo
-    // binary but no usable compute. Parse it when ROCm is present.
-    final gfxArch = hasRocm ? await _probeGfxArch() : null;
+    // binary but no usable compute. Parsed from the same rocminfo output —
+    // no second spawn.
+    final gfxArch = rocm.gfxArch;
 
     final tier = CapabilityTier.forVram(vramMb);
     final modes = _recommendedModes(
@@ -317,36 +325,46 @@ class HardwareAudit {
     return 'Unknown';
   }
 
-  static Future<int> _probeVram(String vendor) async {
+  /// NVIDIA VRAM + CUDA availability from a single nvidia-smi spawn.
+  /// Returns both answers so callers never spawn nvidia-smi twice.
+  static Future<({int vramMb, bool cudaOk})> _probeNvidia() async {
+    try {
+      final res = await Process.run('nvidia-smi', [
+        '--query-gpu=memory.total',
+        '--format=csv,noheader,nounits',
+      ]).timeout(const Duration(seconds: 10));
+      if (res.exitCode != 0) return (vramMb: 0, cudaOk: false);
+      var best = 0;
+      for (final line in res.stdout.toString().split('\n')) {
+        final mb = int.tryParse(
+          RegExp(r'(\d+)').firstMatch(line)?.group(1) ?? '',
+        );
+        if (mb != null && mb > best) best = mb;
+      }
+      return (vramMb: best, cudaOk: true);
+    } catch (_) {
+      return (vramMb: 0, cudaOk: false);
+    }
+  }
+
+  static Future<({int vramMb, bool nvidiaSmiOk})> _probeVram(
+    String vendor,
+  ) async {
     // NVIDIA: nvidia-smi is authoritative.
     if (vendor == 'Nvidia' || vendor == 'Unknown') {
-      try {
-        final res = await Process.run('nvidia-smi', [
-          '--query-gpu=memory.total',
-          '--format=csv,noheader,nounits',
-        ]).timeout(const Duration(seconds: 10));
-        if (res.exitCode == 0) {
-          var best = 0;
-          for (final line in res.stdout.toString().split('\n')) {
-            final mb = int.tryParse(
-              RegExp(r'(\d+)').firstMatch(line)?.group(1) ?? '',
-            );
-            if (mb != null && mb > best) best = mb;
-          }
-          if (best > 0) return best;
-        }
-      } catch (_) {}
+      final nvidia = await _probeNvidia();
+      if (nvidia.vramMb > 0) return (vramMb: nvidia.vramMb, nvidiaSmiOk: true);
       // Unknown vendor: nvidia-smi failed, don't try other paths blindly.
-      if (vendor == 'Nvidia') return 0;
+      if (vendor == 'Nvidia') return (vramMb: 0, nvidiaSmiOk: nvidia.cudaOk);
     }
     // AMD: sysfs via the amdgpu driver.
     if (vendor == 'AMD' || vendor == 'Unknown') {
       try {
         final total = await _amdVramFromSysfs();
-        if (total > 0) return total;
+        if (total > 0) return (vramMb: total, nvidiaSmiOk: false);
       } catch (_) {}
     }
-    return 0;
+    return (vramMb: 0, nvidiaSmiOk: false);
   }
 
   /// Largest VRAM total across /sys/class/drm/cardN (amdgpu), in MB.
@@ -405,51 +423,26 @@ class HardwareAudit {
     return 0;
   }
 
-  /// Only probed when the vendor is Nvidia (or Unknown — the one case where
-  /// we can't rule it out). Never spawned on AMD/Intel hardware.
-  static Future<bool> _probeCuda(String vendor) async {
-    if (vendor != 'Nvidia' && vendor != 'Unknown') return false;
-    if (Platform.isMacOS) return false;
-    try {
-      final res = await Process.run(
-        'nvidia-smi',
-        [],
-      ).timeout(const Duration(seconds: 10));
-      return res.exitCode == 0;
-    } catch (_) {
-      return false;
-    }
-  }
-
   /// Advisory only, Linux + AMD. Never decides the backend by itself.
-  static Future<bool> _probeRocm(String vendor) async {
-    if (!Platform.isLinux) return false;
-    if (vendor != 'AMD') return false;
+  /// Single rocminfo spawn answering both presence and gfx architecture —
+  /// a present binary does not imply a supported architecture (Polaris).
+  static Future<({bool present, String? gfxArch})> _probeRocm(
+    String vendor,
+  ) async {
+    if (!Platform.isLinux) return (present: false, gfxArch: null);
+    if (vendor != 'AMD') return (present: false, gfxArch: null);
     try {
       final res = await Process.run(
         'rocminfo',
         [],
       ).timeout(const Duration(seconds: 10));
-      return res.exitCode == 0;
+      if (res.exitCode != 0) return (present: false, gfxArch: null);
+      return (
+        present: true,
+        gfxArch: GpuBackendResolver.gfxFromRocminfo(res.stdout.toString()),
+      );
     } catch (_) {
-      return false;
-    }
-  }
-
-  /// AMD gfx architecture from rocminfo (e.g. 'gfx803'). Used to determine
-  /// whether ROCm compute is actually viable on this card — a present
-  /// rocminfo binary does not imply a supported architecture (Polaris).
-  static Future<String?> _probeGfxArch() async {
-    if (!Platform.isLinux) return null;
-    try {
-      final res = await Process.run(
-        'rocminfo',
-        [],
-      ).timeout(const Duration(seconds: 10));
-      if (res.exitCode != 0) return null;
-      return GpuBackendResolver.gfxFromRocminfo(res.stdout.toString());
-    } catch (_) {
-      return null;
+      return (present: false, gfxArch: null);
     }
   }
 
