@@ -247,7 +247,7 @@ extension WebServerHostWiring on WebServerHost {
     // Direct binds (localhost or LAN) are always plain HTTP — never a
     // self-signed cert, whose browser trust warning is worse UX than http.
     // Real HTTPS comes only from a trusted external terminator (Tailscale
-    // serve / ngrok); over those our server stays plain http on loopback.
+    // serve); over it our server stays plain http on loopback.
     final bound =
         await shelf_io.serve(buildWebHandler(deps), bindAddress, bindPort)
           ..autoCompress = true;

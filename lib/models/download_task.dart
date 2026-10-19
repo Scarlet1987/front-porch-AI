@@ -17,6 +17,7 @@
 // along with Front Porch AI. If not, see <https://www.gnu.org/licenses/>.
 
 import 'dart:io';
+import 'package:path/path.dart' as p;
 import 'package:uuid/uuid.dart';
 
 /// The current state of a download task in the queue.
@@ -122,12 +123,13 @@ class DownloadTask {
   DownloadTask({
     String? id,
     required this.url,
-    required this.filename,
+    required String filename,
     required this.targetDir,
     this.repoId,
     this.expectedSha256,
     this.maxRetries = 3,
-  }) : id = id ?? const Uuid().v4(),
+  }) : filename = sanitizeFilename(filename),
+       id = id ?? const Uuid().v4(),
        state = DownloadTaskState.pending,
        progress = 0.0,
        bytesDownloaded = 0,
@@ -137,6 +139,17 @@ class DownloadTask {
        retryCount = 0,
        _resumeOffset = 0,
        _previousBytes = 0;
+
+  /// Strips any directory components from [raw] and rejects path traversal.
+  /// HuggingFace API paths arrive unsanitized — a malicious repo can serve
+  /// `../../.config/autostart/evil.desktop`. Throws on hostile input.
+  static String sanitizeFilename(String raw) {
+    final base = p.basename(raw.replaceAll('\\', '/'));
+    if (base.isEmpty || base == '.' || base == '..' || base.contains('..')) {
+      throw ArgumentError('Refusing hostile download filename: $raw');
+    }
+    return base;
+  }
 
   /// Creates a DownloadTask from an existing partial download.
   /// Used when restoring paused downloads on app restart.

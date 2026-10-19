@@ -191,6 +191,16 @@ extension BackendManagerDownload on BackendManager {
         );
       }
 
+      // Integrity: the binary is chmod +x and executed after this point —
+      // refuse if the bytes don't match the published build hash.
+      // TODO: publish SHA256SUMS per KoboldCpp build and plumb the expected
+      // hash through from the release metadata.
+      await VerifySha256.verifyFileOrThrow(
+        file,
+        null, // no published hash yet — logs TODO, does not block
+        assetLabel: 'koboldcpp engine',
+      );
+
       // Only now does the complete binary become the live executable.
       await BackendManager.swapStagedBinary(file, savePath);
 

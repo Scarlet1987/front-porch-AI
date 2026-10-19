@@ -23,7 +23,7 @@ import 'package:front_porch_ai/services/web/tunnels/tunnels.dart';
 import 'package:front_porch_ai/services/web/util/util.dart';
 import 'package:front_porch_ai/services/web/web_server_deps.dart';
 
-/// Remote-access (Tailscale / ngrok / port-forward) status + control endpoints.
+/// Remote-access (Tailscale / port-forward) status + control endpoints.
 ///
 /// Enabling a tunnel publishes the full web surface (chat, library, settings)
 /// beyond the host. That is a credential-grade action: session cookie alone
@@ -33,7 +33,6 @@ class WebRemoteRoutes {
     router.get('/api/remote/status', _status);
     router.post('/api/remote/tailscale', _tailscale);
     router.post('/api/remote/tailscale/login', _tailscaleLogin);
-    router.post('/api/remote/ngrok', _ngrok);
   }
 
   final WebServerDeps _deps;
@@ -42,16 +41,9 @@ class WebRemoteRoutes {
   Future<shelf.Response> _status(shelf.Request request) async =>
       JsonResponse.ok(await _statusMap());
 
-  /// Tunnel status enriched with whether an ngrok authtoken is already saved
-  /// (so the UI can pre-skip the token step).
+  /// Tunnel status for the UI.
   Future<Map<String, dynamic>> _statusMap() async {
-    final status = await _tunnels.status();
-    final ngrok = status['ngrok'];
-    if (ngrok is Map) {
-      ngrok['hasAuthToken'] =
-          _deps.storage.webServerSettings.webServerNgrokAuthToken.isNotEmpty;
-    }
-    return status;
+    return _tunnels.status();
   }
 
   Future<shelf.Response> _tailscaleLogin(shelf.Request request) async {
@@ -94,38 +86,6 @@ class WebRemoteRoutes {
       }
     } else {
       await _tunnels.disableTailscale();
-    }
-    return JsonResponse.ok(await _statusMap());
-  }
-
-  Future<shelf.Response> _ngrok(shelf.Request request) async {
-    final body = await _json(request);
-    if (body['enable'] == true) {
-      // Step-up first — never persist an authtoken on session-only auth.
-      final denied = await denyUnlessSteppedUp(
-        auth: _deps.auth,
-        body: body,
-        request: request,
-      );
-      if (denied != null) return denied;
-
-      final settings = _deps.storage.webServerSettings;
-      final provided = body['authToken']?.toString();
-      if (provided != null && provided.isNotEmpty) {
-        await settings.setWebServerNgrokAuthToken(provided);
-      }
-      final token = settings.webServerNgrokAuthToken;
-      final url = await _tunnels.enableNgrok(
-        authToken: token.isEmpty ? null : token,
-      );
-      if (url == null) {
-        return JsonResponse.error(
-          502,
-          'Could not start ngrok (check the authtoken and your plan limits)',
-        );
-      }
-    } else {
-      await _tunnels.disableNgrok();
     }
     return JsonResponse.ok(await _statusMap());
   }

@@ -23,7 +23,7 @@ import 'package:shelf/shelf.dart' as shelf;
 
 /// Safe request-body parsing with a size cap, so a malicious or buggy client
 /// cannot stream an unbounded body into memory on an internet-exposed server
-/// (Tailscale Funnel / ngrok / port-forward).
+/// (Tailscale Funnel / port-forward).
 class RequestBody {
   const RequestBody._();
 

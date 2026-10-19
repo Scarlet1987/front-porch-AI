@@ -27,6 +27,7 @@ import 'package:front_porch_ai/services/kobold/kobold.dart';
 import 'package:front_porch_ai/services/storage_service.dart';
 import 'package:front_porch_ai/services/hardware_service.dart';
 import 'package:front_porch_ai/services/update_service.dart';
+import 'package:front_porch_ai/services/security/verify_sha256.dart';
 import 'package:front_porch_ai/utils/utils.dart';
 
 part 'backend_manager.download.dart';

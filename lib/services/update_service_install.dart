@@ -181,8 +181,10 @@ extension UpdateServiceInstall on UpdateService {
 
     // Compute the output script filename first (it is independent).
     // Robust wait + cleanup + error to stderr (bash sidecar spirit).
-    final scriptPath =
-        '${Directory.systemTemp.path}/fp_update_${DateTime.now().millisecondsSinceEpoch}.sh';
+    // Unique temp dir per install — a predictable path in the shared temp dir
+    // allows symlink planting between write and execute (§3g).
+    final scriptDir = await Directory.systemTemp.createTemp('fpai_update_');
+    final scriptPath = '${scriptDir.path}/fp_update.sh';
 
     // Defense-in-depth escaping for paths embedded into the generated shell
     // script (issue #12). Pid is numeric and safe. We use single-quote + ' -> '\''

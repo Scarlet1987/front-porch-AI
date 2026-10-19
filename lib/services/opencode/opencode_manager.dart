@@ -29,6 +29,7 @@ import 'package:front_porch_ai/services/opencode/opencode_paths.dart';
 import 'package:front_porch_ai/services/opencode/opencode_pin.dart';
 import 'package:front_porch_ai/services/opencode/opencode_process.dart';
 import 'package:front_porch_ai/services/opencode/opencode_version.dart';
+import 'package:front_porch_ai/services/security/verify_sha256.dart';
 
 typedef OpenCodeDownloader =
     Future<List<int>> Function(
@@ -213,16 +214,34 @@ class OpenCodeManager extends ChangeNotifier {
         await unpack.delete(recursive: true);
       }
       await unpack.create(recursive: true);
+      // Integrity: the archive is extracted and the binary executed after
+      // this point — refuse if the bytes don't match the published hash.
+      // TODO: pin the expected SHA-256 per OpenCode release (third-party
+      // fork; consider pinning to an explicit tag instead of latest).
+      const expectedSha256 = null;
+      if (expectedSha256 != null &&
+          !VerifySha256.verifyBytes(bytes, expectedSha256)) {
+        throw StateError(
+          'SHA-256 mismatch for OpenCode download — refusing to unpack. '
+          'The download may be corrupt or tampered with.',
+        );
+      }
       final unpacked = await _unpack(bytes, unpack);
       if (!Platform.isWindows) {
-        await Process.run('chmod', ['+x', unpacked.path]);
+        await Process.run('chmod', [
+          '+x',
+          unpacked.path,
+        ]).timeout(const Duration(seconds: 15));
       }
       final live = File(closet.binaryPath);
       if (unpacked.path != live.path) {
         if (await live.exists()) await live.delete();
         await unpacked.copy(live.path);
         if (!Platform.isWindows) {
-          await Process.run('chmod', ['+x', live.path]);
+          await Process.run('chmod', [
+            '+x',
+            live.path,
+          ]).timeout(const Duration(seconds: 15));
         }
       }
       final size = await File(closet.binaryPath).length();
@@ -382,7 +401,7 @@ Future<File> openCodeUnpackZip(List<int> bytes, Directory dest) async {
         archive.path,
         '-C',
         dest.path,
-      ]);
+      ]).timeout(const Duration(minutes: 2));
       if (r.exitCode != 0) {
         throw Exception('Unpack failed: ${r.stderr}');
       }
@@ -394,7 +413,7 @@ Future<File> openCodeUnpackZip(List<int> bytes, Directory dest) async {
         '-Command',
         'Expand-Archive -Force -Path "${archive.path}" '
             '-DestinationPath "${dest.path}"',
-      ]);
+      ]).timeout(const Duration(minutes: 2));
       if (r.exitCode != 0) {
         throw Exception('Unpack failed: ${r.stderr}');
       }
@@ -404,7 +423,7 @@ Future<File> openCodeUnpackZip(List<int> bytes, Directory dest) async {
         archive.path,
         '-d',
         dest.path,
-      ]);
+      ]).timeout(const Duration(minutes: 2));
       if (r.exitCode != 0) {
         throw Exception('Unpack failed: ${r.stderr}');
       }

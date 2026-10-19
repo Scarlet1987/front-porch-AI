@@ -22,7 +22,7 @@ import 'package:shelf/shelf.dart' as shelf;
 
 /// Whether the immediate TCP peer is loopback (127.0.0.1 / ::1).
 ///
-/// Tailscale-serve and ngrok terminate TLS on the host and proxy to us on
+/// Tailscale-serve terminates TLS on the host and proxies to us on
 /// loopback. A LAN/tailnet client is never loopback, even if it sends
 /// `X-Forwarded-*` headers.
 bool requestPeerIsLoopback(shelf.Request request) {
@@ -36,7 +36,7 @@ bool requestPeerIsLoopback(shelf.Request request) {
 /// the same trust rule as [WebServerDeps.isSecure]. A LAN client cannot
 /// rotate that header to mint a fresh rate-limit key.
 ///
-/// When the peer *is* a loopback proxy (ngrok / Tailscale-serve), the
+/// When the peer *is* a loopback proxy (Tailscale-serve), the
 /// proxy *appends* the real client. Only a parsed non-loopback hop counts;
 /// empty / unparsed / loopback-only tokens are not a key (`null` → the
 /// shared unknown bucket). `X-Real-IP` is ignored: a client can set it

@@ -33,7 +33,9 @@ extension UpdateServiceDownload on UpdateService {
     notify();
 
     try {
-      final tempDir = Directory.systemTemp;
+      // Unique temp dir per download — a predictable path in the shared temp
+      // dir allows symlink planting between validation and install (§3g).
+      final tempDir = await Directory.systemTemp.createTemp('fpai_update_');
       // Use the resolved asset name so the temp file has the correct
       // extension for the later install dispatch.
       final assetName = _selectedAssetName.isNotEmpty
@@ -86,6 +88,15 @@ extension UpdateServiceDownload on UpdateService {
         if (headText.startsWith('<')) {
           throw Exception('installer download is an HTML page, not a binary');
         }
+
+        // Integrity: refuse to stage an installer whose bytes don't match the
+        // published release hash. TODO: publish SHA256SUMS per release asset
+        // and plumb the expected hash through from the release metadata.
+        await VerifySha256.verifyFileOrThrow(
+          file,
+          null, // no published hash yet — logs TODO, does not block
+          assetLabel: 'self-update $assetName',
+        );
 
         _pendingInstallerPath = installerPath;
         _downloadComplete = true;

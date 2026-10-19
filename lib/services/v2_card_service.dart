@@ -196,7 +196,14 @@ class V2CardService {
     final charaData = await _readCharaData(path);
     if (charaData == null) return null;
 
-    final jsonStr = utf8.decode(base64Decode(charaData));
+    // Malformed base64/UTF-8 in the chara chunk means a bad file, not an
+    // exception — return null per the documented contract.
+    String jsonStr;
+    try {
+      jsonStr = utf8.decode(base64Decode(charaData));
+    } catch (_) {
+      return null;
+    }
     return parseCardJson(jsonStr, imagePath: path);
   }
 

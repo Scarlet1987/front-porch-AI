@@ -21,8 +21,16 @@ part of 'character_repository.dart';
 /// Character-name → on-disk media folder name (same rule used everywhere an
 /// avatar/look path is built). Centralized so the rename move can't drift
 /// from the write/read/delete sites.
-String _mediaFolderName(String characterName) =>
-    characterName.replaceAll(RegExp(r'[^\w\s\-]'), '').replaceAll(' ', '_');
+///
+/// Non-Latin names (CJK/Cyrillic/emoji) can sanitize to an empty string —
+/// [orElseId] is the fallback so such characters don't all share one folder.
+String _mediaFolderName(String characterName, {String? orElseId}) {
+  final safe = characterName
+      .replaceAll(RegExp(r'[^\w\s\-]'), '')
+      .replaceAll(' ', '_');
+  if (safe.isEmpty && orElseId != null && orElseId.isNotEmpty) return orElseId;
+  return safe;
+}
 
 /// Avatar-gallery media: the expression/look CRUD, the media-folder rename
 /// move, and the portrait-promotion delete. Extracted verbatim from
@@ -67,9 +75,7 @@ extension CharacterRepositoryMedia on CharacterRepository {
       debugPrint(
         '[CharacterRepository] addAvatar: started, characterId=$characterId, label=$label',
       );
-      final safeName = characterName
-          .replaceAll(RegExp(r'[^\w\s\-]'), '')
-          .replaceAll(' ', '_');
+      final safeName = _mediaFolderName(characterName, orElseId: characterId);
       final avatarDir = Directory(
         p.join(_storage.charactersDir.path, safeName, 'avatars'),
       );
@@ -136,9 +142,7 @@ extension CharacterRepositoryMedia on CharacterRepository {
       }
     }
 
-    final safeName = characterName
-        .replaceAll(RegExp(r'[^\w\s\-]'), '')
-        .replaceAll(' ', '_');
+    final safeName = _mediaFolderName(characterName, orElseId: characterId);
     final looksDir = Directory(
       p.join(_storage.charactersDir.path, safeName, 'looks'),
     );

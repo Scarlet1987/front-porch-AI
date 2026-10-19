@@ -136,7 +136,7 @@ class WebServerDeps {
   /// null until the story repository + TTS service are injected.
   final StoryExportFacade? storyExportFacade;
 
-  /// Remote-access (Tailscale/ngrok/port-forward) orchestrator. Created once the
+  /// Remote-access (Tailscale/port-forward) orchestrator. Created once the
   /// server is bound (it needs the live port). Null before bind.
   final TunnelManager? tunnelManager;
 
@@ -149,7 +149,7 @@ class WebServerDeps {
   /// transport — governs the `Secure` cookie flag and HSTS.
   ///
   /// We trust `X-Forwarded-Proto: https` only when the immediate peer is
-  /// loopback — i.e. the local Tailscale-serve / ngrok TLS terminator proxying
+  /// loopback — i.e. the local Tailscale-serve TLS terminator proxying
   /// to us on 127.0.0.1. A direct LAN/tailnet client could otherwise spoof the
   /// header, so checking the peer per-request (rather than a global bind-time
   /// flag) lets us bind to all interfaces and still tell real HTTPS apart.

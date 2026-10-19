@@ -21,6 +21,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as path;
 import 'package:front_porch_ai/database/database.dart';
+import 'package:front_porch_ai/services/security/file_permissions.dart';
 
 /// Creates timestamped backups of the SQLite database (now the primary safety
 /// net, since cloud sync is deprecated). Auto-backup runs every 30 minutes and
@@ -76,6 +77,8 @@ class BackupService {
     if (!await backupDir.exists()) {
       await backupDir.create(recursive: true);
     }
+    // Owner-only: backups are plaintext DB copies.
+    await FilePermissions.hardenDir(backupDir);
     return backupDir;
   }
 
@@ -116,6 +119,7 @@ class BackupService {
       return null;
     }
     debugPrint('[Backup] Created backup: $backupPath');
+    await FilePermissions.hardenFile(File(backupPath));
     return backupPath;
   }
 
@@ -209,9 +213,7 @@ class BackupService {
     final keep = <String>{};
 
     // Recent tier — the newest maxBackups snapshots.
-    for (var i = 0;
-        i < backupsNewestFirst.length && i < maxBackups;
-        i++) {
+    for (var i = 0; i < backupsNewestFirst.length && i < maxBackups; i++) {
       keep.add(backupsNewestFirst[i].path);
     }
 

@@ -80,11 +80,7 @@ class PngMetadataUtils {
   /// Decodes ONE tEXt/iTXt chunk's payload, returning its text when the chunk
   /// carries [keyword]. Shared by the in-memory walker above and the seeking
   /// file walker below so the two can never disagree about how a chunk decodes.
-  static String? _parseTextChunk(
-    List<int> data,
-    String type,
-    String keyword,
-  ) {
+  static String? _parseTextChunk(List<int> data, String type, String keyword) {
     final nullIndex = data.indexOf(0);
     if (nullIndex == -1) return null;
     final chunkKeyword = String.fromCharCodes(data.sublist(0, nullIndex));
@@ -109,7 +105,13 @@ class PngMetadataUtils {
     }
     pos++; // skip translated keyword null
     if (pos >= data.length) return null;
-    return utf8.decode(data.sublist(pos));
+    // Hostile PNGs can carry invalid UTF-8 here — return null per the
+    // documented contract instead of throwing FormatException.
+    try {
+      return utf8.decode(data.sublist(pos));
+    } catch (_) {
+      return null;
+    }
   }
 
   /// Extracts [keyword]'s text payload by SEEKING through the PNG's chunk table

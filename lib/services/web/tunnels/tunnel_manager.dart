@@ -20,24 +20,18 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 
-import 'package:front_porch_ai/services/web/tunnels/ngrok_provider.dart';
 import 'package:front_porch_ai/services/web/tunnels/tailscale_provider.dart';
 
-/// Aggregates the remote-access providers behind one surface the settings UI
+/// Aggregates the remote-access provider behind one surface the settings UI
 /// (Flutter) and the React "Remote Access" page both read — a single source of
 /// truth for `{type, url, secure, status}` per tunnel plus a manual
 /// port-forward hint.
 class TunnelManager {
-  TunnelManager(
-    this._port, {
-    TailscaleProvider? tailscale,
-    NgrokProvider? ngrok,
-  })  : _tailscale = tailscale ?? TailscaleProvider(),
-        _ngrok = ngrok ?? NgrokProvider();
+  TunnelManager(this._port, {TailscaleProvider? tailscale})
+    : _tailscale = tailscale ?? TailscaleProvider();
 
   final int _port;
   final TailscaleProvider _tailscale;
-  final NgrokProvider _ngrok;
 
   String? _tailscaleUrl;
   TailscaleServeOutcome? _tailscaleHttpsState;
@@ -68,20 +62,12 @@ class TunnelManager {
         // Last serve outcome so the UI can show the "enable HTTPS certs" path.
         'httpsState': _tailscaleHttpsState?.name,
       },
-      'ngrok': {
-        'installed': _ngrok.isInstalled,
-        'running': _ngrok.isRunning,
-        'url': _ngrok.publicUrl,
-        'secure': true, // TLS terminated at ngrok edge
-        'installUrl': NgrokProvider.installUrl,
-        'authTokenUrl': NgrokProvider.authTokenUrl,
-      },
       'portForward': {
         // Manual option: forward this TCP port on the router to this host.
         'port': _port,
         'hint':
             'Forward external port to this host:$_port, then use https via a '
-                'reverse proxy or a dynamic-DNS + cert for a real secure context.',
+            'reverse proxy or a dynamic-DNS + cert for a real secure context.',
       },
     };
   }
@@ -124,13 +110,7 @@ class TunnelManager {
     }
   }
 
-  Future<String?> enableNgrok({String? authToken}) =>
-      _ngrok.start(_port, authToken: authToken);
-
-  Future<void> disableNgrok() => _ngrok.stop();
-
   Future<void> dispose() async {
-    await _ngrok.stop();
     await _tailscale.serveOff();
     _tailscaleUrl = null;
   }

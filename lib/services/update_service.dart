@@ -23,6 +23,7 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:front_porch_ai/app_version.dart';
+import 'package:front_porch_ai/services/security/verify_sha256.dart';
 import 'package:front_porch_ai/utils/native_exit.dart';
 
 part 'update_service_download.dart';

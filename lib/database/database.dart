@@ -27,6 +27,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 import 'package:uuid/uuid.dart';
+import 'package:front_porch_ai/services/security/file_permissions.dart';
 import 'package:front_porch_ai/app_version.dart';
 import 'package:front_porch_ai/database/session_gen_overrides_heal.dart';
 import 'package:front_porch_ai/services/db_reunification_service.dart';
@@ -146,6 +147,9 @@ class AppDatabase extends _$AppDatabase {
     final dbName = isPreRelease ? 'front_porch_beta.db' : 'front_porch.db';
     final file = File(p.join(dbDir, dbName));
     await file.parent.create(recursive: true);
+    // Owner-only: the DB holds chat logs and character data.
+    await FilePermissions.hardenDir(Directory(dbDir));
+    await FilePermissions.hardenFile(file);
 
     // For pre-release: if no beta DB exists yet, copy the production DB
     // so users get all their data without modifying the stable database.

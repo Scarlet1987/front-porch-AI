@@ -23,7 +23,7 @@ import 'dart:math';
 ///
 /// While setup is open, `POST /api/auth/setup` is a public API. A direct
 /// browser on the host (loopback peer, no proxy headers) may claim the
-/// account. LAN binds, Tailscale serve, and ngrok proxy from loopback but
+/// account. LAN binds and Tailscale serve proxy from loopback but
 /// set `X-Forwarded-*` — those clients need a one-time token shown only on
 /// the desktop Settings card.
 class SetupGate {

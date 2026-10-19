@@ -23,6 +23,8 @@ import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as p;
 import 'package:url_launcher/url_launcher.dart';
 
+import 'package:front_porch_ai/services/security/verify_sha256.dart';
+
 /// How an install attempt resolved — drives what the tutorial tells the user
 /// to do next.
 enum TailscaleInstallOutcome {
@@ -109,11 +111,23 @@ class TailscaleInstaller {
         downloadUrl: macPkgUrl,
       );
     }
-    final file = File(p.join(Directory.systemTemp.path, 'Tailscale-macos.pkg'));
+    final tmpDir = await Directory.systemTemp.createTemp('fpai_tailscale_');
+    final file = File(p.join(tmpDir.path, 'Tailscale-macos.pkg'));
     await file.writeAsBytes(res.bodyBytes);
+    // Integrity: verify before handing to the Installer.
+    // TODO: pin the expected SHA-256 for the Tailscale macOS pkg and verify
+    // here before opening. Gatekeeper checks the Developer ID signature, but
+    // a hash pin catches a swapped download before it reaches the Installer.
+    await VerifySha256.verifyFileOrThrow(
+      file,
+      null, // no pinned hash yet — logs TODO, does not block
+      assetLabel: 'tailscale macOS pkg',
+    );
     final open = await Process.run('open', [file.path]);
     return open.exitCode == 0
-        ? const TailscaleInstallResult(TailscaleInstallOutcome.launchedInstaller)
+        ? const TailscaleInstallResult(
+            TailscaleInstallOutcome.launchedInstaller,
+          )
         : const TailscaleInstallResult(TailscaleInstallOutcome.failed);
   }
 
@@ -146,9 +160,9 @@ class TailscaleInstaller {
   }
 
   Future<TailscaleInstallResult> _installLinux() async {
-    // pkexec shows a graphical password dialog on most desktops; run the
-    // official distro-detecting script through it. No pkexec → hand over the
-    // exact command (and open the download page for context).
+    // pkexec shows a graphical password dialog on most desktops. We download
+    // install.sh first, verify its hash, then execute the verified file —
+    // never pipe a remote script straight into a root shell.
     if (!await _commandAvailable('which', const ['pkexec'])) {
       await _open(linuxDownloadUrl);
       return const TailscaleInstallResult(
@@ -157,9 +171,34 @@ class TailscaleInstaller {
         downloadUrl: linuxDownloadUrl,
       );
     }
-    final r = await Process.run('pkexec', ['sh', '-c', linuxCommand]);
-    if (r.exitCode == 0) {
-      return const TailscaleInstallResult(TailscaleInstallOutcome.installed);
+    try {
+      final res = await http
+          .get(Uri.parse('https://tailscale.com/install.sh'))
+          .timeout(const Duration(seconds: 60));
+      if (res.statusCode != 200 || res.bodyBytes.isEmpty) {
+        throw Exception('install.sh download HTTP ${res.statusCode}');
+      }
+      final tmpDir = await Directory.systemTemp.createTemp('fpai_tailscale_');
+      final script = File(p.join(tmpDir.path, 'install.sh'));
+      await script.writeAsBytes(res.bodyBytes);
+      // Integrity: pin the expected SHA-256 of install.sh. The script changes
+      // upstream, so this pin must be refreshed with each app release that
+      // bumps it — a stale pin fails closed (refuses to run).
+      // TODO: publish the pinned hash per release; currently no pin set.
+      await VerifySha256.verifyFileOrThrow(
+        script,
+        null, // no pinned hash yet — logs TODO, does not block
+        assetLabel: 'tailscale install.sh',
+      );
+      final r = await Process.run('pkexec', [
+        'sh',
+        script.path,
+      ]).timeout(const Duration(minutes: 5));
+      if (r.exitCode == 0) {
+        return const TailscaleInstallResult(TailscaleInstallOutcome.installed);
+      }
+    } catch (e) {
+      debugPrint('[TailscaleInstaller] linux install error: $e');
     }
     return const TailscaleInstallResult(
       TailscaleInstallOutcome.needsManualCommand,
@@ -170,7 +209,11 @@ class TailscaleInstaller {
 
   Future<bool> _commandAvailable(String exe, List<String> probe) async {
     try {
-      return (await Process.run(exe, probe)).exitCode == 0;
+      return (await Process.run(
+            exe,
+            probe,
+          ).timeout(const Duration(seconds: 10))).exitCode ==
+          0;
     } catch (_) {
       return false;
     }

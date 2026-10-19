@@ -91,9 +91,15 @@ class GroupCardImporter {
             (raw['data'] as Map?)?['avatar_base64'] as String?;
 
         if (avatarBase64 != null && avatarBase64.isNotEmpty) {
-          final avatarBytes = base64Decode(avatarBase64);
-          var avatarImg =
-              img.decodePng(avatarBytes) ?? img.decodeImage(avatarBytes);
+          Uint8List avatarBytes;
+          try {
+            avatarBytes = base64Decode(avatarBase64);
+          } catch (_) {
+            avatarBytes = Uint8List(0);
+          }
+          var avatarImg = avatarBytes.isEmpty
+              ? null
+              : img.decodePng(avatarBytes) ?? img.decodeImage(avatarBytes);
 
           if (avatarImg != null) {
             avatarImg.textData ??= {};
@@ -218,7 +224,8 @@ class GroupCardImporter {
           ),
         );
 
-        final originalStableId = (raw['_original_stable_id'] as String?)?.trim();
+        final originalStableId = (raw['_original_stable_id'] as String?)
+            ?.trim();
         if (originalStableId != null && originalStableId.isNotEmpty) {
           oldStableIdToNewStableId[originalStableId] = memberId;
         }

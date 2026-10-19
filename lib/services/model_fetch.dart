@@ -195,11 +195,17 @@ class ModelFetch {
     return Isolate.run(() {
       final bytes = File(tarBz2Path).readAsBytesSync();
       final tar = TarDecoder().decodeBytes(BZip2Decoder().decodeBytes(bytes));
+      final root = p.normalize(p.absolute(destDir));
       for (final entry in tar) {
         final parts = p.posix.split(entry.name);
         if (parts.length < 2) continue; // top-level dir itself
         final rel = p.joinAll(parts.sublist(1));
-        final out = File(p.join(destDir, rel));
+        // Tar-slip guard: reject absolute paths, `..` segments, and anything
+        // that escapes the destination dir after normalization.
+        if (p.isAbsolute(rel) || p.split(rel).contains('..')) continue;
+        final out = File(p.join(root, rel));
+        final norm = p.normalize(out.path);
+        if (norm != root && !p.isWithin(root, norm)) continue;
         if (entry.isFile) {
           out.parent.createSync(recursive: true);
           out.writeAsBytesSync(entry.content as List<int>);

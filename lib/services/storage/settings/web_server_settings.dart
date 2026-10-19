@@ -35,12 +35,10 @@ class WebServerSettings with SettingsBase {
   int _webServerPort = 8085;
 
   // Bind policy: localhost-only by default; LAN access is explicit opt-in.
-  // Remote access goes through Tailscale/ngrok.
+  // Remote access goes through Tailscale.
   bool _webServerAllowLan = false;
 
   // Remote access / TLS.
-  // ngrok agent authtoken (treated as a secret; supplied by the user).
-  String _webServerNgrokAuthToken = '';
 
   // Set once the user opts into remote access ("Set it up for me" in the web-
   // access tutorial). When on AND Tailscale is running, the server binds to all
@@ -52,7 +50,6 @@ class WebServerSettings with SettingsBase {
   bool get webServerStarting => _webServerStarting;
   int get webServerPort => _webServerPort;
   bool get webServerAllowLan => _webServerAllowLan;
-  String get webServerNgrokAuthToken => _webServerNgrokAuthToken;
   bool get webServerAutoRemote => _webServerAutoRemote;
 
   void load() {
@@ -60,10 +57,7 @@ class WebServerSettings with SettingsBase {
     _webServerStarting = prefs?.getBool(k('web_server_starting')) ?? false;
     _webServerPort = prefs?.getInt(k('web_server_port')) ?? 8085;
     _webServerAllowLan = prefs?.getBool(k('web_server_allow_lan')) ?? false;
-    _webServerNgrokAuthToken =
-        prefs?.getString(k('web_server_ngrok_authtoken')) ?? '';
-    _webServerAutoRemote =
-        prefs?.getBool(k('web_server_auto_remote')) ?? false;
+    _webServerAutoRemote = prefs?.getBool(k('web_server_auto_remote')) ?? false;
   }
 
   Future<void> setWebServerEnabled(bool value) async {
@@ -88,12 +82,6 @@ class WebServerSettings with SettingsBase {
   Future<void> setWebServerAllowLan(bool value) async {
     _webServerAllowLan = value;
     await prefs?.setBool(k('web_server_allow_lan'), value);
-    notify();
-  }
-
-  Future<void> setWebServerNgrokAuthToken(String value) async {
-    _webServerNgrokAuthToken = value;
-    await prefs?.setString(k('web_server_ngrok_authtoken'), value);
     notify();
   }
 
