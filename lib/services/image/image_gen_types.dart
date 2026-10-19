@@ -30,18 +30,15 @@
 /// former is now `customPrompt` with scene context, the latter was retired
 /// because generating a figure-free chat background confused users. Backgrounds
 /// are still chosen from the Background settings dialog.)
-enum ImageGenMode {
-  customPrompt,
-  characterPortrait,
-  userAvatar,
-}
+enum ImageGenMode { customPrompt, characterPortrait, userAvatar }
 
 /// Local image-generation backend options.
 enum ImageGenBackend {
   remote,
   a1111,
   drawThings,
-  comfyUi;
+  comfyUi,
+  native;
 
   static ImageGenBackend fromKey(String key) {
     switch (key) {
@@ -50,7 +47,11 @@ enum ImageGenBackend {
       case 'drawthings':
         return ImageGenBackend.drawThings;
       case 'comfyui':
-        return ImageGenBackend.comfyUi;
+        // Migrated: the ComfyUI server backend is gone. Stored 'comfyui'
+        // selections now resolve to the built-in native backend.
+        return ImageGenBackend.native;
+      case 'native':
+        return ImageGenBackend.native;
       default:
         return ImageGenBackend.remote;
     }
@@ -63,7 +64,9 @@ enum ImageGenBackend {
       case ImageGenBackend.drawThings:
         return 'drawthings';
       case ImageGenBackend.comfyUi:
-        return 'comfyui';
+        return 'native';
+      case ImageGenBackend.native:
+        return 'native';
       case ImageGenBackend.remote:
         return 'remote';
     }
@@ -76,7 +79,9 @@ enum ImageGenBackend {
       case ImageGenBackend.drawThings:
         return 'Draw Things';
       case ImageGenBackend.comfyUi:
-        return 'ComfyUI';
+        return 'Built-in';
+      case ImageGenBackend.native:
+        return 'Built-in';
       case ImageGenBackend.remote:
         return 'Remote API';
     }

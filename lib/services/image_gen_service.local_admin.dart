@@ -35,13 +35,14 @@ extension _ImageGenLocalAdmin on ImageGenService {
         debugPrint('ImageGen: Draw Things connection test failed: $e');
         return false;
       }
-    } else if (backendKey == 'comfyui') {
-      return _ensureComfyUi.testConnection();
+    } else if (backendKey == 'comfyui' || backendKey == 'native') {
+      // Native backend is built in — always connected.
+      return true;
     } else {
       final client = http.Client();
       try {
         final uri = Uri.parse(
-          '${ComfyUiService.ensureHttpScheme(baseUrl)}/sdapi/v1/sd-models',
+          '${normalizeImageServerUrl(baseUrl)}/sdapi/v1/sd-models',
         );
         final response = await client
             .get(uri)
@@ -71,7 +72,7 @@ extension _ImageGenLocalAdmin on ImageGenService {
       final client = http.Client();
       try {
         final uri = Uri.parse(
-          '${ComfyUiService.ensureHttpScheme(baseUrl)}/sdapi/v1/sd-models',
+          '${normalizeImageServerUrl(baseUrl)}/sdapi/v1/sd-models',
         );
         final response = await client
             .get(uri)
@@ -94,7 +95,7 @@ extension _ImageGenLocalAdmin on ImageGenService {
     final client = http.Client();
     try {
       final uri = Uri.parse(
-        '${ComfyUiService.ensureHttpScheme(baseUrl)}/sdapi/v1/loras',
+        '${normalizeImageServerUrl(baseUrl)}/sdapi/v1/loras',
       );
       debugPrint('ImageGen: Fetching LoRAs from $uri');
       final response = await client
@@ -131,7 +132,7 @@ extension _ImageGenLocalAdmin on ImageGenService {
     final client = http.Client();
     try {
       final uri = Uri.parse(
-        '${ComfyUiService.ensureHttpScheme(baseUrl)}/sdapi/v1/unload-checkpoint',
+        '${normalizeImageServerUrl(baseUrl)}/sdapi/v1/unload-checkpoint',
       );
       debugPrint('ImageGen: Requesting model unload at $uri');
       final response = await client
@@ -171,7 +172,7 @@ extension _ImageGenLocalAdmin on ImageGenService {
     final client = http.Client();
     try {
       final uri = Uri.parse(
-        '${ComfyUiService.ensureHttpScheme(baseUrl)}/sdapi/v1/options',
+        '${normalizeImageServerUrl(baseUrl)}/sdapi/v1/options',
       );
       debugPrint('ImageGen: Switching checkpoint → $modelName');
       final response = await client
@@ -221,7 +222,7 @@ extension _ImageGenLocalAdmin on ImageGenService {
     http.Client client,
   ) async {
     final uri = Uri.parse(
-      '${ComfyUiService.ensureHttpScheme(baseUrl)}/sdapi/v1/options',
+      '${normalizeImageServerUrl(baseUrl)}/sdapi/v1/options',
     );
     const maxAttempts = 30;
     const pollInterval = Duration(seconds: 2);
@@ -253,7 +254,7 @@ extension _ImageGenLocalAdmin on ImageGenService {
     final client = http.Client();
     try {
       final uri = Uri.parse(
-        '${ComfyUiService.ensureHttpScheme(baseUrl)}/sdapi/v1/samplers',
+        '${normalizeImageServerUrl(baseUrl)}/sdapi/v1/samplers',
       );
       final response = await client
           .get(uri)
@@ -276,7 +277,7 @@ extension _ImageGenLocalAdmin on ImageGenService {
     final client = http.Client();
     try {
       final uri = Uri.parse(
-        '${ComfyUiService.ensureHttpScheme(baseUrl)}/sdapi/v1/schedulers',
+        '${normalizeImageServerUrl(baseUrl)}/sdapi/v1/schedulers',
       );
       final response = await client
           .get(uri)
@@ -307,7 +308,7 @@ extension A1111LoraRefresh on ImageGenService {
     final client = http.Client();
     try {
       final uri = Uri.parse(
-        '${ComfyUiService.ensureHttpScheme(baseUrl)}/sdapi/v1/refresh-loras',
+        '${normalizeImageServerUrl(baseUrl)}/sdapi/v1/refresh-loras',
       );
       final response = await client
           .post(uri)

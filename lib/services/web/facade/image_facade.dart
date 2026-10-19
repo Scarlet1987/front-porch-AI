@@ -25,7 +25,6 @@ import 'package:path/path.dart' as p;
 
 import 'package:front_porch_ai/models/models.dart';
 import 'package:front_porch_ai/services/capability/capability.dart';
-import 'package:front_porch_ai/services/comfy_ui_service.dart';
 import 'package:front_porch_ai/services/image/image.dart';
 import 'package:front_porch_ai/services/image_prompt/image_prompt.dart';
 import 'package:front_porch_ai/services/services.dart';
@@ -56,10 +55,6 @@ class ImageFacade {
   final CharacterRepository? _characters;
   final ExpressionPackBoard _packBoard;
   LLMService? Function()? promptLlm;
-
-  /// How the ready check looks for ComfyUI; tests point it at their servers.
-  @visibleForTesting
-  ComfyUrlFinder? comfyFinder;
 
   /// Current image-gen config for the web panel. The API key is never returned
   /// (presence only), matching the text-backend settings facade.
@@ -120,43 +115,8 @@ class ImageFacade {
       'comfyEditUploadedWorkflow': img.comfyEditUploadedWorkflow
           .trim()
           .isNotEmpty,
-      'comfyEditUploadedTitle': img.comfyEditUploadedTitle,
-      'comfyEditPresets': [
-        for (final preset in kComfyEditPresets)
-          {
-            'id': preset.id,
-            'label': preset.label,
-            'slots': [
-              for (final slot in preset.modelSlots)
-                {
-                  'token': slot.token,
-                  'label': slot.label,
-                  'loaderClass': slot.loaderClass,
-                  'inputName': slot.inputName,
-                  'folderHint': slot.folderHint,
-                },
-            ],
-          },
-      ],
-      'comfyCreatePresets': [
-        for (final p in kComfyCreatePresets)
-          {
-            'id': p.id,
-            'label': p.label,
-            'comfyTemplateName': p.comfyTemplateName,
-            'usesCheckpointBuilder': p.usesCheckpointBuilder,
-            'slots': [
-              for (final s in p.modelSlots)
-                {
-                  'token': s.token,
-                  'label': s.label,
-                  'loaderClass': s.loaderClass,
-                  'inputName': s.inputName,
-                  'folderHint': s.folderHint,
-                },
-            ],
-          },
-      ],
+      'comfyEditPresets': const <Map<String, dynamic>>[],
+      'comfyCreatePresets': const <Map<String, dynamic>>[],
     };
   }
 

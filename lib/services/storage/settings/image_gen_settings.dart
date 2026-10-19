@@ -65,6 +65,9 @@ class ImageGenSettings with SettingsBase, ImageGenRemotePrefs {
   // Draw-Things-only `drawThingsStrength` (which was redundant once img2img
   // became a shared feature across A1111/ComfyUI/Draw Things).
   double _imageGenDenoise = 0.5;
+  // Body-proportion key: which classical head-count the engine works from.
+  // 'off' = no hint; 'child' = 4-5 heads; 'teen' = 6-7 heads; 'adult' = 7-8.
+  String _imageGenProportion = 'adult';
   int _imageGenSteps = 4;
   double _imageGenCfgScale = 1.0;
   String _imageGenSampler = 'Euler a';
@@ -134,6 +137,9 @@ class ImageGenSettings with SettingsBase, ImageGenRemotePrefs {
   String get imageGenLora => _imageGenLoraSlots.first.file;
   double get imageGenLoraWeight => _imageGenLoraSlots.first.weight;
   double get imageGenDenoise => _imageGenDenoise;
+
+  /// Which head-count key the engine uses for humanoid proportions.
+  String get imageGenProportion => _imageGenProportion;
   int get imageGenSteps => _imageGenSteps;
   double get imageGenCfgScale => _imageGenCfgScale;
   String get imageGenSampler => _imageGenSampler;
@@ -289,6 +295,15 @@ class ImageGenSettings with SettingsBase, ImageGenRemotePrefs {
   Future<void> setImageGenDenoise(double value) async {
     _imageGenDenoise = value.clamp(0.0, 1.0);
     await prefs?.setDouble(k('image_gen_denoise'), _imageGenDenoise);
+    notify();
+  }
+
+  /// Body-proportion key for humanoid subjects. Persisted; the Studio's
+  /// "Body proportions" picker writes it and the prompt builder reads it.
+  Future<void> setImageGenProportion(String value) async {
+    const allowed = {'off', 'child', 'teen', 'adult'};
+    _imageGenProportion = allowed.contains(value) ? value : 'adult';
+    await prefs?.setString(k('image_gen_proportion'), _imageGenProportion);
     notify();
   }
 

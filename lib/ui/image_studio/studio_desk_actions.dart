@@ -9,7 +9,7 @@ extension on _StudioDeskState {
   String _workflowId(ImageGenSettings settings) =>
       _editing ? settings.comfyEditWorkflowId : settings.comfyCreateWorkflowId;
 
-  List<ComfyModelSlot> get _slots => _ready?.readiness.slots ?? const [];
+  List<dynamic> get _slots => const [];
 
   Future<void> _setChoice(
     ImageGenSettings settings,
@@ -34,39 +34,14 @@ extension on _StudioDeskState {
   /// files. A slot that holds a file is left as it is.
   Future<void> _fillSupport(
     ImageGenSettings settings,
-    List<ComfyModelSlot> slots,
+    List<dynamic> slots,
   ) async {
-    if (_configurationLocked) return;
-    final id = _workflowId(settings);
-    if (settings.imageGenBackend != 'comfyui' || id.isEmpty) return;
-    if (id == kComfyUploadedWorkflowId) return;
-    final tokens = [
-      for (final slot in slots)
-        if (slot.token.contains('CLIP') || slot.token.contains('VAE'))
-          slot.token,
-    ];
-    if (tokens.isEmpty) return;
-    final primary = studioPrimaryFor(settings, edit: _editing);
-    if (primary.isEmpty) return;
-    final fills = supportAutofill(
-      workflowId: id,
-      primary: primary,
-      choices: _editing
-          ? settings.comfyEditModelChoices
-          : settings.comfyCreateModelChoices,
-      clips: _clips,
-      vaes: _vaes,
-      tokens: tokens,
-    );
-    for (final entry in fills.entries) {
-      await _setChoice(settings, id, entry.key, entry.value);
-    }
+    // No-op: the native backend has no workflow graph slots to fill.
+    return;
   }
 
-  /// Picks the primary model. A saved, template or legacy Comfy graph keeps
-  /// its graph and takes the file in its own slot. A bundled graph follows
-  /// the file's family, except that a file of no known family stays on the
-  /// graph it was chosen on.
+  /// Picks the primary model. The native backend takes the file directly;
+  /// no workflow graph involved.
   Future<void> _pickModel(ImageGenSettings settings, String file) async {
     if (_configurationLocked) return;
     if (settings.imageGenBackend == 'remote') {
@@ -75,22 +50,6 @@ extension on _StudioDeskState {
         file,
         edit: _editing,
       );
-      return;
-    }
-    if (settings.imageGenBackend == 'comfyui') {
-      final current = _workflowId(settings);
-      final keep = deskKeepsWorkflow(current);
-      final family = ImageModelFamily.detectFromName(file);
-      final id = keep || (family == ModelFamily.unknown && !isGgufFile(file))
-          ? current
-          : workflowForModel(edit: _editing, file: file);
-      if (id != current) await _setWorkflow(settings, id);
-      final token = keep
-          ? deskPrimaryToken(workflowId: id, file: file, slots: _slots)
-          : deskComfyToken(workflowId: id, file: file);
-      await _setChoice(settings, id, token, file);
-      _fillWhenReady = true;
-      await _checkReady(force: true);
       return;
     }
     if (_editing) {
@@ -137,189 +96,50 @@ extension on _StudioDeskState {
         unfit: unfit,
         onPick: (file) {
           if (_configurationLocked) return;
-          if (token != null && settings.imageGenBackend == 'comfyui') {
-            _setChoice(settings, _workflowId(settings), token, file);
-            return;
-          }
           _pickModel(settings, file);
         },
       ),
     );
   }
 
+  /// No-op: GGUF loader support was a ComfyUI concept.
   Future<void> _useExistingLoaderSupport(ImageGenSettings settings) async {
-    final url = settings.comfyUiUrl;
-    final confirmed = City96Gate.instance.hasExistingSupport(url);
-    if (!confirmed) {
-      final yes = await showWarmDialog<bool>(
-        context,
-        title: 'Use existing GGUF support?',
-        content: WarmDialogText(
-          'Choose this if your workflow already runs in ComfyUI with a '
-          'compatible loader or extension. Front Porch will skip its GGUF '
-          'compatibility check for $url until Front Porch restarts. ComfyUI '
-          'will still validate the workflow.',
-        ),
-        actions: [
-          Builder(builder: (ctx) => warmDialogCancel(ctx, value: false)),
-          Builder(
-            builder: (ctx) => warmDialogConfirm(
-              ctx,
-              label: 'Use existing support',
-              onPressed: () => Navigator.of(ctx).pop(true),
-            ),
-          ),
-        ],
-      );
-      if (yes != true ||
-          !mounted ||
-          settings.comfyUiUrl != url ||
-          settings.imageGenBackend != 'comfyui') {
-        return;
-      }
-    }
-    City96Gate.instance.setExistingSupport(url, confirmed: !confirmed);
-    settings.notify();
-    await _checkReady(force: true);
+    return;
   }
 
-  /// "Update loader…": asks, on this computer, to change ComfyUI-GGUF's loader
-  /// for the graph on the desk, then says what happened and judges again. The
-  /// question is asked every time it is pressed, whatever was answered before.
+  /// No-op: loader updates were a ComfyUI concept.
   Future<void> _updateLoader(ImageGenSettings settings) async {
-    final graph = _ready?.readiness.graph;
-    if (graph == null) return;
-    final result = await City96Gate.instance.ensure(
-      comfyUrl: settings.comfyUiUrl,
-      graph: graph,
-      askAgain: true,
-    );
-    if (!mounted) return;
-    final message = result.message;
-    if (message != null) {
-      ScaffoldMessenger.maybeOf(
-        context,
-      )?.showSnackBar(SnackBar(content: Text(message)));
-    }
-    await _checkReady(force: true);
+    return;
   }
 
+  /// No-op: the native backend has no workflow graphs to save.
   Future<void> _saveGraph(
     ImageGenSettings settings,
     String raw, {
     bool? forEdit,
     String name = '',
   }) async {
-    if (_configurationLocked) return;
-    final kept = pngWorkflowText({'prompt': raw});
-    if (kept == null) {
-      if (!mounted) return;
-      ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-        const SnackBar(content: Text('That file isn’t a ComfyUI graph.')),
-      );
-      return;
-    }
-    final edit = forEdit ?? _editing;
-    final title = name.trim().isEmpty ? 'workflow' : name.trim();
-    if (edit) {
-      await settings.setComfyEditUploadedWorkflow(kept, title: title);
-      if (_configurationLocked) return;
-      await settings.setComfyEditWorkflowId(kComfyUploadedWorkflowId);
-    } else {
-      await settings.setComfyCreateUploadedWorkflow(kept, title: title);
-      if (_configurationLocked) return;
-      await settings.setComfyCreateWorkflowId(kComfyUploadedWorkflowId);
-    }
+    return;
   }
 
   Future<void> openGraphs(ImageGenSettings settings) async {
-    final file = studioPrimaryFor(settings, edit: _editing);
-    var menu = deskGraphMenu(
-      edit: _editing,
-      templates: const [],
-      saved: const [],
-      modelFile: file,
-    );
-    var other = deskGraphMenu(
-      edit: !_editing,
-      templates: const [],
-      saved: const [],
-      modelFile: file,
-    );
-    var read = false;
-    if (settings.imageGenBackend == 'comfyui') {
-      try {
-        final menus = await loadDeskGraphMenus(
-          comfy: ComfyUiService(baseUrl: settings.comfyUiUrl),
-          modelFile: file,
-        );
-        menu = _editing ? menus.edit : menus.create;
-        other = _editing ? menus.create : menus.edit;
-        read = true;
-      } catch (e) {
-        debugPrint('studio graph list failed: ${e.runtimeType}');
-      }
-    }
+    // No-op: the native backend has no workflow graphs. The model is picked
+    // directly via Change model.
     if (!mounted) return;
-    final note = settings.imageGenBackend == 'comfyui'
-        ? (read
-              ? 'The first group is built into Front Porch. The rest are '
-                    'this Comfy’s templates for this mode, then saved '
-                    'workflows that match it. A file that could not be '
-                    'read is listed separately and is not used.'
-              : 'Comfy’s template list could not be read. The names below '
-                    'are built into Front Porch.')
-        : 'These graphs are built into Front Porch. Connect ComfyUI to '
-              'also list that install’s templates and saved workflows.';
-    await showDialog<void>(
-      context: context,
-      builder: (context) => StudioGraphSheet(
-        edit: _editing,
-        rows: menu,
-        otherRows: other,
-        note: note,
-        onPick: (id) => _pickGraph(settings, id, file),
-        onUpload: (json, {required bool forEdit, required String name}) {
-          _saveGraph(settings, json, forEdit: forEdit, name: name);
-        },
-        onUseOther: (id, {required bool forEdit}) {
-          if (_configurationLocked) return;
-          if (forEdit) {
-            settings.setComfyEditWorkflowId(id);
-          } else {
-            settings.setComfyCreateWorkflowId(id);
-          }
-        },
+    ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+      const SnackBar(
+        content: Text('The built-in engine picks models directly — no graphs.'),
       ),
     );
   }
 
-  /// Chooses a graph. The file already on the desk moves along only to a
-  /// bundled graph of its own family; a saved or template graph keeps the
-  /// files it has and empty slots are filled once it has been read.
+  /// No-op: the native backend has no workflow graphs to pick.
   Future<void> _pickGraph(
     ImageGenSettings settings,
     String id,
     String file,
   ) async {
-    if (_configurationLocked) return;
-    final chosen = isGgufFile(file) && id == 'sd'
-        ? workflowForModel(edit: _editing, file: file)
-        : id;
-    await _setWorkflow(settings, chosen);
-    if (file.isNotEmpty &&
-        settings.imageGenBackend == 'comfyui' &&
-        !deskKeepsWorkflow(chosen) &&
-        workflowForModel(edit: _editing, file: file) == chosen) {
-      await _setChoice(
-        settings,
-        chosen,
-        deskComfyToken(workflowId: chosen, file: file),
-        file,
-      );
-    }
-    _fillWhenReady = true;
-    await _checkReady(force: true);
+    return;
   }
 
   Future<void> openLoras(ImageGenSettings settings, String primary) {
@@ -373,7 +193,7 @@ extension on _StudioDeskState {
     );
   }
 
-  /// A finished download is selected only when this graph can load it.
+  /// A finished download is picked directly — no workflow graph involved.
   Future<void> _afterInstall(
     BuildContext deskContext,
     ImageGenSettings settings,
@@ -383,66 +203,17 @@ extension on _StudioDeskState {
     if (_configurationLocked) return;
     await _refreshCatalog(settings, force: true);
     if (!mounted) return;
-    final id = _workflowId(settings);
-    final onDisk = await mergeCivitaiDisk(
-      backend: settings.imageGenBackend,
-      file: file,
-      lora: lora,
-      workflowId: id,
-      checkpoints: _checkpoints,
-      diffusion: _unet,
-      gguf: _gguf,
-      loras: _loras,
-    );
-    if (!mounted) return;
-    _showInstalledFiles(
-      checkpoints: onDisk.checkpoints,
-      unet: onDisk.diffusion,
-      gguf: onDisk.gguf,
-      loras: onDisk.loras,
-    );
-    var choice = installedDeskChoice(
-      backend: settings.imageGenBackend,
-      workflowId: id,
-      file: file,
-      lora: lora,
-      checkpoints: onDisk.checkpoints,
-      diffusionModels: onDisk.diffusion,
-      ggufUnets: onDisk.gguf,
-      loras: onDisk.loras,
-      loraSlotFiles: [for (final slot in settings.imageGenLoraSlots) slot.file],
-    );
-    if (!choice.accept) {
-      final message = choice.kind == 'lora-full'
-          ? 'Saved to your models folder on this computer. '
-                'All LoRA slots are full.'
-          : lora && settings.imageGenBackend == 'a1111'
-          ? 'Saved to your models folder on this computer. '
-                'It is in the Lora folder.'
-          : lora
-          ? 'Saved to your models folder on this computer. '
-                'Pick it with Add under LoRA.'
-          : 'Saved to your models folder on this computer. '
-                'Pick it with Change model.';
-      ScaffoldMessenger.maybeOf(
-        deskContext,
-      )?.showSnackBar(SnackBar(content: Text(message)));
+    // For the native backend, a downloaded model is picked directly.
+    if (!lora) {
+      await _pickModel(settings, file);
       return;
     }
-    if (choice.kind == 'comfy' && deskKeepsWorkflow(id)) {
-      choice = InstalledDeskChoice(
-        accept: true,
-        kind: 'comfy',
-        token: deskPrimaryToken(workflowId: id, file: file, slots: _slots),
-      );
-    }
-    if (_configurationLocked) return;
-    await applyInstalledDeskChoice(
-      settings: settings,
-      choice: choice,
-      workflowId: id,
-      file: file,
-      edit: _editing,
+    ScaffoldMessenger.maybeOf(deskContext)?.showSnackBar(
+      const SnackBar(
+        content: Text(
+          'Saved to your models folder on this computer. Pick it with Add under LoRA.',
+        ),
+      ),
     );
   }
 }

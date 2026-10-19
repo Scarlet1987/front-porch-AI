@@ -342,21 +342,26 @@ extension ChatServiceGuestFlow on ChatService {
   }
 
   /// Promote the pending detected character to a real Scene Guest via the
-  /// EXISTING mint+add+enter path (same as `/create`). Seeds the guest from the
-  /// detected name + descriptor (as concept). Surfaces errors like `/create`.
-  Future<void> acceptDetectedGuest() async {
+  /// EXISTING mint+add+enter path (same as `/create`). Seeds from the detected
+  /// name + descriptor, or from [overrides] when the save popup supplied edits.
+  Future<void> acceptDetectedGuest({
+    Map<String, String> overrides = const {},
+  }) async {
     final detected = _sceneGuest.pendingDetection;
     if (detected == null) return;
     _sceneGuest.pendingDetection = null;
-    _sceneGuest.offeredOrIgnoredNames.add(detected.name.trim().toLowerCase());
+    final edited = (overrides['name'] ?? '').trim();
+    final finalName = edited.isEmpty ? detected.name : edited;
+    _sceneGuest.offeredOrIgnoredNames.add(finalName.toLowerCase());
     notifyListeners();
 
     await _addGuestWithStatus(
-      displayName: detected.name,
+      displayName: finalName,
       mint: (onStatus) => _mintSceneGuest(
-        detected.name,
+        finalName,
         detected.descriptor,
         onStatus: onStatus,
+        overrides: overrides,
       ),
     );
   }
@@ -378,6 +383,7 @@ extension ChatServiceGuestFlow on ChatService {
     String name,
     String concept, {
     void Function(String step)? onStatus,
+    Map<String, String> overrides = const {},
   }) async {
     final repo = _characterRepository;
     if (repo == null) return const GuestMintResult.failure('no repository');
@@ -388,6 +394,7 @@ extension ChatServiceGuestFlow on ChatService {
       llm: testLlmServiceOverride ?? _llmProvider?.activeService,
       host: _mintHost,
       onStatus: onStatus,
+      overrides: overrides,
     );
   }
 

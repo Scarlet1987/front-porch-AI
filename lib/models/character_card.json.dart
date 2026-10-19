@@ -95,6 +95,14 @@ extension FrontPorchExtensionsJson on FrontPorchExtensions {
         if (occupationBrief.isNotEmpty) 'occupationBrief': occupationBrief,
         if (hours.isNotEmpty && workDays != null) 'workDays': workDays,
         if (birthday.isNotEmpty) 'birthday': birthday,
+        if (appearanceAge.isNotEmpty) 'appearance_age': appearanceAge,
+        if (appearanceEyeColor.isNotEmpty)
+          'appearance_eye_color': appearanceEyeColor,
+        if (appearanceHair.isNotEmpty) 'appearance_hair': appearanceHair,
+        if (appearanceFeatures.isNotEmpty)
+          'appearance_features': appearanceFeatures,
+        if (appearanceProportion.isNotEmpty)
+          'appearance_proportion': appearanceProportion,
         'likes': likes,
         'dislikes': dislikes,
         // Nested so the 18+ pair can be stripped from a share as one object.

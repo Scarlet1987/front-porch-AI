@@ -51,6 +51,8 @@ extension ImageGenSettingsLoad on ImageGenSettings {
       legacyWeight: prefs?.getDouble(k('image_gen_lora_weight')) ?? 0.8,
     );
     _imageGenDenoise = prefs?.getDouble(k('image_gen_denoise')) ?? 0.5;
+    _imageGenProportion =
+        prefs?.getString(k('image_gen_proportion')) ?? 'adult';
     _imageGenSteps = prefs?.getInt(k('image_gen_steps')) ?? 4;
     _imageGenCfgScale = prefs?.getDouble(k('image_gen_cfg_scale')) ?? 1.0;
     _imageGenSampler = prefs?.getString(k('image_gen_sampler')) ?? 'Euler a';

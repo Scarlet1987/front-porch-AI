@@ -27,10 +27,11 @@ import 'package:front_porch_ai/ui/theme/app_colors.dart';
 /// Optional img2img reference-image control for the Image Studio.
 ///
 /// Shows a "Reference image (optional)" picker; once an image is set it reveals
-/// a thumbnail, a clear button, and the **Denoise** slider (0.2–0.9) that only
-/// exists while a reference is present — because denoise is meaningless without
-/// one. The denoise value is the shared `StorageService.imageGenDenoise` setting
-/// (single source of truth across all three local backends).
+/// a thumbnail, a clear button, and the "How much should change" slider
+/// (20%–90%) that only exists while a reference is present — because the
+/// amount of change is meaningless without one. The value is the shared
+/// `StorageService.imageGenDenoise` setting (single source of truth across
+/// all three local backends).
 ///
 /// img2img is a local-backend feature only: the remote-API paths have no
 /// img2img endpoint, so this widget renders nothing when the configured backend
@@ -174,8 +175,8 @@ class ReferenceImagePicker extends StatelessWidget {
   }
 }
 
-/// The img2img denoise slider — kept private to this file since it is only ever
-/// shown alongside a chosen reference image. Reads/writes the shared
+/// The "how much should change" slider — kept private to this file since it is
+/// only ever shown alongside a chosen reference image. Reads/writes the shared
 /// `imageGenDenoise` setting so every local backend uses the same value.
 class _DenoiseSlider extends StatelessWidget {
   final bool isBusy;
@@ -188,24 +189,39 @@ class _DenoiseSlider extends StatelessWidget {
     );
     // The setting clamps to 0–1; the slider offers the usable img2img window.
     final display = denoise.clamp(0.2, 0.9);
+    final percent = (display * 100).round();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(
-          'How different from the photo?',
-          style: TextStyle(
-            color: AppColors.textSecondary(context),
-            fontSize: 11,
-            fontWeight: FontWeight.w600,
-          ),
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                'How much should change',
+                style: TextStyle(
+                  color: AppColors.textSecondary(context),
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            Text(
+              '$percent%',
+              style: TextStyle(
+                color: AppColors.textPrimary(context),
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
         ),
         Slider(
           value: display.toDouble(),
           min: 0.2,
           max: 0.9,
           divisions: 14,
-          label: display.toStringAsFixed(2),
+          label: '$percent%',
           activeColor: AppColors.formMasterAccent,
           onChanged: isBusy
               ? null
@@ -215,7 +231,7 @@ class _DenoiseSlider extends StatelessWidget {
                     .setImageGenDenoise(v),
         ),
         Text(
-          'Left keeps it close to your photo; right lets the prompt take over.',
+          'Low keeps it close to your photo; high lets the prompt take over.',
           style: TextStyle(
             color: AppColors.textTertiary(context),
             fontSize: 10,

@@ -33,7 +33,6 @@ import 'package:front_porch_ai/services/hardware_service.dart';
 import 'package:front_porch_ai/services/memory_budget.dart';
 import 'package:front_porch_ai/services/grpc/draw_things_grpc_service.dart';
 import 'package:front_porch_ai/services/image_prompt/image_prompt.dart';
-import 'package:front_porch_ai/services/comfy_ui_service.dart';
 import 'package:front_porch_ai/services/image/image.dart';
 import 'package:front_porch_ai/services/capability/capability.dart';
 
@@ -52,7 +51,7 @@ part 'image_gen_service.backends.generate.dart';
 part 'image_gen_service.catalog.dart';
 part 'image_gen_service.nano_models.dart';
 part 'image_gen_service.payload.dart';
-part 'image_gen_service.comfy.dart';
+part 'image_gen_service.native.dart';
 part 'image_gen_service.clients.dart';
 
 /// Service for generating images via the remote API. Studio's host is
@@ -109,7 +108,10 @@ class ImageGenService extends ChangeNotifier {
   bool get isConfigured => _isConfiguredImpl;
 
   DrawThingsGrpcService? _drawThingsGrpc;
-  ComfyUiService? _comfyUi;
+
+  /// Built-in native image backend. Replaces the old ComfyUI server client.
+  /// In-process: no HTTP, no server, no ports.
+  NativeImageBackend? _nativeBackend;
 
   // Thin delegation hook for prompt construction.
   // Full ownership of ImageGenContext mapping semantics, mode contracts
@@ -153,6 +155,37 @@ class ImageGenService extends ChangeNotifier {
   /// creator pack's "Switching to edit model" stage). No-op on every other
   /// backend — DT/remote load-unload per request on their own.
   Future<void> nudgeComfyFree() => _nudgeComfyFreeImpl();
+
+  /// Generate an image from a prompt.
+  ///
+  /// Instance-member stub (see class doc): the test fakes override this, so
+  /// it must stay a literal instance member for virtual dispatch. Delegates
+  /// to [_generateImageQueueImpl] in image_gen_service.queue.dart.
+  Future<Uint8List?> generateImage({
+    required String prompt,
+    String? negativePrompt,
+    String? size,
+    Uint8List? referenceImage,
+    String? model,
+    bool isPortrait = false,
+    int? seed,
+    double? denoise,
+    StudioIntent intent = StudioIntent.create,
+    double? editStrength,
+    String? sessionId,
+  }) => _generateImageQueueImpl(
+    prompt: prompt,
+    negativePrompt: negativePrompt,
+    size: size,
+    referenceImage: referenceImage,
+    model: model,
+    isPortrait: isPortrait,
+    seed: seed,
+    denoise: denoise,
+    intent: intent,
+    editStrength: editStrength,
+    sessionId: sessionId,
+  );
 
   /// Fetch available image models.
   ///
@@ -324,52 +357,51 @@ class ImageGenService extends ChangeNotifier {
     }
   }
 
-  /// ComfyUI discovery — checkpoints / LoRAs / samplers all come from one
-  /// GET /object_info payload (see [ComfyUiService]); URL from settings.
+  /// Native backend model discovery — lists model files from the configured
+  /// model directories. Replaces the old ComfyUI /object_info discovery.
+  /// [baseUrl] is ignored (kept for signature compatibility).
   Future<List<String>> fetchComfyModels(String baseUrl) =>
-      _ensureComfyUi.fetchModels();
+      _ensureNative.listModels();
 
-  /// Checkpoints + diffusion_models + encoders + VAE + LoRAs.
-  Future<ComfyFileCatalog> fetchComfyCatalog(String baseUrl) =>
-      _ensureComfyUi.fetchCatalog();
-
-  /// Live Comfy `/templates` Create list (empty when that install has none).
-  Future<List<ComfyTemplateEntry>> fetchComfyCreateTemplates(String baseUrl) =>
-      _ensureComfyUi.fetchCreateTemplates();
-
-  /// ComfyUI LoRAs, enriched with base-model family. Names come from
-  /// /object_info; the family is read per-LoRA from the embedded safetensors
-  /// metadata via /view_metadata (authoritative), falling back to the file name
-  /// when a model exposes none. Metadata reads run in small concurrent batches
-  /// so a large library doesn't stall the picker, and any failure degrades
-  /// silently to name detection.
-  Future<List<LoraOption>> fetchComfyLoras(String baseUrl) async {
-    final comfy = _ensureComfyUi;
-    final names = await comfy.fetchLoras();
-    final out = <LoraOption>[];
-    const batch = 8;
-    for (var i = 0; i < names.length; i += batch) {
-      final slice = names.skip(i).take(batch);
-      final metas = await Future.wait(slice.map(comfy.fetchLoraMetadata));
-      var j = 0;
-      for (final n in slice) {
-        final meta = metas[j++];
-        out.add(
-          ImageModelFamily.classifyLora(
-            n,
-            metadata: meta.isEmpty ? null : meta,
-          ),
-        );
-      }
-    }
-    return out;
+  /// Model catalog from the native backend's model directories.
+  /// [baseUrl] is ignored (kept for signature compatibility).
+  Future<ComfyFileCatalog> fetchComfyCatalog(String baseUrl) async {
+    final models = await _ensureNative.listModels();
+    return ComfyFileCatalog(checkpoints: models);
   }
 
-  Future<List<String>> fetchComfySamplers(String baseUrl) =>
-      _ensureComfyUi.fetchSamplers();
+  /// Workflow templates do not exist in the native backend.
+  /// Returns empty. [baseUrl] is ignored (kept for signature compatibility).
+  Future<List<dynamic>> fetchComfyCreateTemplates(String baseUrl) async => [];
 
-  Future<List<String>> fetchComfySchedulers(String baseUrl) =>
-      _ensureComfyUi.fetchSchedulers();
+  /// LoRAs from the native backend's model directories.
+  /// [baseUrl] is ignored (kept for signature compatibility).
+  Future<List<LoraOption>> fetchComfyLoras(String baseUrl) async {
+    final models = await _ensureNative.listModels();
+    final loraFiles = models
+        .where((m) => m.toLowerCase().contains('lora'))
+        .toList();
+    return loraFiles.map((n) => ImageModelFamily.classifyLora(n)).toList();
+  }
+
+  /// Samplers supported by the native backend.
+  /// [baseUrl] is ignored (kept for signature compatibility).
+  Future<List<String>> fetchComfySamplers(String baseUrl) async => const [
+    'euler',
+    'euler_ancestral',
+    'dpmpp_2m',
+    'dpmpp_sde',
+    'ddim',
+  ];
+
+  /// Schedulers supported by the native backend.
+  /// [baseUrl] is ignored (kept for signature compatibility).
+  Future<List<String>> fetchComfySchedulers(String baseUrl) async => const [
+    'normal',
+    'karras',
+    'exponential',
+    'sgm_uniform',
+  ];
 
   /// Fetch LoRAs from an A1111 / Forge / SD.Next server, enriched with
   /// base-model family.
@@ -407,7 +439,8 @@ class ImageGenService extends ChangeNotifier {
     try {
       switch (backend) {
         case ImageGenBackend.comfyUi:
-          await _comfyUi?.freeMemory();
+        case ImageGenBackend.native:
+          await _nativeBackend?.freeMemory();
         case ImageGenBackend.a1111:
         case ImageGenBackend.drawThings:
           final url = _storage.imageGenSettings.localImageGenUrl;

@@ -6,6 +6,97 @@ import 'dart:convert';
 import 'package:front_porch_ai/services/image/image.dart';
 import 'package:front_porch_ai/services/storage/settings/image_gen_settings.dart';
 
+/// Classical head-count proportions: 1 head = the character's head height.
+/// The engine's reference key for humanoid bodies — pick the age range and
+/// the prompt carries the count, so the model works from a real measurement
+/// instead of guessing.
+enum BodyProportion { off, child, teen, adult }
+
+/// Stored setting value → [BodyProportion]. Unknown values fall back to adult.
+BodyProportion bodyProportionFromSetting(String value) {
+  switch (value) {
+    case 'child':
+      return BodyProportion.child;
+    case 'teen':
+      return BodyProportion.teen;
+    case 'off':
+      return BodyProportion.off;
+    case 'adult':
+    default:
+      return BodyProportion.adult;
+  }
+}
+
+/// Setting value for [BodyProportion].
+String bodyProportionSetting(BodyProportion proportion) {
+  switch (proportion) {
+    case BodyProportion.child:
+      return 'child';
+    case BodyProportion.teen:
+      return 'teen';
+    case BodyProportion.off:
+      return 'off';
+    case BodyProportion.adult:
+      return 'adult';
+  }
+}
+
+/// Plain-English label with the head range, for the picker.
+String bodyProportionLabel(BodyProportion proportion) {
+  switch (proportion) {
+    case BodyProportion.child:
+      return 'Child (4–5 heads)';
+    case BodyProportion.teen:
+      return 'Teen (6–7 heads)';
+    case BodyProportion.adult:
+      return 'Adult (7–8 heads)';
+    case BodyProportion.off:
+      return 'Off';
+  }
+}
+
+/// The prompt phrase the engine works from. Empty when off — nothing injected.
+String bodyProportionPrompt(BodyProportion proportion) {
+  switch (proportion) {
+    case BodyProportion.child:
+      return 'young child, about 5 heads tall, correct proportions for a child';
+    case BodyProportion.teen:
+      return 'teenager, about 6 heads tall, correct proportions for a teenager';
+    case BodyProportion.adult:
+      return 'adult, about 8 heads tall, heroic body proportions';
+    case BodyProportion.off:
+      return '';
+  }
+}
+
+const String kBodyProportionKey =
+    'Artists measure bodies in heads — 1 head = the height of the '
+    'character\u2019s head. Pick the age range and we\u2019ll handle '
+    'the proportions.';
+
+/// Builds the locked-in appearance phrase for a prompt from a character's
+/// stored details: "16 years old, blue eyes, black hair, scar on left cheek".
+/// Empty when nothing is locked in.
+String lockedAppearancePhrase({
+  required String age,
+  required String eyeColor,
+  required String hair,
+  required String features,
+}) {
+  final parts = <String>[];
+  final a = age.trim();
+  if (a.isNotEmpty) parts.add('$a years old');
+  final e = eyeColor.trim();
+  if (e.isNotEmpty) parts.add('$e eyes');
+  final h = hair.trim();
+  if (h.isNotEmpty) {
+    parts.add(h.toLowerCase().contains('hair') ? h : '$h hair');
+  }
+  final f = features.trim();
+  if (f.isNotEmpty) parts.add(f);
+  return parts.join(', ');
+}
+
 const String kStudioCreateWell =
     'Start from a picture — optional. A reference here varies the Create '
     'model. It does not switch you to Edit.';
@@ -196,36 +287,14 @@ class StudioSupportRow {
 /// Every model file the graph loads besides the primary diffusion or
 /// checkpoint file, with what is stored for it. [slots] are the graph's own
 /// slots (a saved or template graph has no bundled preset); until the graph
-/// has been read, a bundled preset's slots stand in. A stored choice is shown
-/// as it is, whatever its name: it is the person's pick. An empty list with
-/// [checkpointOnly] is a checkpoint graph, which has no text-encoder or VAE
-/// slot.
+/// Obsolete: the native backend has no model slots. Always returns empty.
 ({bool checkpointOnly, List<StudioSupportRow> rows}) studioSupport({
   required bool edit,
   required String workflowId,
   required Map<String, String> choices,
-  List<ComfyModelSlot> slots = const [],
+  List<dynamic> slots = const [],
 }) {
-  final known = slots.isNotEmpty
-      ? slots
-      : (edit
-                ? comfyEditPresetById(workflowId)?.modelSlots
-                : comfyCreatePresetById(workflowId)?.modelSlots) ??
-            const <ComfyModelSlot>[];
-  if (known.isEmpty) {
-    return (checkpointOnly: false, rows: const <StudioSupportRow>[]);
-  }
-  final rows = <StudioSupportRow>[
-    for (final slot in known)
-      if (slot.token != '%MODEL_DIFFUSION%' &&
-          slot.token != kComfyCheckpointToken)
-        StudioSupportRow(
-          slot.label,
-          slot.token,
-          (choices['$workflowId/${slot.token}'] ?? '').trim(),
-        ),
-  ];
-  return (checkpointOnly: rows.isEmpty, rows: rows);
+  return (checkpointOnly: false, rows: const <StudioSupportRow>[]);
 }
 
 /// Names the encoder when Qwen-Image 2.1 has no Qwen3-VL 8B file chosen.

@@ -3,8 +3,11 @@
 
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:front_porch_ai/services/web/tunnels/ngrok_provider.dart';
 import 'package:front_porch_ai/services/web/tunnels/tailscale_provider.dart';
+
+// Note: ngrok provider was removed (Tailscale-only decision, 2026-10-19).
+// The NgrokProvider.parseTunnels group was deleted with it.
+// (approved-test-change: Elaina, 2026-10-19)
 
 void main() {
   group('TailscaleProvider.parseStatus', () {
@@ -53,27 +56,6 @@ void main() {
           TailscaleServeOutcome.failed);
       expect(TailscaleProvider.classifyServeFailure(b),
           TailscaleServeOutcome.failed);
-    });
-  });
-
-  group('NgrokProvider.parseTunnels', () {
-    test('prefers the https public_url', () {
-      const json = '''
-      {"tunnels":[
-        {"public_url":"http://abc.ngrok-free.app"},
-        {"public_url":"https://abc.ngrok-free.app"}
-      ]}''';
-      expect(NgrokProvider.parseTunnels(json), 'https://abc.ngrok-free.app');
-    });
-
-    test('falls back to any url when no https present', () {
-      const json = '{"tunnels":[{"public_url":"tcp://0.tcp.ngrok.io:12345"}]}';
-      expect(NgrokProvider.parseTunnels(json), 'tcp://0.tcp.ngrok.io:12345');
-    });
-
-    test('empty / malformed returns null', () {
-      expect(NgrokProvider.parseTunnels('{"tunnels":[]}'), isNull);
-      expect(NgrokProvider.parseTunnels('nope'), isNull);
     });
   });
 }

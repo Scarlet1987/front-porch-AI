@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import 'package:front_porch_ai/services/capability/image_reference_resolver.dart';
-import 'package:front_porch_ai/services/comfy_ui_service.dart';
 import 'package:front_porch_ai/services/image/image.dart';
 import 'package:front_porch_ai/services/storage_service.dart';
 
@@ -40,24 +39,10 @@ class PackPlan {
 /// (A1111, or a Draw Things model that cannot edit) make the pack by img2img.
 Future<PackPlan> planExpressionPack(
   StorageService storage, {
-  ComfyUiService? comfy,
   City96Gate? gate,
 }) async {
   final settings = storage.imageGenSettings;
   final backend = ImageGenBackend.fromKey(settings.imageGenBackend);
-  if (backend == ImageGenBackend.comfyUi) {
-    final report = await checkStudioReady(
-      settings: settings,
-      edit: true,
-      comfy: comfy,
-      gate: gate,
-    );
-    return report.ready
-        ? const PackPlan.edit()
-        : PackPlan.refused(
-            packNotReadyMessage(report.readiness, settings.comfyUiUrl),
-          );
-  }
   if (backend == ImageGenBackend.remote) {
     final account = resolveImageStudioRemoteAccount(
       imageRemoteApiUrl: settings.imageRemoteApiUrl,

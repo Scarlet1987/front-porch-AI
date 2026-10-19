@@ -1,7 +1,6 @@
 // Copyright (C) 2026 Front Porch AI
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'package:front_porch_ai/ui/theme/app_colors.dart';
@@ -22,22 +21,13 @@ class StudioStove extends StatefulWidget {
   const StudioStove({
     super.key,
     required this.backendName,
-    required this.backend,
-    required this.url,
-    required this.onBackend,
-    required this.onEditUrl,
-    this.address,
-    this.remoteNote,
-    this.reachable = false,
-    this.checkedDown = false,
-    this.diffusionCount = 0,
-    this.loraCount = 0,
+    required this.reachable,
     required this.familyLabel,
     required this.primaryFile,
     required this.why,
-    required this.onGraphs,
     this.onModels,
     required this.onGetModel,
+    this.onGraphs,
     this.checkpointOnly = false,
     this.support = const [],
     this.onChangeSupport,
@@ -69,7 +59,6 @@ class StudioStove extends StatefulWidget {
     this.showGenerate = true,
     this.errorText = '',
     this.generating = false,
-    this.onRetry,
     this.showModes = false,
     this.editing = false,
     this.onMode,
@@ -78,23 +67,16 @@ class StudioStove extends StatefulWidget {
     this.loaderSupportAction,
   });
 
+  /// Display name of the active image engine (e.g. "ComfyUI").
   final String backendName;
-  final String backend;
-  final String url;
-  final ValueChanged<String> onBackend;
-  final VoidCallback onEditUrl;
 
-  /// Shown instead of the tappable address (ComfyUI's editable field).
-  final Widget? address;
-  final Widget? remoteNote;
+  /// Whether the engine answered the last probe. Read-only here — engine
+  /// setup (backend choice, address, keys) lives in Settings.
   final bool reachable;
-  final bool checkedDown;
-  final int diffusionCount;
-  final int loraCount;
   final String familyLabel;
   final String primaryFile;
   final String why;
-  final VoidCallback onGraphs;
+  final VoidCallback? onGraphs;
   final VoidCallback? onModels;
   final VoidCallback onGetModel;
   final bool checkpointOnly;
@@ -132,7 +114,6 @@ class StudioStove extends StatefulWidget {
   final bool showGenerate;
   final String errorText;
   final bool generating;
-  final VoidCallback? onRetry;
   final bool showModes;
   final bool editing;
   final ValueChanged<bool>? onMode;
@@ -177,31 +158,27 @@ class _StudioStoveState extends State<StudioStove> {
           children: [
             if (widget.showModes)
               StudioStoveModes(editing: widget.editing, onMode: widget.onMode),
-            _connection(context, primary, secondary),
+            _engineStatus(context, primary, secondary),
             const SizedBox(height: 12),
             Text(
-              'Model',
+              'The AI drawing your pictures',
               style: TextStyle(
                 color: secondary,
                 fontSize: 12,
                 fontWeight: FontWeight.w700,
               ),
             ),
+            const SizedBox(height: 2),
             Text(
               widget.familyLabel,
               style: TextStyle(color: primary, fontWeight: FontWeight.w700),
             ),
             if (widget.primaryFile.isNotEmpty)
               Text(widget.primaryFile, style: TextStyle(color: primary)),
-            Text(widget.why, style: TextStyle(color: secondary, fontSize: 12)),
+            const SizedBox(height: 4),
             Wrap(
               spacing: 4,
               children: [
-                if (widget.backend == 'comfyui')
-                  TextButton(
-                    onPressed: widget.onGraphs,
-                    child: const Text('Change graph'),
-                  ),
                 if (widget.onModels != null)
                   TextButton(
                     onPressed: widget.onModels,
@@ -209,95 +186,22 @@ class _StudioStoveState extends State<StudioStove> {
                   ),
                 TextButton(
                   onPressed: widget.onGetModel,
-                  child: const Text('Get a model from CivitAI'),
+                  child: const Text('Find a new drawing AI'),
                 ),
               ],
             ),
-            if (widget.status.isNotEmpty || widget.loaderSupportAction != null)
-              Wrap(
-                crossAxisAlignment: WrapCrossAlignment.center,
-                spacing: 8,
-                children: [
-                  if (widget.status.isNotEmpty)
-                    Text(widget.status, style: TextStyle(color: primary)),
-                  if (widget.loaderSupportAction != null)
-                    widget.loaderSupportAction!,
-                  if (widget.onUpdateLoader != null)
-                    TextButton(
-                      onPressed: widget.onUpdateLoader,
-                      child: const Text('Update loader…'),
-                    ),
-                ],
-              ),
-            if (widget.checkpointOnly)
-              Text(
-                kStudioCheckpointSupport,
-                style: TextStyle(color: secondary, fontSize: 12, height: 1.35),
-              ),
-            if (widget.support.isNotEmpty) ...[
+            if (widget.loraBlocked) ...[
               const SizedBox(height: 8),
               Text(
-                'This graph also loads',
-                style: TextStyle(
-                  color: secondary,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              for (final row in widget.support)
-                _supportRow(context, row, primary, secondary),
-              Text(
-                kStudioLoraFamilyNote,
+                'The style pack doesn\u2019t match this drawing AI, so '
+                'Generate is paused. Open Advanced to pick a matching one '
+                'or use it anyway.',
                 style: TextStyle(color: secondary, fontSize: 12, height: 1.35),
               ),
             ],
             const SizedBox(height: 8),
             Text(
-              'LoRA',
-              style: TextStyle(
-                color: secondary,
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            for (final row in widget.loras)
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(row.file, style: TextStyle(color: primary)),
-                  ),
-                  Text(row.badge, style: TextStyle(color: secondary)),
-                ],
-              ),
-            if (widget.loraBlocked) ...[
-              Text(
-                'Generate stays off until you pick a matching LoRA or press Use anyway.',
-                style: TextStyle(color: secondary, fontSize: 12, height: 1.35),
-              ),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: TextButton(
-                  onPressed: widget.onAnyway,
-                  child: const Text('Use anyway'),
-                ),
-              ),
-            ],
-            Wrap(
-              spacing: 4,
-              children: [
-                TextButton(
-                  onPressed: widget.onAddLora,
-                  child: const Text('Add'),
-                ),
-                TextButton(
-                  onPressed: widget.onGetLora,
-                  child: const Text('Get a LoRA from CivitAI'),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Size',
+              'Picture size',
               style: TextStyle(
                 color: secondary,
                 fontSize: 12,
@@ -337,6 +241,116 @@ class _StudioStoveState extends State<StudioStove> {
               ),
             ),
             if (_open) ...[
+              // --- Advanced: power-user controls. Basic view stays clean. ---
+              if (widget.why.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Text(
+                    widget.why,
+                    style: TextStyle(color: secondary, fontSize: 12),
+                  ),
+                ),
+              if (widget.onGraphs != null)
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: TextButton(
+                    onPressed: widget.onGraphs,
+                    child: const Text('Change workflow'),
+                  ),
+                ),
+              if (widget.status.isNotEmpty ||
+                  widget.loaderSupportAction != null)
+                Wrap(
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  spacing: 8,
+                  children: [
+                    if (widget.status.isNotEmpty)
+                      Text(widget.status, style: TextStyle(color: primary)),
+                    if (widget.loaderSupportAction != null)
+                      widget.loaderSupportAction!,
+                    if (widget.onUpdateLoader != null)
+                      TextButton(
+                        onPressed: widget.onUpdateLoader,
+                        child: const Text('Update loader…'),
+                      ),
+                  ],
+                ),
+              if (widget.checkpointOnly)
+                Text(
+                  kStudioCheckpointSupport,
+                  style: TextStyle(
+                    color: secondary,
+                    fontSize: 12,
+                    height: 1.35,
+                  ),
+                ),
+              if (widget.support.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                Text(
+                  'Extra files this setup loads',
+                  style: TextStyle(
+                    color: secondary,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                for (final row in widget.support)
+                  _supportRow(context, row, primary, secondary),
+                Text(
+                  kStudioLoraFamilyNote,
+                  style: TextStyle(
+                    color: secondary,
+                    fontSize: 12,
+                    height: 1.35,
+                  ),
+                ),
+              ],
+              const SizedBox(height: 8),
+              Text(
+                'Style packs',
+                style: TextStyle(
+                  color: secondary,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              Text(
+                'Small add-ons that teach the drawing AI a specific look '
+                'or character.',
+                style: TextStyle(color: secondary, fontSize: 12, height: 1.35),
+              ),
+              const SizedBox(height: 4),
+              for (final row in widget.loras)
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(row.file, style: TextStyle(color: primary)),
+                    ),
+                    Text(row.badge, style: TextStyle(color: secondary)),
+                  ],
+                ),
+              if (widget.loraBlocked)
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: TextButton(
+                    onPressed: widget.onAnyway,
+                    child: const Text('Use anyway'),
+                  ),
+                ),
+              Wrap(
+                spacing: 4,
+                children: [
+                  TextButton(
+                    onPressed: widget.onAddLora,
+                    child: const Text('Add style pack'),
+                  ),
+                  TextButton(
+                    onPressed: widget.onGetLora,
+                    child: const Text('Find a style pack'),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
               StudioStoveKnobs(
                 drawThings: widget.drawThings,
                 showSampler: showSampler,
@@ -388,67 +402,42 @@ class _StudioStoveState extends State<StudioStove> {
     );
   }
 
-  Widget _connection(BuildContext context, Color primary, Color secondary) {
-    return Row(
+  /// Read-only engine status. Backend choice, server address, and API keys
+  /// are configured in Settings → Engine resources — the Studio is for
+  /// making pictures, not wiring up servers.
+  Widget _engineStatus(BuildContext context, Color primary, Color secondary) {
+    final dot = widget.reachable ? AppColors.logReady : secondary;
+    return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Connection',
-                style: TextStyle(
-                  color: secondary,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              Text(widget.backendName, style: TextStyle(color: primary)),
-              widget.address ??
-                  InkWell(
-                    onTap: widget.onEditUrl,
-                    child: Text(
-                      widget.url,
-                      style: TextStyle(color: secondary, fontSize: 12),
-                    ),
-                  ),
-              if (widget.remoteNote != null) widget.remoteNote!,
-              if (widget.reachable)
-                Text(
-                  'Reachable · ${widget.diffusionCount} diffusion files · ${widget.loraCount} LoRAs',
-                  style: TextStyle(color: secondary, fontSize: 12),
-                )
-              else if (widget.backend == 'comfyui' || (widget.checkedDown))
-                Text(
-                  'Not running',
-                  style: TextStyle(color: secondary, fontSize: 12),
-                ),
-              if (widget.onRetry != null)
-                TextButton(
-                  onPressed: widget.onRetry,
-                  child: const Text('Check'),
-                ),
-            ],
+        Text(
+          'Image engine',
+          style: TextStyle(
+            color: secondary,
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
           ),
         ),
-        PopupMenuButton<String>(
-          onSelected: widget.onBackend,
-          itemBuilder: (context) => [
-            const PopupMenuItem(value: 'remote', child: Text('Remote')),
-            const PopupMenuItem(value: 'comfyui', child: Text('ComfyUI')),
-            const PopupMenuItem(value: 'a1111', child: Text('Automatic1111')),
-            if (defaultTargetPlatform == TargetPlatform.macOS ||
-                widget.backend == 'drawthings')
-              const PopupMenuItem(
-                value: 'drawthings',
-                child: Text('Draw Things'),
-              ),
+        const SizedBox(height: 4),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 8,
+              height: 8,
+              decoration: BoxDecoration(color: dot, shape: BoxShape.circle),
+            ),
+            const SizedBox(width: 6),
+            Text(
+              '${widget.backendName} · ${widget.reachable ? 'Connected' : 'Not connected'}',
+              style: TextStyle(color: primary),
+            ),
           ],
-          child: const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-            child: Text('Change…'),
-          ),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          'Change the image engine in Settings → Engine resources.',
+          style: TextStyle(color: secondary, fontSize: 12),
         ),
       ],
     );

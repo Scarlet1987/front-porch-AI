@@ -10,6 +10,7 @@ export 'reference_image_picker.dart';
 export 'result_view.dart';
 export 'generation_history.dart';
 export 'subject_picker.dart';
+export 'proportion_picker.dart';
 export 'studio_desk.dart';
 export 'studio_desk_copy.dart';
 export 'studio_desk_frame.dart';

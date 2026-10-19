@@ -8,7 +8,7 @@ import 'package:front_porch_ai/ui/theme/app_colors.dart';
 
 import 'studio_desk_copy.dart';
 
-/// Change model. Rows are grouped by family. A typed name is kept when
+/// Choose a drawing AI. Rows are grouped by type. A typed name is kept when
 /// the connected app has not listed that file yet.
 class StudioModelSheet extends StatefulWidget {
   const StudioModelSheet({
@@ -65,7 +65,7 @@ class _StudioModelSheetState extends State<StudioModelSheet> {
     return AlertDialog(
       backgroundColor: AppColors.surfaceOf(context),
       title: Text(
-        widget.edit ? 'Change model — Edit' : 'Change model — Create',
+        widget.edit ? 'Choose a drawing AI — Edit' : 'Choose a drawing AI',
         style: TextStyle(color: AppColors.textPrimary(context)),
       ),
       content: SizedBox(
@@ -77,7 +77,7 @@ class _StudioModelSheetState extends State<StudioModelSheet> {
             TextField(
               autofocus: true,
               decoration: const InputDecoration(
-                hintText: 'Search families or files',
+                hintText: 'Search by name',
                 isDense: true,
               ),
               onChanged: (value) => setState(() => _query = value),
@@ -147,7 +147,7 @@ class _StudioModelSheetState extends State<StudioModelSheet> {
             ),
             subtitle: marked
                 ? Text(
-                    'The name does not look like it fits this model.',
+                    'This file might not work with the current setup.',
                     style: TextStyle(
                       color: AppColors.textSecondary(context),
                       fontSize: 12,

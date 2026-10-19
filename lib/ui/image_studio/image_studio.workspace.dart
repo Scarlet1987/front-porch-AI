@@ -32,6 +32,7 @@ extension _ImageStudioWorkspace on _ImageStudioState {
       child: StudioView(
         activeMode: _activeMode,
         characterName: _activeCharName,
+        characterDbId: _lookTarget?.$1,
         groupCharacters: widget.groupCharacters,
         groupShotActive: _groupShot,
         onPickGroupMember: _pickGroupSubject,

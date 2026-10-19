@@ -55,7 +55,7 @@ extension _ChatPageSceneDialogs on _ChatPageState {
       _showingGuestDetection = false;
       return;
     }
-    final accepted = await showDialog<bool>(
+    final details = await showDialog<NpcSaveDetails>(
       context: context,
       barrierDismissible: false,
       builder: (_) => SceneGuestDetectedDialog(
@@ -64,8 +64,18 @@ extension _ChatPageSceneDialogs on _ChatPageState {
       ),
     );
     _showingGuestDetection = false;
-    if (accepted == true) {
-      await chat.acceptDetectedGuest();
+    if (details != null) {
+      await chat.acceptDetectedGuest(
+        overrides: {
+          'name': details.name,
+          'age': details.age,
+          'eyeColor': details.eyeColor,
+          'hair': details.hair,
+          'features': details.features,
+          'personality': details.personality,
+          'description': details.description,
+        },
+      );
     } else {
       chat.dismissDetectedGuest();
     }

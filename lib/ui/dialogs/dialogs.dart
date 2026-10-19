@@ -40,6 +40,7 @@ export 'reprocess_needs_dialog.dart';
 export 'piper_import_voice_button.dart';
 export 'rocm_guidance_dialog.dart';
 export 'scene_guest_detected_dialog.dart';
+export 'npc_save_details.dart';
 export 'scene_guest_picker_dialog.dart';
 export 'stable_db_import_dialog.dart';
 export 'story_calendar_dialog.dart';

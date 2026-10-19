@@ -145,6 +145,19 @@ ImageSurfaceCapabilities capabilitiesFor({
         editAllowlist: false,
         editPicker: false,
       );
+    case ImageGenBackend.native:
+      // Built-in engine: no workflow graphs, model file picked directly.
+      return ImageSurfaceCapabilities(
+        edit: reference.supportsEdit,
+        img2img: reference.supportsImg2img,
+        lora: true,
+        negativePrompt: true,
+        checkpointSlot: true,
+        workflowSlots: false,
+        scheduler: true,
+        editAllowlist: false,
+        editPicker: false,
+      );
     case ImageGenBackend.remote:
       return ImageSurfaceCapabilities(
         edit: reference.supportsEdit,

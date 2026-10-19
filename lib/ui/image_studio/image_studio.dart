@@ -209,10 +209,42 @@ class _ImageStudioState extends State<ImageStudio> {
 
   Future<void> _generate() async {
     if (context.read<ImageGenService>().isGenerating) return;
-    final prompt = _editablePrompt.trim();
+    var prompt = _editablePrompt.trim();
     if (prompt.isEmpty) {
       setState(() => _error = 'Write a prompt first.');
       return;
+    }
+    // Body-proportion key: the picked age range's head count rides along so
+    // the engine works from a classical measurement instead of guessing.
+    // A character-level locked proportion wins over the global picker.
+    final storage = context.read<StorageService>();
+    var proportionKey = storage.imageGenSettings.imageGenProportion;
+    String lockedDetails = '';
+    final lookTarget = _lookTarget;
+    if (lookTarget != null) {
+      final card = await context
+          .read<CharacterRepository>()
+          .getCharacterCardById(lookTarget.$1);
+      final ext = card?.frontPorchExtensions;
+      if (ext != null) {
+        if (ext.appearanceProportion.isNotEmpty) {
+          proportionKey = ext.appearanceProportion;
+        }
+        lockedDetails = lockedAppearancePhrase(
+          age: ext.appearanceAge,
+          eyeColor: ext.appearanceEyeColor,
+          hair: ext.appearanceHair,
+          features: ext.appearanceFeatures,
+        );
+      }
+    }
+    final proportion = bodyProportionFromSetting(proportionKey);
+    final proportionPhrase = bodyProportionPrompt(proportion);
+    if (proportionPhrase.isNotEmpty) {
+      prompt = '$prompt, $proportionPhrase';
+    }
+    if (lockedDetails.isNotEmpty) {
+      prompt = '$prompt, $lockedDetails';
     }
 
     setState(() {

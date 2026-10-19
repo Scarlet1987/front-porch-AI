@@ -51,6 +51,7 @@ class SceneGuestFactory {
     required CharacterCard? host,
     String sceneGrounding = '',
     void Function(String step)? onStatus,
+    Map<String, String> overrides = const {},
   }) async {
     if (llm == null || !llm.isReady) {
       return const GuestMintResult.failure('the LLM backend is not ready');
@@ -61,6 +62,8 @@ class SceneGuestFactory {
       card = await CharacterGenService(llm).generateCharacter(
         name: name,
         concept: groundedConceptFor(name, concept, sceneGrounding),
+        // User-locked age from the save popup steers generation too.
+        age: (overrides['age'] ?? '').trim(),
         // Surface generation sub-steps (profile → interview → dialogue → …) so
         // the chat banner can show progress instead of a single static spinner.
         onStatus: onStatus,
@@ -106,13 +109,30 @@ class SceneGuestFactory {
     final ext = (card.frontPorchExtensions ?? FrontPorchExtensions()).copyWith(
       tier: 'lite',
     );
+    // User-locked appearance details from the save popup win over anything
+    // the generator invented — the user looked at it and said "this is them".
+    String locked(String key) => (overrides[key] ?? '').trim();
+    final userAge = locked('age');
+    final userEyes = locked('eyeColor');
+    final userHair = locked('hair');
+    final userFeatures = locked('features');
+    if (userAge.isNotEmpty) ext.appearanceAge = userAge;
+    if (userEyes.isNotEmpty) ext.appearanceEyeColor = userEyes;
+    if (userHair.isNotEmpty) ext.appearanceHair = userHair;
+    if (userFeatures.isNotEmpty) ext.appearanceFeatures = userFeatures;
+    final userPersonality = locked('personality');
+    if (userPersonality.isNotEmpty) card.personality = userPersonality;
+    final userDescription = locked('description');
+    if (userDescription.isNotEmpty) card.description = userDescription;
     card.frontPorchExtensions = ext;
 
     try {
       final charDir = _storage.charactersDir;
       if (!charDir.existsSync()) charDir.createSync(recursive: true);
       final epoch = DateTime.now().millisecondsSinceEpoch;
-      var safeName = name.replaceAll(RegExp(r'[^\w\s]'), '').replaceAll(' ', '_');
+      var safeName = name
+          .replaceAll(RegExp(r'[^\w\s]'), '')
+          .replaceAll(' ', '_');
       // Dart's \w is ASCII-only, so a purely non-Latin or symbol name (e.g.
       // "美咲" or "***") strips to empty → a nameless "_<epoch>.png". Fall back
       // to a stable prefix so the filename is never degenerate.

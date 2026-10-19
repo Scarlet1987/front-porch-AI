@@ -92,6 +92,18 @@ class FrontPorchExtensions {
   /// at parse. Age and "days away" are story-clock math, not wall-clock.
   String birthday;
 
+  /// Locked-in appearance details — authored once (e.g. from the Image
+  /// Studio's "lock in details"), read everywhere: image prompts, chat
+  /// context, NPC generation. Blank is omitted from JSON.
+  String appearanceAge;
+  String appearanceEyeColor;
+  String appearanceHair;
+  String appearanceFeatures;
+
+  /// Head-count key for this character: 'child', 'teen', 'adult', 'off'.
+  /// Blank means "use the Studio's global Body proportions setting".
+  String appearanceProportion;
+
   /// What this character is drawn to, and what puts them off — short phrases,
   /// authored on the card. Identity like [ambitions]: they travel with it.
   ///
@@ -223,6 +235,11 @@ class FrontPorchExtensions {
     this.occupationBrief = '',
     this.workDays,
     this.birthday = '',
+    this.appearanceAge = '',
+    this.appearanceEyeColor = '',
+    this.appearanceHair = '',
+    this.appearanceFeatures = '',
+    this.appearanceProportion = '',
     this.likes = const [],
     this.dislikes = const [],
     this.intimateInto = const [],
@@ -307,6 +324,11 @@ class FrontPorchExtensions {
       occupationBrief: realism['occupationBrief'] as String? ?? '',
       workDays: _workDays(realism),
       birthday: realism['birthday'] as String? ?? '',
+      appearanceAge: realism['appearance_age'] as String? ?? '',
+      appearanceEyeColor: realism['appearance_eye_color'] as String? ?? '',
+      appearanceHair: realism['appearance_hair'] as String? ?? '',
+      appearanceFeatures: realism['appearance_features'] as String? ?? '',
+      appearanceProportion: realism['appearance_proportion'] as String? ?? '',
       likes: _phrases(realism['likes']),
       dislikes: _phrases(realism['dislikes']),
       intimateInto: _phrases(_intimate(realism)['into']),

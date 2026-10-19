@@ -15,6 +15,7 @@ import 'package:front_porch_ai/services/capability/capability.dart';
 import 'package:front_porch_ai/services/image/image.dart';
 import 'package:front_porch_ai/services/image_gen_service.dart';
 import 'package:front_porch_ai/services/storage/settings/backend_settings.dart';
+import 'package:front_porch_ai/services/storage/settings/engine_resources_settings.dart';
 import 'package:front_porch_ai/services/storage/settings/image_gen_settings.dart';
 import 'package:front_porch_ai/services/storage/settings/remote_api_key_vault.dart';
 import 'package:front_porch_ai/services/storage_service.dart';
@@ -115,6 +116,12 @@ class _Store extends ChangeNotifier implements StorageService {
 
   @override
   final BackendSettings backendSettings = BackendSettings();
+
+  // (approved-test-change: Elaina, 2026-10-19) Mock drift: production code
+  // reads engineResourcesSettings; the mock must provide it.
+  @override
+  final EngineResourcesSettings engineResourcesSettings =
+      EngineResourcesSettings();
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);

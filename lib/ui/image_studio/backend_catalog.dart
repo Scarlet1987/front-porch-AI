@@ -35,6 +35,8 @@ String backendProbeUrl(StorageService st) {
           : '$host:${st.imageGenSettings.drawThingsGrpcPort}';
     case ImageGenBackend.comfyUi:
       return st.imageGenSettings.comfyUiUrl;
+    case ImageGenBackend.native:
+      return ''; // Built-in engine needs no probe URL.
     case ImageGenBackend.a1111:
       return st.imageGenSettings.localImageGenUrl;
     case ImageGenBackend.remote:

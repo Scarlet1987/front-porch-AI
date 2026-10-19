@@ -33,72 +33,37 @@ bool imageConfigUploadsGraph(Map<String, dynamic> body) {
   return false;
 }
 
-/// [raw] as a ComfyUI graph the desk may store: within the size limit and a
-/// JSON object. Throws [DeskRefused] otherwise.
+/// Obsolete: the native backend has no workflow graphs.
 String checkedDeskGraph(String raw) {
-  if (utf8.encode(raw).length > kMaxDeskGraphBytes) {
-    throw const DeskRefused(
-      'too_large',
-      'That graph is too large to use.',
-      413,
-    );
-  }
-  final kept = pngWorkflowText({'prompt': raw});
-  if (kept == null || workflowNodeCount(kept) == 0) {
-    throw const DeskRefused('not_graph', 'That file isn’t a ComfyUI graph.');
-  }
-  return kept;
+  throw const DeskRefused('no_graphs', 'The built-in engine has no graphs.');
 }
 
 extension ImageStudioDesk on ImageFacade {
   ImageGenSettings get _s => _storage.imageGenSettings;
 
-  Future<void> _setWorkflow(bool edit, String id) {
-    requireIdleImageSettings();
-    return edit
-        ? _s.setComfyEditWorkflowId(id)
-        : _s.setComfyCreateWorkflowId(id);
+  Future<void> _setWorkflow(bool edit, String id) async {
+    // No-op: the native backend has no workflows.
+    return;
   }
 
-  Future<void> _setChoice(bool edit, String id, String token, String file) {
-    requireIdleImageSettings();
-    return edit
-        ? _s.setComfyEditModelChoice(id, token, file)
-        : _s.setComfyCreateModelChoice(id, token, file);
+  Future<void> _setChoice(
+    bool edit,
+    String id,
+    String token,
+    String file,
+  ) async {
+    // No-op: the native backend has no workflow slots.
+    return;
   }
 
-  /// The model files the graph on the desk loads, as the readiness rule read
-  /// them. Empty when Comfy cannot be read.
-  Future<List<ComfyModelSlot>> _deskSlots(bool edit) async {
-    final report = await checkStudioReady(settings: _s, edit: edit);
-    return report.readiness.slots;
+  /// The model files the graph on the desk loads. Obsolete — always empty.
+  Future<List<dynamic>> _deskSlots(bool edit) async {
+    return const [];
   }
 
-  /// Fills the graph's empty text-encoder and VAE slots from the installed
-  /// files, as the desktop desk does. A slot that holds a file is left alone.
+  /// No-op: the native backend has no slots to fill.
   Future<void> _fillSupport(bool edit) async {
-    if (_s.imageGenBackend != 'comfyui') return;
-    final id = edit ? _s.comfyEditWorkflowId : _s.comfyCreateWorkflowId;
-    if (id.isEmpty || id == kComfyUploadedWorkflowId) return;
-    final tokens = [
-      for (final slot in await _deskSlots(edit))
-        if (slot.token.contains('CLIP') || slot.token.contains('VAE'))
-          slot.token,
-    ];
-    final primary = studioPrimaryFor(_s, edit: edit);
-    if (tokens.isEmpty || primary.isEmpty) return;
-    final cat = await _image.fetchComfyCatalog(_s.comfyUiUrl);
-    final fills = supportAutofill(
-      workflowId: id,
-      primary: primary,
-      choices: edit ? _s.comfyEditModelChoices : _s.comfyCreateModelChoices,
-      clips: cat.textEncoders,
-      vaes: cat.vaes,
-      tokens: tokens,
-    );
-    for (final entry in fills.entries) {
-      await _setChoice(edit, id, entry.key, entry.value);
-    }
+    return;
   }
 
   /// Picks the primary model, the way the desktop desk does. A saved,
@@ -134,82 +99,30 @@ extension ImageStudioDesk on ImageFacade {
       await (edit ? _s.setImageGenEditModel(name) : _s.setImageGenModel(name));
       return;
     }
-    if (_s.imageGenBackend != 'comfyui') {
-      await (edit ? _s.setImageGenEditModel(name) : _s.setImageGenModel(name));
-      return;
-    }
-    final current = edit ? _s.comfyEditWorkflowId : _s.comfyCreateWorkflowId;
-    final keep = deskKeepsWorkflow(current);
-    final family = ImageModelFamily.detectFromName(name);
-    final id = keep || (family == ModelFamily.unknown && !isGgufFile(name))
-        ? current
-        : workflowForModel(edit: edit, file: name);
-    if (id != current) await _setWorkflow(edit, id);
-    final token = keep
-        ? deskPrimaryToken(
-            workflowId: id,
-            file: name,
-            slots: await _deskSlots(edit),
-          )
-        : deskComfyToken(workflowId: id, file: name);
-    await _setChoice(edit, id, token, name);
-    await _fillSupport(edit);
+    // Native backend (and others): pick the model file directly.
+    await (edit ? _s.setImageGenEditModel(name) : _s.setImageGenModel(name));
   }
 
-  /// Chooses a graph. The file already on the desk moves along only to a
-  /// bundled graph of its own family; a saved or template graph keeps the
-  /// files it has and empty slots are filled.
+  /// Obsolete: the native backend has no graphs to pick.
   Future<void> pickGraph({required bool edit, required String id}) async {
     requireIdleImageSettings();
-    final graph = _cleanName(id);
-    final uploaded = edit
-        ? _s.comfyEditUploadedWorkflow
-        : _s.comfyCreateUploadedWorkflow;
-    final bundled = edit
-        ? kComfyEditPresets.any((p) => p.id == graph)
-        : kComfyCreatePresets.any((p) => p.id == graph);
-    final known =
-        bundled ||
-        graph.startsWith('comfy:') ||
-        (graph == kComfyUploadedWorkflowId && uploaded.trim().isNotEmpty);
-    if (!known) {
-      throw const DeskRefused(
-        'unknown_graph',
-        'That graph is not on the list.',
-      );
-    }
-    final file = studioPrimaryFor(_s, edit: edit);
-    final chosen = isGgufFile(file) && graph == 'sd'
-        ? workflowForModel(edit: edit, file: file)
-        : graph;
-    await _setWorkflow(edit, chosen);
-    if (file.isNotEmpty &&
-        _s.imageGenBackend == 'comfyui' &&
-        !deskKeepsWorkflow(chosen) &&
-        workflowForModel(edit: edit, file: file) == chosen) {
-      await _setChoice(
-        edit,
-        chosen,
-        deskComfyToken(workflowId: chosen, file: file),
-        file,
-      );
-    }
-    await _fillSupport(edit);
+    throw const DeskRefused(
+      'no_graphs',
+      'The built-in engine has no graphs — pick a model directly.',
+    );
   }
 
-  /// Sets one text-encoder, VAE or other slot of the graph on the desk.
+  /// Obsolete: the native backend has no model slots.
   Future<void> pickSupport({
     required bool edit,
     required String token,
     required String file,
   }) async {
     requireIdleImageSettings();
-    final slot = _cleanName(token);
-    if (!RegExp(r'^%MODEL_[A-Z0-9_]+%$').hasMatch(slot)) {
-      throw const DeskRefused('bad_slot', 'That is not a model slot.');
-    }
-    final id = edit ? _s.comfyEditWorkflowId : _s.comfyCreateWorkflowId;
-    await _setChoice(edit, id, slot, _cleanName(file));
+    throw const DeskRefused(
+      'no_slots',
+      'The built-in engine has no model slots.',
+    );
   }
 
   String _cleanName(String value) {
@@ -228,6 +141,7 @@ extension ImageStudioDesk on ImageFacade {
   /// meant for the other mode and [useFor] does not say which mode to use it
   /// for. [edit] is the mode the desk is on. The answer says which mode the
   /// graph is for (`create`, `edit` or `unstated`) and whether it was stored.
+  /// Obsolete: the native backend has no workflow graphs to store.
   Future<Map<String, dynamic>> saveGraphFile({
     required List<int> bytes,
     required String name,
@@ -235,55 +149,10 @@ extension ImageStudioDesk on ImageFacade {
     String? useFor,
   }) async {
     requireIdleImageSettings();
-    if (bytes.length > kMaxDeskGraphBytes) {
-      throw const DeskRefused(
-        'too_large',
-        'That file is too large to use.',
-        413,
-      );
-    }
-    final json = workflowJsonFromBytes(bytes);
-    if (json == null || workflowNodeCount(json) == 0) {
-      final png = bytes.length >= 4 && bytes[0] == 137 && bytes[1] == 80;
-      throw DeskRefused(
-        png ? 'no_graph_in_image' : 'not_graph',
-        png
-            ? 'That image has no ComfyUI workflow saved inside it.'
-            : 'That file isn’t a ComfyUI graph.',
-      );
-    }
-    final stance = deskGraphStance(json);
-    if (useFor != null && useFor != 'create' && useFor != 'edit') {
-      throw const DeskRefused('bad_request', 'Use it for Create or for Edit.');
-    }
-    final target =
-        useFor ?? (stance == (edit ? 'edit' : 'create') ? stance : null);
-    if (target == null) {
-      return {
-        'stored': false,
-        'stance': stance,
-        'nodes': workflowNodeCount(json),
-      };
-    }
-    final forEdit = target == 'edit';
-    final title = name.trim().isEmpty ? 'workflow' : name.trim();
-    final shown = title.length > 120 ? title.substring(0, 120) : title;
-    if (forEdit) {
-      await _s.setComfyEditUploadedWorkflow(json, title: shown);
-      requireIdleImageSettings();
-      await _s.setComfyEditWorkflowId(kComfyUploadedWorkflowId);
-    } else {
-      await _s.setComfyCreateUploadedWorkflow(json, title: shown);
-      requireIdleImageSettings();
-      await _s.setComfyCreateWorkflowId(kComfyUploadedWorkflowId);
-    }
-    return {
-      'stored': true,
-      'stance': stance,
-      'mode': target,
-      'nodes': workflowNodeCount(json),
-      'title': shown,
-    };
+    throw const DeskRefused(
+      'no_graphs',
+      'The built-in engine has no graphs — workflow upload is not supported.',
+    );
   }
 
   /// The picture an Edit works on, or a Create varies: a picture this app

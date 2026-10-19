@@ -232,6 +232,9 @@ class AliceCreatorDraft extends ChangeNotifier {
   bool npcNaming = false;
   CharacterCard? npcDraft;
 
+  /// DbId of the NPC card loaded via "Load NPC". Null = working from scratch.
+  String? npcLoadedDbId;
+
   void setNpcRole(String r) {
     npcRole = r;
     notifyListeners();

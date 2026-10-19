@@ -16,13 +16,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with Front Porch AI. If not, see <https://www.gnu.org/licenses/>.
 
-import 'comfy_edit_workflow.dart';
-
-/// Files ComfyUI exposes for Image Studio Create / pack discovery.
-///
-/// Checkpoints live in `models/checkpoints` (A1111-shaped SD piles).
-/// Flux / Qwen-Image / Z-Image Turbo live in `models/diffusion_models`
-/// and are listed by `UNETLoader.unet_name`, not `CheckpointLoaderSimple`.
+/// Files the native backend exposes for Image Studio Create / pack discovery.
 class ComfyFileCatalog {
   final List<String> checkpoints;
 
@@ -89,12 +83,7 @@ List<String> mergeComfyCreateModels(
   return out;
 }
 
-/// Empty-slot copy that names the Comfy drawer so "this family is empty"
-/// is distinct from "you picked the wrong family".
-String comfySlotEmptyMessage(ComfyModelSlot slot) {
-  if (slot.folderHint.isEmpty) {
-    return 'No files found for this slot.';
-  }
-  return 'No files in Comfy’s ${slot.folderHint} folder. '
-      'If your model lives in a different drawer, pick that family above.';
+/// Empty-slot message. Obsolete for the native backend.
+String comfySlotEmptyMessage(dynamic slot) {
+  return 'No files found for this slot.';
 }

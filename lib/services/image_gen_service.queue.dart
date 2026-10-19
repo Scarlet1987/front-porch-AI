@@ -165,7 +165,8 @@ extension ImageGenServiceQueue on ImageGenService {
     try {
       switch (backend) {
         case ImageGenBackend.comfyUi:
-          await _comfyUi?.freeMemory();
+        case ImageGenBackend.native:
+          await _nativeBackend?.freeMemory();
         case ImageGenBackend.a1111:
         case ImageGenBackend.drawThings:
           final url = _storage.imageGenSettings.localImageGenUrl;
@@ -183,7 +184,7 @@ extension ImageGenServiceQueue on ImageGenService {
   /// Routes to the configured remote API (OpenRouter, Nano-GPT, etc.).
   ///
   /// Returns the image bytes on success, or null on failure.
-  Future<Uint8List?> generateImage({
+  Future<Uint8List?> _generateImageQueueImpl({
     required String prompt,
     String? negativePrompt,
     String? size,

@@ -3,8 +3,6 @@
 
 import 'dart:convert';
 
-import 'comfy_edit_workflow.dart';
-import 'comfy_template_index.dart';
 import 'model_family.dart';
 
 enum StudioReady {
@@ -37,11 +35,9 @@ class StudioReadiness {
   /// the graph resolved.
   final Map<String, dynamic>? graph;
 
-  /// The model files this graph loads, in the order it lists them. Set on
-  /// Comfy once the graph resolved, even when the verdict is not Ready, so a
-  /// slot that is still empty can be filled. Empty for an uploaded graph,
-  /// whose files are named inside it.
-  final List<ComfyModelSlot> slots;
+  /// The model files this graph loads. Obsolete for the native backend —
+  /// always empty.
+  final List<dynamic> slots;
 
   /// For [StudioReady.needsLoaderUpdate]: the person can allow the update from
   /// the desk ("Update loader…"). False when it cannot be changed at all
@@ -102,27 +98,11 @@ ModelFamily familyForRun({
   return ImageModelFamily.detectFromName(primaryFile);
 }
 
-/// A title that is both text-to-image and image-edit is not a Create row.
-bool _hasTag(String title, Set<String> tags) {
-  final text = title.toLowerCase();
-  for (final tag in tags) {
-    if (text.contains(tag)) return true;
-  }
-  return false;
-}
+/// Obsolete: template titles were a ComfyUI concept.
+bool isCreateTemplateTitle(String title) => false;
 
-bool isCreateTemplateTitle(String title) {
-  final create = _hasTag(title, kComfyCreateTags);
-  final edit = _hasTag(title, kComfyEditTags);
-  return create && !edit;
-}
-
-/// An edit row is edit-only. A title that is both tasks is neither list.
-bool isEditTemplateTitle(String title) {
-  final create = _hasTag(title, kComfyCreateTags);
-  final edit = _hasTag(title, kComfyEditTags);
-  return edit && !create;
-}
+/// Obsolete: template titles were a ComfyUI concept.
+bool isEditTemplateTitle(String title) => false;
 
 /// PNG text chunks. Null when neither chunk is JSON.
 String? pngWorkflowText(Map<String, String> texts) {

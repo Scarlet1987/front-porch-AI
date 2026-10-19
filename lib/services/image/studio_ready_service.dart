@@ -1,7 +1,6 @@
 // Copyright (C) 2026 Front Porch AI
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import 'package:front_porch_ai/services/comfy_ui_service.dart';
 import 'package:front_porch_ai/services/storage/settings/image_gen_settings.dart';
 
 import 'comfy_gguf_city96_gate.dart';
@@ -70,64 +69,22 @@ Future<StudioReadyReport> checkStudioReady({
   required bool edit,
   List<DeskLoraCheck> loras = const [],
   bool allowLoraMismatch = false,
-  ComfyUiService? comfy,
   City96Gate? gate,
 }) async {
   final backend = settings.imageGenBackend;
-  final workflowId = edit
-      ? settings.comfyEditWorkflowId
-      : settings.comfyCreateWorkflowId;
   final primary = studioPrimaryFor(settings, edit: edit);
-  final onComfy = backend == 'comfyui';
-  final client = onComfy
-      ? (comfy ?? ComfyUiService(baseUrl: settings.comfyUiUrl))
-      : null;
-  final info = await client?.fetchObjectInfo();
-  final live = info == null
-      ? null
-      : await client?.fetchWorkflowTemplate(workflowId);
   var verdict = deskReadiness(
     backend: backend,
     primaryFile: primary,
-    objectInfo: onComfy ? info : const {},
+    objectInfo: const {},
     edit: edit,
-    workflowId: workflowId,
-    uploadedWorkflowJson: edit
-        ? settings.comfyEditUploadedWorkflow
-        : settings.comfyCreateUploadedWorkflow,
-    modelChoices: edit
-        ? settings.comfyEditModelChoices
-        : settings.comfyCreateModelChoices,
-    liveTemplate: live,
     loras: loras,
     allowLoraMismatch: allowLoraMismatch,
   );
-  final graph = verdict.graph;
-  if (onComfy && verdict.kind == StudioReady.ready && graph != null) {
-    final loader = await (gate ?? City96Gate.instance).check(
-      comfyUrl: settings.comfyUiUrl,
-      graph: graph,
-    );
-    if (loader.state == City96State.needsUpdate ||
-        loader.state == City96State.restartNeeded) {
-      verdict = StudioReadiness(
-        loader.state == City96State.restartNeeded
-            ? StudioReady.needsComfyRestart
-            : StudioReady.needsLoaderUpdate,
-        null,
-        loader.message ?? kCity96NeedsUpdate,
-        graph,
-        verdict.slots,
-        loader.canUpdate,
-        verdict.tokens,
-        verdict.ownShift,
-      );
-    }
-  }
   return StudioReadyReport(
     readiness: verdict,
     primaryFile: primary,
-    workflowId: workflowId,
-    objectInfo: info,
+    workflowId: '',
+    objectInfo: const {},
   );
 }

@@ -37,6 +37,7 @@ class StudioView extends StatelessWidget {
     super.key,
     required this.activeMode,
     required this.characterName,
+    this.characterDbId,
     this.groupCharacters = const [],
     this.groupShotActive = false,
     this.onPickGroupMember,
@@ -75,6 +76,7 @@ class StudioView extends StatelessWidget {
 
   final ImageGenMode activeMode;
   final String? characterName;
+  final String? characterDbId;
   final List<({String name, String description, String? dbId})> groupCharacters;
   final bool groupShotActive;
   final ValueChanged<int>? onPickGroupMember;
@@ -192,6 +194,11 @@ class StudioView extends StatelessWidget {
             onChanged: draftBusy ? null : onSelectSubject,
             onPickGroupMember: draftBusy ? null : onPickGroupMember,
             onPickGroupShot: draftBusy ? null : onPickGroupShot,
+          ),
+          const SizedBox(height: 10),
+          ProportionPicker(
+            characterDbId: characterDbId,
+            characterName: characterName,
           ),
           if (groupShotActive) ...[
             const SizedBox(height: 8),

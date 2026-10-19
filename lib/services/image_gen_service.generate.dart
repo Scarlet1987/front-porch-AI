@@ -70,7 +70,7 @@ extension _ImageGenGenerate on ImageGenService {
       return null;
     }
     if (!nested) {
-      _comfyUi?.clearCancel();
+      _nativeBackend?.cancel();
       _isGenerating = true;
       _statusMessage = 'Generating image...';
       _lastGeneratedImage = null;
@@ -312,36 +312,39 @@ extension _ImageGenGenerate on ImageGenService {
             denoise: denoise ?? _storage.imageGenSettings.imageGenDenoise,
           );
         }
-      } else if (plan.backend == ImageGenBackend.comfyUi) {
-        _statusMessage = 'Connecting to ComfyUI...';
+      } else if (plan.backend == ImageGenBackend.comfyUi ||
+          plan.backend == ImageGenBackend.native) {
+        _statusMessage = 'Generating with built-in engine...';
         _notify();
         try {
-          imageBytes = await _generateViaComfy(
-            prompt: prompt,
-            negativePrompt: negativePrompt,
-            size: size,
-            refModelName: refModelName,
-            referenceImage: referenceImage,
-            seed: seed,
-            denoise: denoise,
-            editStrength: editStrength,
-            refRole: refRole,
+          final (width, height) = _parseSize(
+            size ?? _storage.imageGenSettings.imageGenSize,
+          );
+          final native = _ensureNative;
+          // Ensure the requested model is loaded.
+          if (refModelName.isNotEmpty) {
+            await native.loadModel(refModelName);
+          }
+          imageBytes = await native.generate(
+            NativeGenerateParams(
+              prompt: prompt,
+              negativePrompt: negativePrompt,
+              width: width,
+              height: height,
+              steps: _storage.imageGenSettings.imageGenSteps,
+              cfg: _storage.imageGenSettings.imageGenCfgScale,
+              seed: seed ?? _storage.imageGenSettings.imageGenSeed,
+              denoise: denoise ?? _storage.imageGenSettings.imageGenDenoise,
+              referenceImage: referenceImage,
+            ),
+            onProgress: (p, preview) => _updateGenProgress(p, preview),
           );
         } catch (e) {
-          // Sanitize for user display (mirrors the Draw Things branch). A
-          // graph refused before posting says exactly why; it is never the
-          // generic "is ComfyUI running" guess.
           final msg = e.toString().replaceFirst(RegExp(r'^Exception:\s*'), '');
-          _statusMessage =
-              e is ComfyRunCancelled ||
-                  e is ComfyGraphNotReady ||
-                  e is ComfyLoaderUpdateNeeded ||
-                  msg.startsWith('ComfyUI') ||
-                  msg.contains('model')
+          _statusMessage = msg.startsWith('NativeEngine')
               ? msg
-              : 'ComfyUI generation failed. Check that ComfyUI is running and '
-                    'the URL is correct.';
-          debugPrint('ImageGen: ComfyUI error: $e');
+              : 'Image generation failed: $msg';
+          debugPrint('ImageGen: native backend error: $e');
           _endGenerationLock();
           _notify();
           return null;

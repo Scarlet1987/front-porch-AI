@@ -68,6 +68,16 @@ class ImageReferenceResolver {
           supportsImg2img: true,
           editKind: EditModelKind.generic,
         );
+      case ImageGenBackend.native:
+        // Built-in engine: edit is model-gated, not workflow-gated. Offered
+        // whenever the loaded model supports it; readiness is the model being
+        // loaded, enforced by the native backend itself.
+        return const ImageReferenceCapability(
+          supportsEdit: true,
+          editMaxImages: 1,
+          supportsImg2img: true,
+          editKind: EditModelKind.generic,
+        );
       case ImageGenBackend.remote:
         // Remote edit is detected from the model ID allowlist (canonical
         // provider ids, e.g. qwen-image-max-edit / nano-banana-edit), capped at
@@ -119,14 +129,8 @@ class ImageReferenceResolver {
       backend: backend,
       modelName: modelName,
     ).supportsEdit;
-    if (editMode && backend == ImageGenBackend.comfyUi) {
-      editMode = comfyEditReady(
-        workflowId: settings.comfyEditWorkflowId,
-        uploadedWorkflowJson: settings.comfyEditUploadedWorkflow,
-        modelChoices: settings.comfyEditModelChoices,
-        liveTemplate: liveTemplate,
-      );
-    }
+    // Legacy comfyUi enum value: fromKey now migrates 'comfyui' to native,
+    // so this path is unreachable via settings. No workflow gating remains.
     return editMode;
   }
 }

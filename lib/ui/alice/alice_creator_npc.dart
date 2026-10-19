@@ -6,14 +6,10 @@
 // the full card via CharacterGenService.
 
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 
-import 'package:front_porch_ai/services/character_gen_service.dart';
-import 'package:front_porch_ai/services/character_repository.dart';
-import 'package:front_porch_ai/services/llm_provider.dart';
-import 'package:front_porch_ai/services/llm_service.dart';
 import 'package:front_porch_ai/ui/alice/alice_creator_draft.dart';
 import 'package:front_porch_ai/ui/alice/alice_creator_fields.dart';
+import 'package:front_porch_ai/ui/alice/alice_creator_npc_actions.dart';
 import 'package:front_porch_ai/ui/alice/alice_widgets.dart';
 import 'package:front_porch_ai/ui/theme/app_colors.dart';
 
@@ -39,6 +35,47 @@ class NpcPane extends StatelessWidget {
           'That\u2019s the whole job here — the AI fills in appearance, '
           'personality and the rest when it drafts the card.',
           style: theme.textTheme.bodyMedium?.copyWith(color: theme.hintColor),
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(
+              child: AliceButton(
+                label: 'Load NPC',
+                ghost: true,
+                small: true,
+                onPressed: () => draft.loadNpcPicker(context),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: AliceButton(
+                label: 'Save NPC',
+                ghost: true,
+                small: true,
+                onPressed: draft.npcDraft != null || draft.npcLoadedDbId != null
+                    ? () => draft.saveNpcCard(context)
+                    : null,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: AliceButton(
+                label: 'Edit NPC',
+                ghost: true,
+                small: true,
+                onPressed: draft.npcDraft != null || draft.npcLoadedDbId != null
+                    ? () => draft.editNpcDetails(context)
+                    : null,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'Load an NPC from scratch or a saved card. Save keeps them as a '
+          'character card. Edit changes their look and details.',
+          style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor),
         ),
         const SizedBox(height: 12),
         Row(
@@ -190,106 +227,5 @@ class _DraftOutput extends StatelessWidget {
   String _shorten(String s) {
     final oneLine = s.replaceAll(RegExp(r'\s+'), ' ').trim();
     return oneLine.length > 220 ? '${oneLine.substring(0, 220)}…' : oneLine;
-  }
-}
-
-void _snack(BuildContext context, String message) {
-  ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(content: Text(message), behavior: SnackBarBehavior.floating),
-  );
-}
-
-/// NPC drafting actions on the shared draft: AI naming, full-card draft
-/// via the existing chargen service, and saving the drafted card.
-extension NpcDraftActions on AliceCreatorDraft {
-  /// "Let the AI name them": one short generation, name only.
-  Future<void> suggestNpcName(BuildContext context) async {
-    final llm = context.read<LLMProvider>().activeService;
-    if (!llm.isReady) {
-      _snack(
-        context,
-        'No AI backend is ready. Start one in Settings, then try again.',
-      );
-      return;
-    }
-    npcNaming = true;
-    touch();
-    try {
-      final concept = npcConcept.text.trim();
-      final prompt =
-          'Suggest one fitting name for a roleplay NPC. Role: $npcRole.'
-          '${concept.isEmpty ? '' : ' Concept: $concept'}'
-          ' Reply with ONLY the name — no quotes, no explanation.';
-      final buf = StringBuffer();
-      await for (final chunk in llm.generateStream(
-        GenerationParams(prompt: prompt, maxLength: 24, temperature: 0.9),
-      )) {
-        buf.write(chunk);
-        if (buf.length > 80) break;
-      }
-      final name = buf
-          .toString()
-          .trim()
-          .split('\n')
-          .first
-          .trim()
-          .replaceAll(RegExp('^["\u201c]|["\u201d.\$]'), '');
-      if (name.isNotEmpty) npcName.text = name;
-    } catch (_) {
-      // Naming is a nicety — the draft button below still works.
-    } finally {
-      npcNaming = false;
-      touch();
-    }
-  }
-
-  /// "Draft this NPC with AI": full card via the existing chargen service.
-  Future<void> draftNpc(BuildContext context) async {
-    final llm = context.read<LLMProvider>().activeService;
-    if (!llm.isReady) {
-      _snack(
-        context,
-        'No AI backend is ready. Start one in Settings, then draft your NPC.',
-      );
-      return;
-    }
-    npcDrafting = true;
-    npcDraft = null;
-    touch();
-    try {
-      final name = npcName.text.trim();
-      final conceptBits = <String>[
-        'Supporting NPC.',
-        'Role: $npcRole.',
-        npcConcept.text.trim(),
-      ].where((s) => s.trim().isNotEmpty).join(' ');
-      final card = await CharacterGenService(llm).generateCharacter(
-        name: name.isEmpty ? 'A new NPC' : name,
-        concept: conceptBits,
-        relationship: npcRelationship.text.trim(),
-        generateLorebook: false,
-        altGreetingCount: 1,
-      );
-      npcDraft = card;
-      if (card == null && context.mounted) {
-        _snack(context, 'The AI could not draft that NPC. Try again.');
-      }
-    } finally {
-      npcDrafting = false;
-      touch();
-    }
-  }
-
-  /// Persist the drafted NPC card.
-  Future<void> saveNpcCard(BuildContext context) async {
-    final card = npcDraft;
-    if (card == null) return;
-    final repo = Provider.of<CharacterRepository>(context, listen: false);
-    await repo.addCharacter(card);
-    if (context.mounted) {
-      _snack(context, 'NPC card saved.');
-      npcDraft = null;
-      touch();
-    }
   }
 }

@@ -2,9 +2,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 //
 // Barrel for the image-generation support leaves: base-model family
-// detection, the Draw Things edit recipe defaults, the bundled ComfyUI edit
-// presets + their workflow schema, and the pure ImageGenService types
-// (mode/backend enums + the remote model info record).
+// detection, the Draw Things edit recipe defaults, and the pure
+// ImageGenService types (mode/backend enums + the remote model info record).
+//
+// NOTE: The ComfyUI server backend was removed 2026-10-19. Workflow JSON,
+// server probing, and HTTP client files are gone. The native in-process
+// backend replaces them (see image_gen_service.native.dart).
 
 export 'civitai_client.dart';
 export 'civitai_credentials.dart';
@@ -22,24 +25,12 @@ export 'civitai_safetensors.dart';
 export 'civitai_search_pages.dart';
 export 'civitai_version.dart';
 export 'comfy_catalog.dart';
-export 'comfy_create_presets.dart';
-export 'comfy_create_workflow.dart';
-export 'comfy_edit_presets.dart';
-export 'comfy_edit_workflow.dart';
 export 'comfy_gguf_city96.dart';
 export 'comfy_gguf_city96_gate.dart';
 export 'comfy_gguf_loaders.dart';
 export 'bounded_process.dart';
-export 'comfy_backoff.dart';
-export 'comfy_progress_socket.dart';
-export 'comfy_run_ledger.dart';
-export 'comfy_url_probe.dart';
 export 'comfy_starters.dart';
-export 'comfy_template_index.dart';
 export 'comfy_type_folders.dart';
-export 'comfy_workflow_adapt.dart';
-export 'comfy_widget_slots.dart';
-export 'comfy_workflow_convert.dart';
 export 'draw_things_lora_filter.dart';
 export 'draw_things_samplers.dart';
 export 'edit_profile.dart';

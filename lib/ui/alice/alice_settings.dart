@@ -22,6 +22,7 @@ import 'package:front_porch_ai/ui/theme/app_colors.dart';
 
 part 'alice_settings_engine.dart';
 part 'alice_settings_engine_budget.dart';
+part 'alice_settings_image_engine.dart';
 part 'alice_settings_zones.dart';
 part 'alice_settings_about.dart';
 
@@ -59,6 +60,8 @@ class AliceSettingsScreen extends StatelessWidget {
               const _GoldenRuleCard(),
               const SizedBox(height: 12),
               const AliceEngineResourcesCard(),
+              const SizedBox(height: 12),
+              const AliceImageEngineCard(),
               const SizedBox(height: 12),
               const AliceContentZoneCard(),
               const SizedBox(height: 12),

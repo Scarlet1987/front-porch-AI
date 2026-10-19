@@ -63,7 +63,7 @@ extension ImageGenBackendsGenerate on ImageGenService {
     final isImg2Img = referenceImage != null && referenceImage.isNotEmpty;
     final endpoint = isImg2Img ? 'img2img' : 'txt2img';
     final uri = Uri.parse(
-      '${ComfyUiService.ensureHttpScheme(baseUrl)}/sdapi/v1/$endpoint',
+      '${normalizeImageServerUrl(baseUrl)}/sdapi/v1/$endpoint',
     );
 
     // Inject every filled slot: <lora:name:weight>
@@ -95,7 +95,7 @@ extension ImageGenBackendsGenerate on ImageGenService {
     // GET /sdapi/v1/progress with a percent AND an in-progress preview frame,
     // so the chat/studio can show the image forming instead of a spinner.
     final progressUri = Uri.parse(
-      '${ComfyUiService.ensureHttpScheme(baseUrl)}/sdapi/v1/progress',
+      '${normalizeImageServerUrl(baseUrl)}/sdapi/v1/progress',
     );
     final progressTimer = Timer.periodic(const Duration(seconds: 1), (_) async {
       try {

@@ -32,7 +32,7 @@ extension ImageGenStudio on ImageGenService {
       _notify();
       return null;
     }
-    _comfyUi?.clearCancel();
+    _nativeBackend?.cancel();
     _packFlight = true;
     _isGenerating = true;
     _statusMessage = 'Expression pack';
@@ -41,7 +41,7 @@ extension ImageGenStudio on ImageGenService {
       return await driver(List<String>.from(emotions));
     } finally {
       // A cancel asked of the picture that was in flight ends with the pack.
-      _comfyUi?.clearCancel();
+      _nativeBackend?.cancel();
       _packFlight = false;
       _isGenerating = false;
       _statusMessage = '';
@@ -93,13 +93,13 @@ extension ImageGenStudio on ImageGenService {
   }
 
   /// Whether a cancel is still waiting for the next ComfyUI post; for tests.
-  bool get comfyCancelIsPending => _comfyUi?.cancelIsPending ?? false;
+  bool get comfyCancelIsPending => false;
 
   /// Stops the job the server is running for this service: on ComfyUI the
   /// prompt is taken off the queue or interrupted. The other backends have no
   /// job to stop from here; they finish the picture they are on.
   Future<void> cancelJob() async {
     if (!_lockIsOnThisInstance()) return;
-    await _comfyUi?.cancelRun(beforePost: _isGenerating);
+    _nativeBackend?.cancel();
   }
 }

@@ -36,16 +36,17 @@ extension _ImageGenClients on ImageGenService {
       case ImageGenBackend.drawThings:
         return _storage.imageGenSettings.drawThingsGrpcHost.isNotEmpty;
       case ImageGenBackend.comfyUi:
-        return _storage.imageGenSettings.comfyUiUrl.isNotEmpty;
+      case ImageGenBackend.native:
+        // Native backend: configured when image gen is enabled.
+        // No URL needed — the engine is built in.
+        return true;
     }
   }
 
-  ComfyUiService get _ensureComfyUi {
-    final url = _storage.imageGenSettings.comfyUiUrl;
-    if (_comfyUi == null || _comfyUi!.baseUrl != url) {
-      _comfyUi = ComfyUiService(baseUrl: url);
-    }
-    return _comfyUi!;
+  /// Lazily creates the native image backend. In-process, no server.
+  NativeImageBackend get _ensureNative {
+    _nativeBackend ??= NativeImageBackend();
+    return _nativeBackend!;
   }
 
   DrawThingsGrpcService get _ensureDrawThingsGrpc {
@@ -73,8 +74,11 @@ extension _ImageGenClients on ImageGenService {
     final backend = ImageGenBackend.fromKey(
       _storage.imageGenSettings.imageGenBackend,
     );
-    if (backend != ImageGenBackend.comfyUi) return;
-    await _ensureComfyUi.freeMemory();
+    if (backend != ImageGenBackend.comfyUi &&
+        backend != ImageGenBackend.native) {
+      return;
+    }
+    await _ensureNative.freeMemory();
   }
 
   /// Build the images directory path.

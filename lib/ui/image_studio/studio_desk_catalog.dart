@@ -135,38 +135,13 @@ extension on _StudioDeskState {
     }
   }
 
+  /// No-op: the ComfyUI server catalog is gone. The native backend lists
+  /// local model files directly.
   Future<void> _refreshComfy(
     ImageGenSettings settings, {
     required bool force,
   }) async {
-    final url = settings.comfyUiUrl;
-    if (!force && (_catalogUrl == url || _catalogPending == url)) return;
-    // Marked as listed only once it has been: a ComfyUI that was down is
-    // asked again on the next look, not only after Check.
-    _catalogPending = url;
-    final service = ComfyUiService(baseUrl: url);
-    final catalog = await service.fetchCatalogIfUp();
-    if (_catalogPending == url) _catalogPending = null;
-    if (catalog == null) {
-      if (mounted && _catalogUrl == url) rebuildState(() => _catalogUrl = null);
-      return;
-    }
-    final samplers = await service.fetchSamplers();
-    final schedulers = await service.fetchSchedulers();
-    if (!mounted) return;
-    _applyCatalog(
-      models: catalog.deskDiscovery,
-      checkpoints: catalog.checkpoints,
-      unet: catalog.diffusionModels,
-      gguf: catalog.ggufUnets,
-      loras: catalog.loras,
-      clips: catalog.textEncoders,
-      vaes: catalog.vaes,
-      samplers: samplers,
-      schedulers: schedulers,
-      url: url,
-    );
-    await _readLoraFacts(settings, service);
+    return;
   }
 
   /// The Remote API's image models, for the host chosen on the stove.
@@ -188,11 +163,8 @@ extension on _StudioDeskState {
     );
   }
 
-  Future<void> _readLoraFacts(
-    ImageGenSettings settings,
-    ComfyUiService service,
-  ) async {
-    final checks = await deskLoraChecks(settings: settings, comfy: service);
+  Future<void> _readLoraFacts(ImageGenSettings settings) async {
+    final checks = await deskLoraChecks(settings: settings);
     if (!mounted) return;
     final stored = storedLoraFacts(settings);
     final changed = checks.any((row) {

@@ -118,6 +118,10 @@ void main() {
       final storage = StorageService();
       await storage.imageGenSettings.setImageGenBackend('a1111');
       await storage.imageGenSettings.setLocalImageGenUrl(server.baseUrl);
+      // This test exercises the refuse-on-overlap path (502 + already-
+      // generating). Disable the backpressure queue so the second request
+      // refuses instead of queueing. (approved-test-change: Elaina, 2026-10-19)
+      await storage.engineResourcesSettings.setQueueWithBackpressure(false);
       final image = ImageGenService(storage);
       final facade = ImageFacade(image, storage);
       final db = AppDatabase.forTesting();

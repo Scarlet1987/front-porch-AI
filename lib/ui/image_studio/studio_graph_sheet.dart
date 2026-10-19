@@ -49,49 +49,17 @@ class _StudioGraphSheetState extends State<StudioGraphSheet> {
   String _pendingStance = '';
 
   Future<void> _chooseFile() async {
-    final picked = await GuardedPicker.pickFiles(
-      context,
-      category: 'studio-graph',
-      dialogTitle: 'Workflow file',
-      type: FileType.custom,
-      allowedExtensions: const ['json', 'png'],
-    );
+    // Obsolete: the native backend has no workflow graphs to upload.
     if (!mounted) return;
-    final bytes = await picked?.firstBytes();
-    if (!mounted || bytes == null) return;
-    final name = picked!.files.first.name;
-    final json = workflowJsonFromBytes(bytes);
-    if (json == null) {
-      final lower = name.toLowerCase();
-      final png =
-          lower.endsWith('.png') ||
-          (bytes.length >= 4 && bytes[0] == 137 && bytes[1] == 80);
-      setState(() {
-        _error = png ? kStudioPngReject : kStudioFileReject;
-        _pendingJson = null;
-      });
-      return;
-    }
-    final stance = deskGraphStance(json);
-    final current = widget.edit ? 'edit' : 'create';
-    if (stance == current) {
-      widget.onUpload?.call(json, forEdit: widget.edit, name: name);
-      if (mounted) Navigator.of(context).pop();
-      return;
-    }
     setState(() {
-      _error = '';
-      _pendingJson = json;
-      _pendingName = name;
-      _pendingStance = stance;
+      _error =
+          'The built-in engine has no graphs — workflow upload is not supported.';
+      _pendingJson = null;
     });
   }
 
   void _useFile(bool forEdit) {
-    final json = _pendingJson;
-    if (json == null) return;
-    widget.onUpload?.call(json, forEdit: forEdit, name: _pendingName);
-    Navigator.of(context).pop();
+    // Obsolete: no-op.
   }
 
   @override

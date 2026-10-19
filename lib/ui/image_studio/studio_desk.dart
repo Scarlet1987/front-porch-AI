@@ -7,7 +7,6 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'package:front_porch_ai/services/comfy_ui_service.dart';
 import 'package:front_porch_ai/services/image/image.dart';
 import 'package:front_porch_ai/services/services.dart';
 import 'package:front_porch_ai/services/storage/settings/image_gen_settings.dart';
@@ -89,7 +88,6 @@ class _StudioDeskState extends State<StudioDesk> {
   ModelFamily? _checkedFamily;
   bool? _reportedReady;
   StorageService? _storage;
-  ComfyBackoff? _comfyBackoff;
   Future<bool>? _looking;
   Timer? _comfyUpWatch;
   bool _askingIfUp = false;
@@ -125,7 +123,6 @@ class _StudioDeskState extends State<StudioDesk> {
   @override
   void dispose() {
     _storage?.removeListener(_onStorage);
-    _comfyBackoff?.stop();
     _comfyUpWatch?.cancel();
     super.dispose();
   }
@@ -169,20 +166,14 @@ class _StudioDeskState extends State<StudioDesk> {
     final parts = settings.imageGenSize.split('x');
     final width = int.tryParse(parts.first) ?? 1024;
     final height = parts.length > 1 ? int.tryParse(parts[1]) ?? 1024 : 1024;
-    final uploadedGraph = workflowId == kComfyUploadedWorkflowId;
-    final uploaded = editing
-        ? settings.comfyEditUploadedWorkflow
-        : settings.comfyCreateUploadedWorkflow;
+    final uploadedGraph = false;
+    final uploaded = '';
     final why = studioWorkflowWhy(
       workflowId: workflowId,
       primaryFile: primary,
       uploaded: uploadedGraph,
-      uploadedTitle: editing
-          ? settings.comfyEditUploadedTitle
-          : settings.comfyCreateUploadedTitle,
-      uploadedNodes: uploadedGraph && uploaded.trim().isNotEmpty
-          ? workflowNodeCount(uploaded)
-          : 0,
+      uploadedTitle: '',
+      uploadedNodes: 0,
     );
     final support = backend == 'drawthings' || uploadedGraph
         ? (checkpointOnly: false, rows: const <StudioSupportRow>[])
@@ -201,34 +192,9 @@ class _StudioDeskState extends State<StudioDesk> {
       busy: context.watch<ImageGenService?>()?.isGenerating ?? false,
       child: StudioStove(
         backendName: studioBackendName(backend),
-        backend: backend,
-        url: _url(settings),
-        onBackend: (value) => _write(() => settings.setImageGenBackend(value)),
-        onEditUrl: () => _editUrl(settings),
-        address: backend == 'comfyui'
-            ? StudioComfyAddress(
-                url: settings.comfyUiUrl,
-                explicit: settings.comfyUiUrlExplicit,
-                offer: _comfyOffer,
-                onSave: (url) async {
-                  if (_configurationLocked) return;
-                  rebuildState(() => _comfyOffer = null);
-                  await settings.setComfyUiUrl(url);
-                  if (url.isEmpty) await _lookForComfy();
-                },
-              )
-            : null,
-        remoteNote: backend == 'remote'
-            ? StudioRemoteKeyNote(settings: settings, storage: storage)
-            : null,
         reachable: _reachable(backend, report),
-        checkedDown: (_catalogUrl ?? '').startsWith('down:'),
-        diffusionCount: backend == 'drawthings' || backend == 'remote'
-            ? _models.length
-            : _unet.length + _gguf.length,
-        loraCount: _loras.length,
         familyLabel: primary.isEmpty
-            ? 'No model chosen'
+            ? 'No drawing AI chosen yet'
             : (family == ModelFamily.unknown ? 'Model' : family.label),
         primaryFile: primary,
         why: why,
@@ -309,10 +275,7 @@ class _StudioDeskState extends State<StudioDesk> {
           canWrite: () => !_configurationLocked,
           settings: settings,
           edit: editing,
-          comfyShiftGraph:
-              (ready?.tokens.contains(ComfyEditTokens.shift) ?? false)
-              ? _workflowId(settings)
-              : null,
+          comfyShiftGraph: null,
           comfyOwnShift: ready?.ownShift ?? kEditRecommendedShift,
         ),
         readyLine: studioReadyLine(
@@ -328,7 +291,6 @@ class _StudioDeskState extends State<StudioDesk> {
         showGenerate: widget.showGenerate,
         errorText: widget.errorText,
         generating: widget.generating,
-        onRetry: _retryCatalog,
         showModes: widget.editMode == null,
         editing: editing,
         onMode: (value) {
@@ -374,59 +336,6 @@ class _StudioDeskState extends State<StudioDesk> {
     if (mark.isEmpty || mark.startsWith('down:')) return false;
     if (mark.startsWith('up:')) return true;
     return _models.isNotEmpty || _loras.isNotEmpty;
-  }
-
-  void _retryCatalog() {
-    _lookForComfy();
-    setState(() => _catalogUrl = null);
-    _refreshCatalog(
-      context.read<StorageService>().imageGenSettings,
-      force: true,
-    );
-    _checkReady(force: true);
-  }
-
-  String _url(ImageGenSettings settings) {
-    switch (settings.imageGenBackend) {
-      case 'comfyui':
-        return settings.comfyUiUrl;
-      case 'a1111':
-        return settings.localImageGenUrl;
-      case 'drawthings':
-        return settings.drawThingsGrpcHost;
-      default:
-        return settings.imageRemoteApiUrl;
-    }
-  }
-
-  Future<void> _saveUrl(ImageGenSettings settings, String value) {
-    if (_configurationLocked) return Future.value();
-    switch (settings.imageGenBackend) {
-      case 'comfyui':
-        return settings.setComfyUiUrl(value);
-      case 'a1111':
-        return settings.setLocalImageGenUrl(value);
-      case 'drawthings':
-        return settings.setDrawThingsGrpcHost(value);
-      default:
-        return settings.setImageRemoteApiUrl(value);
-    }
-  }
-
-  Future<void> _editUrl(ImageGenSettings settings) {
-    return showDialog<void>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        content: StudioCommitField(
-          value: _url(settings),
-          label: 'Address',
-          onSubmit: (value) {
-            _saveUrl(settings, value);
-            Navigator.of(dialogContext).pop();
-          },
-        ),
-      ),
-    );
   }
 
   /// One stored signature of everything the Ready verdict depends on.
