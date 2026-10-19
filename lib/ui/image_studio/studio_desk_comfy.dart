@@ -12,9 +12,6 @@ extension _DeskComfy on _StudioDeskState {
   /// No-op: nothing to look for.
   Future<bool> _lookForComfy() async => true;
 
-  /// No-op: nothing to check.
-  Future<void> _checkComfyUp() async {}
-
   /// No-op: nothing to watch.
   void _watchComfy(dynamic report) {}
 }

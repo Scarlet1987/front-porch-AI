@@ -10,7 +10,6 @@ import 'package:provider/provider.dart';
 import 'package:front_porch_ai/services/image/image.dart';
 import 'package:front_porch_ai/services/services.dart';
 import 'package:front_porch_ai/services/storage/settings/image_gen_settings.dart';
-import 'package:front_porch_ai/ui/widgets/widgets.dart';
 
 import 'studio_widgets.dart';
 
@@ -66,9 +65,6 @@ class _StudioDeskState extends State<StudioDesk> {
   bool get _editing => widget.editMode ?? _edit;
   bool _adult = false;
   List<String> _models = const [];
-  List<String> _checkpoints = const [];
-  List<String> _unet = const [];
-  List<String> _gguf = const [];
   List<String> _loras = const [];
   List<String> _clips = const [];
   List<String> _vaes = const [];
@@ -78,7 +74,6 @@ class _StudioDeskState extends State<StudioDesk> {
   Map<String, String> _dtLoraVersions = const {};
   Map<String, String> _dtModelVersions = const {};
   String? _catalogUrl;
-  String? _catalogPending;
   bool _remoteListed = false;
 
   StudioReadyReport? _ready;
@@ -88,11 +83,7 @@ class _StudioDeskState extends State<StudioDesk> {
   ModelFamily? _checkedFamily;
   bool? _reportedReady;
   StorageService? _storage;
-  Future<bool>? _looking;
   Timer? _comfyUpWatch;
-  bool _askingIfUp = false;
-  bool? _comfyUp;
-  String? _comfyOffer;
   bool _lookedForComfy = false;
 
   @override
@@ -167,7 +158,6 @@ class _StudioDeskState extends State<StudioDesk> {
     final width = int.tryParse(parts.first) ?? 1024;
     final height = parts.length > 1 ? int.tryParse(parts[1]) ?? 1024 : 1024;
     final uploadedGraph = false;
-    final uploaded = '';
     final why = studioWorkflowWhy(
       workflowId: workflowId,
       primaryFile: primary,
@@ -199,7 +189,7 @@ class _StudioDeskState extends State<StudioDesk> {
         primaryFile: primary,
         why: why,
         onGraphs: () => openGraphs(settings),
-        onModels: uploadedGraph ? null : () => _openModels(settings),
+        onModels: () => _openModels(settings),
         onGetModel: () => openCivitai(settings, lora: false),
         checkpointOnly: support.checkpointOnly,
         support: support.rows,

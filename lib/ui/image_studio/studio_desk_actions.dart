@@ -6,30 +6,6 @@ part of 'studio_desk.dart';
 /// What the person does on the desk. Every write here answers a tap; nothing
 /// in `build` or in a passive read calls these.
 extension on _StudioDeskState {
-  String _workflowId(ImageGenSettings settings) =>
-      _editing ? settings.comfyEditWorkflowId : settings.comfyCreateWorkflowId;
-
-  List<dynamic> get _slots => const [];
-
-  Future<void> _setChoice(
-    ImageGenSettings settings,
-    String workflowId,
-    String token,
-    String file,
-  ) {
-    if (_configurationLocked) return Future.value();
-    return _editing
-        ? settings.setComfyEditModelChoice(workflowId, token, file)
-        : settings.setComfyCreateModelChoice(workflowId, token, file);
-  }
-
-  Future<void> _setWorkflow(ImageGenSettings settings, String workflowId) {
-    if (_configurationLocked) return Future.value();
-    return _editing
-        ? settings.setComfyEditWorkflowId(workflowId)
-        : settings.setComfyCreateWorkflowId(workflowId);
-  }
-
   /// Fills the graph's empty text-encoder and VAE slots from the installed
   /// files. A slot that holds a file is left as it is.
   Future<void> _fillSupport(
@@ -112,16 +88,6 @@ extension on _StudioDeskState {
     return;
   }
 
-  /// No-op: the native backend has no workflow graphs to save.
-  Future<void> _saveGraph(
-    ImageGenSettings settings,
-    String raw, {
-    bool? forEdit,
-    String name = '',
-  }) async {
-    return;
-  }
-
   Future<void> openGraphs(ImageGenSettings settings) async {
     // No-op: the native backend has no workflow graphs. The model is picked
     // directly via Change model.
@@ -131,15 +97,6 @@ extension on _StudioDeskState {
         content: Text('The built-in engine picks models directly — no graphs.'),
       ),
     );
-  }
-
-  /// No-op: the native backend has no workflow graphs to pick.
-  Future<void> _pickGraph(
-    ImageGenSettings settings,
-    String id,
-    String file,
-  ) async {
-    return;
   }
 
   Future<void> openLoras(ImageGenSettings settings, String primary) {

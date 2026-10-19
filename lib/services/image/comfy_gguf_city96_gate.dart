@@ -6,7 +6,6 @@
 // the public API so callers compile. All checks report "ready".
 
 import 'dart:async';
-import 'dart:io';
 
 export 'city96_records.dart';
 

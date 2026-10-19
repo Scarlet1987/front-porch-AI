@@ -6,7 +6,6 @@
 
 // ignore: unused_import
 import 'dart:io';
-import 'dart:typed_data';
 
 Future<void> writeNewFileExclusiveWindows(
   String path,

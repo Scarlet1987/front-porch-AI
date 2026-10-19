@@ -41,31 +41,6 @@ String checkedDeskGraph(String raw) {
 extension ImageStudioDesk on ImageFacade {
   ImageGenSettings get _s => _storage.imageGenSettings;
 
-  Future<void> _setWorkflow(bool edit, String id) async {
-    // No-op: the native backend has no workflows.
-    return;
-  }
-
-  Future<void> _setChoice(
-    bool edit,
-    String id,
-    String token,
-    String file,
-  ) async {
-    // No-op: the native backend has no workflow slots.
-    return;
-  }
-
-  /// The model files the graph on the desk loads. Obsolete — always empty.
-  Future<List<dynamic>> _deskSlots(bool edit) async {
-    return const [];
-  }
-
-  /// No-op: the native backend has no slots to fill.
-  Future<void> _fillSupport(bool edit) async {
-    return;
-  }
-
   /// Picks the primary model, the way the desktop desk does. A saved,
   /// template or legacy Comfy graph keeps its graph and takes the file in its
   /// own slot. A bundled graph follows the file's family, except that a file

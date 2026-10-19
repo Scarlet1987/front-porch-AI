@@ -156,7 +156,6 @@ extension ImageStudioReady on ImageFacade {
     required bool lora,
   }) async {
     final settings = _storage.imageGenSettings;
-    final backend = settings.imageGenBackend;
     final slotFiles = [
       for (final slot in settings.imageGenLoraSlots) slot.file,
     ];

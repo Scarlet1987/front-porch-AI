@@ -3,13 +3,6 @@
 
 part of 'image_facade.dart';
 
-Map<String, dynamic> _graphRow(DeskGraphChoice row) => {
-  'id': row.id,
-  'title': row.title,
-  'detail': row.detail,
-  'group': row.group,
-};
-
 /// MIGRATION NOTE: The ComfyUI catalog is gone. The native backend lists
 /// local model files directly. These methods return empty data so the
 /// phone API compiles; the phone should use the model list instead.

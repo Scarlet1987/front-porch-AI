@@ -14,9 +14,6 @@ extension on _StudioDeskState {
 
   void _applyCatalog({
     List<String> models = const [],
-    List<String> checkpoints = const [],
-    List<String> unet = const [],
-    List<String> gguf = const [],
     List<String> loras = const [],
     List<String> clips = const [],
     List<String> vaes = const [],
@@ -27,9 +24,6 @@ extension on _StudioDeskState {
   }) {
     rebuildState(() {
       _models = models;
-      _checkpoints = checkpoints;
-      _unet = unet;
-      _gguf = gguf;
       _loras = loras;
       _clips = clips;
       _vaes = vaes;
@@ -51,20 +45,6 @@ extension on _StudioDeskState {
       _dtModelVersions = dtModelVersions;
     });
     _checkReady();
-  }
-
-  void _showInstalledFiles({
-    required List<String> checkpoints,
-    required List<String> unet,
-    required List<String> gguf,
-    required List<String> loras,
-  }) {
-    rebuildState(() {
-      _checkpoints = checkpoints;
-      _unet = unet;
-      _gguf = gguf;
-      _loras = loras;
-    });
   }
 
   /// Lists what the connected backend has. Reading never writes a setting.
@@ -161,20 +141,5 @@ extension on _StudioDeskState {
       remoteListed: listed.isNotEmpty,
       url: url,
     );
-  }
-
-  Future<void> _readLoraFacts(ImageGenSettings settings) async {
-    final checks = await deskLoraChecks(settings: settings);
-    if (!mounted) return;
-    final stored = storedLoraFacts(settings);
-    final changed = checks.any((row) {
-      final was = stored[row.file];
-      return was == null ||
-          was.family != row.family ||
-          was.metadataBacked != row.metadataBacked;
-    });
-    if (changed) await saveLoraFacts(settings, checks);
-    if (!mounted) return;
-    _rememberLoraFacts({for (final row in checks) row.file: row});
   }
 }

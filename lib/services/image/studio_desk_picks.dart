@@ -7,9 +7,6 @@
 // picks model files directly — no workflows, no slots, no tokens.
 // These functions are kept as stubs so callers compile.
 
-import 'comfy_gguf_loaders.dart';
-import 'studio_desk_logic.dart';
-
 /// Obsolete: the native backend has no workflows to keep.
 bool deskKeepsWorkflow(String workflowId) => false;
 
