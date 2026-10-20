@@ -557,6 +557,11 @@ jobs:
           EOF
           mkdir -p deb/usr/share/pixmaps
           cp AppDir/front_porch_ai.png deb/usr/share/pixmaps/front-porch-ai.png
+
+          # Launcher icons (hicolor, all sizes — bar/dock sizes carry the
+          # bold white-rabbit mark, desktop/Start sizes the Nouveau art)
+          mkdir -p deb/usr/share/icons
+          cp -r packaging/linux/icons/hicolor deb/usr/share/icons/
           
           cat <<EOF > deb/DEBIAN/control
           Package: front-porch-ai
@@ -575,7 +580,7 @@ jobs:
             update-desktop-database /usr/share/applications 2>/dev/null || true
           fi
           if command -v gtk-update-icon-cache >/dev/null 2>&1; then
-            gtk-update-icon-cache /usr/share/pixmaps 2>/dev/null || true
+            gtk-update-icon-cache -f -t /usr/share/icons/hicolor 2>/dev/null || true
           fi
           EOF
           chmod 755 deb/DEBIAN/postinst

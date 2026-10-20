@@ -13,8 +13,22 @@ options=('!strip' '!debug')
 _tag="0.9.0-Beta"
 source=("Front_Porch_AI-Linux.AppImage::https://github.com/linux4life1/front-porch-AI/releases/download/${_tag}/Front_Porch_AI-Linux.AppImage"
         "front-porch-ai.desktop"
-        "front-porch-ai.png")
+        "icons/front-porch-ai-16.png"
+        "icons/front-porch-ai-24.png"
+        "icons/front-porch-ai-32.png"
+        "icons/front-porch-ai-48.png"
+        "icons/front-porch-ai-64.png"
+        "icons/front-porch-ai-128.png"
+        "icons/front-porch-ai-192.png"
+        "icons/front-porch-ai-256.png")
 sha256sums=('SKIP'
+            'SKIP'
+            'SKIP'
+            'SKIP'
+            'SKIP'
+            'SKIP'
+            'SKIP'
+            'SKIP'
             'SKIP'
             'SKIP')
 noextract=('Front_Porch_AI-Linux.AppImage')
@@ -34,6 +48,10 @@ EOF
     # Desktop entry
     install -Dm644 "${srcdir}/front-porch-ai.desktop" "${pkgdir}/usr/share/applications/front-porch-ai.desktop"
 
-    # Icon
-    install -Dm644 "${srcdir}/front-porch-ai.png" "${pkgdir}/usr/share/pixmaps/front-porch-ai.png"
+    # Icons (hicolor, all sizes — bar/dock sizes carry the bold
+    # white-rabbit mark, desktop/Start sizes the Art Nouveau art)
+    for size in 16 24 32 48 64 128 192 256; do
+        install -Dm644 "${srcdir}/front-porch-ai-${size}.png" \
+            "${pkgdir}/usr/share/icons/hicolor/${size}x${size}/apps/front-porch-ai.png"
+    done
 }
