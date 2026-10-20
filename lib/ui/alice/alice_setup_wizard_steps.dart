@@ -251,7 +251,11 @@ extension _AliceSetupWizardSteps on _AliceSetupWizardState {
         'This creates pictures for your stories. The online service works '
         'right away on any hardware — your API key goes in Settings. '
         'Prefer free and private? Connect your own image server on this '
-        'computer later in Settings.',
+        'computer later in Settings.\n\n'
+        'For pictures made on this computer: on graphics cards with 8 GB '
+        'of memory or less, SD 1.5 and SDXL models are the right fit. The '
+        'biggest models, like FLUX, need more memory — those come later, '
+        'for stronger cards.',
       ),
     );
   }
