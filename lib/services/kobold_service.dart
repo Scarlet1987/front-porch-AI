@@ -344,7 +344,13 @@ class KoboldService extends ChangeNotifier
     if (hasListeners) notifyListeners();
   }
 
-  File get _logFile => File(
+  // The text engine's session log lives in the logs folder (Settings →
+  // Advanced paths can move it). It used to sit inside the characters
+  // folder; _purgeLogs cleans that legacy copy up.
+  File get _logFile =>
+      File(path.join(_storageService.pathSettings.logsPath, 'session_log.txt'));
+
+  File get _legacyLogFile => File(
     path.join(_storageService.rootPath!, 'characters', 'session_log.txt'),
   );
 
@@ -352,6 +358,9 @@ class KoboldService extends ChangeNotifier
     try {
       if (_storageService.rootPath != null && _logFile.existsSync()) {
         _logFile.deleteSync();
+      }
+      if (_storageService.rootPath != null && _legacyLogFile.existsSync()) {
+        _legacyLogFile.deleteSync();
       }
     } catch (e) {
       print('Error purging logs: $e');

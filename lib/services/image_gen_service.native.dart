@@ -93,7 +93,12 @@ enum NativeEngineStatus {
 /// ImageGenService calls to make pictures — but in-process instead of
 /// over HTTP.
 class NativeImageBackend extends ChangeNotifier {
-  NativeImageBackend();
+  /// [modelsDir] supplies the folder the user chose for image models
+  /// (Settings → Where things live). Read lazily on every scan so a
+  /// folder change takes effect without recreating the backend.
+  NativeImageBackend({String Function()? modelsDir}) : _modelsDir = modelsDir;
+
+  final String Function()? _modelsDir;
 
   NativeEngineStatus _status = NativeEngineStatus.idle;
   NativeEngineStatus get status => _status;
@@ -219,15 +224,27 @@ class NativeImageBackend extends ChangeNotifier {
     );
   }
 
-  /// List available model files in the configured model directories.
-  /// Scans for .safetensors, .gguf, .ckpt files. No server needed.
+  /// List available model files in the user's image-models folder.
+  /// Pure Dart directory scan (no FFI, no server): finds .safetensors,
+  /// .gguf and .ckpt files, recursively, and returns their file names —
+  /// the same shape the old server discovery returned.
   Future<List<String>> listModels() async {
-    // TODO(native-bridge): This can stay pure Dart — just scan the
-    //   directories from settings. No FFI needed.
-    debugPrint(
-      '[NativeImageBackend] TODO: listModels() — directory scan not yet implemented',
-    );
-    return [];
+    final root = _modelsDir?.call() ?? '';
+    if (root.isEmpty) return const [];
+    final dir = Directory(root);
+    if (!await dir.exists()) return const [];
+    final names = <String>[];
+    await for (final entity in dir.list(recursive: true, followLinks: false)) {
+      if (entity is! File) continue;
+      final lower = entity.path.toLowerCase();
+      if (lower.endsWith('.safetensors') ||
+          lower.endsWith('.gguf') ||
+          lower.endsWith('.ckpt')) {
+        names.add(path.basename(entity.path));
+      }
+    }
+    names.sort();
+    return names;
   }
 
   /// Cancel the in-progress generation, if any.

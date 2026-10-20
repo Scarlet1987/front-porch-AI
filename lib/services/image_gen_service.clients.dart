@@ -44,8 +44,12 @@ extension _ImageGenClients on ImageGenService {
   }
 
   /// Lazily creates the native image backend. In-process, no server.
+  /// Its model scan reads the user's image-models folder (Settings →
+  /// Where things live) on every call, so folder changes apply live.
   NativeImageBackend get _ensureNative {
-    _nativeBackend ??= NativeImageBackend();
+    _nativeBackend ??= NativeImageBackend(
+      modelsDir: () => _storage.pathSettings.imageModelsPath,
+    );
     return _nativeBackend!;
   }
 

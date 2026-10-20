@@ -13,6 +13,7 @@ export 'settings/generation_settings.dart';
 export 'settings/image_gen_settings.dart';
 export 'settings/lorebook_settings.dart';
 export 'settings/memory_settings.dart';
+export 'settings/path_settings.dart';
 export 'settings/preset_settings.dart';
 export 'settings/realism_settings.dart';
 export 'settings/settings_base.dart';

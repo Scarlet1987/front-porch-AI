@@ -27,6 +27,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:front_porch_ai/app_version.dart';
 
 // Stage 7: directories + domain settings. Do not grow this file.
+import 'backup_service.dart';
 import 'desktop_spell_check_service.dart';
 import 'kobold/kobold_preset_link_repair.dart';
 import 'reasoning_effort_store.dart';
@@ -55,6 +56,7 @@ class StorageService extends ChangeNotifier {
   late final BackendSettings _backendSettings = BackendSettings()
     ..engineFolder = () => binDir.path;
   late final UiSettings _uiSettings = UiSettings();
+  late final PathSettings _pathSettings = PathSettings();
   late final TtsSettings _ttsSettings = TtsSettings();
   late final SttSettings _sttSettings = SttSettings();
   late final ImageGenSettings _imageGenSettings = ImageGenSettings();
@@ -114,6 +116,7 @@ class StorageService extends ChangeNotifier {
   GenerationSettings get generationSettings => _generationSettings;
   BackendSettings get backendSettings => _backendSettings;
   UiSettings get uiSettings => _uiSettings;
+  PathSettings get pathSettings => _pathSettings;
   TtsSettings get ttsSettings => _ttsSettings;
   SttSettings get sttSettings => _sttSettings;
   ImageGenSettings get imageGenSettings => _imageGenSettings;
@@ -173,6 +176,7 @@ class StorageService extends ChangeNotifier {
     }
     _prefs = null;
     _rootPath = rootPath;
+    _pathSettings.dataRoot = rootPath;
     _binDir = Directory(path.join(rootPath, 'koboldcpp_bin'));
     for (final dir in [
       chatsDir,
@@ -194,6 +198,7 @@ class StorageService extends ChangeNotifier {
     _generationSettings.initializeBase(null, notifyListeners);
     _backendSettings.initializeBase(null, notifyListeners);
     _uiSettings.initializeBase(null, notifyListeners);
+    _pathSettings.initializeBase(null, notifyListeners);
     _ttsSettings.initializeBase(null, notifyListeners);
     _sttSettings.initializeBase(null, notifyListeners);
     _imageGenSettings.initializeBase(null, notifyListeners);
@@ -209,6 +214,7 @@ class StorageService extends ChangeNotifier {
     _generationSettings.load();
     _backendSettings.load();
     _uiSettings.load();
+    _pathSettings.load();
     _ttsSettings.load();
     _sttSettings.load();
     _imageGenSettings.load();
@@ -292,6 +298,9 @@ class StorageService extends ChangeNotifier {
       charactersDir,
       groupsDir,
       customBackgroundDir,
+      // The text engine's session log goes here (Settings → Advanced paths
+      // can move it). Created at init like the other app-managed folders.
+      Directory(path.join(_rootPath!, 'logs')),
     ]) {
       try {
         await dir.create(recursive: true);
@@ -311,6 +320,7 @@ class StorageService extends ChangeNotifier {
     _generationSettings.initializeBase(_prefs, notifyListeners);
     _backendSettings.initializeBase(_prefs, notifyListeners);
     _uiSettings.initializeBase(_prefs, notifyListeners);
+    _pathSettings.initializeBase(_prefs, notifyListeners);
     _ttsSettings.initializeBase(_prefs, notifyListeners);
     _sttSettings.initializeBase(_prefs, notifyListeners);
     _imageGenSettings.initializeBase(_prefs, notifyListeners);
@@ -323,6 +333,10 @@ class StorageService extends ChangeNotifier {
     _lorebookSettings.initializeBase(_prefs, notifyListeners);
     _toolVerdictSettings.initializeBase(_prefs, notifyListeners);
 
+    // Alice folder defaults hang off the live data root — keep in sync
+    // with the sandbox ctor and setRootPath.
+    _pathSettings.dataRoot = _rootPath ?? '';
+
     // Nothing between here and the completer may escape. _init is
     // fire-and-forget, so one throw (a corrupt prefs value) would leave
     // `initialized` unresolved FOREVER — the same wedge the makeDirs fallback
@@ -332,6 +346,12 @@ class StorageService extends ChangeNotifier {
       _generationSettings.load();
       _backendSettings.load();
       _uiSettings.load();
+      _pathSettings.load();
+      // Backups honor the folder the user chose (Settings → Advanced paths).
+      // Restored here, before anything can trigger a backup.
+      BackupService.dirOverride = _pathSettings.backupsPathIsCustom
+          ? _pathSettings.backupsPath
+          : null;
       _ttsSettings.load();
       _sttSettings.load();
       _imageGenSettings.load();
@@ -343,7 +363,7 @@ class StorageService extends ChangeNotifier {
       _presetSettings.load();
       _lorebookSettings.load();
       _toolVerdictSettings.load();
-    _engineResourcesSettings.load();
+      _engineResourcesSettings.load();
       await repairKoboldPresetLinks(_presetSettings, engineDir: binDir.path);
       attachReasoningEffortMenuStore(_prefs);
 
@@ -386,6 +406,7 @@ class StorageService extends ChangeNotifier {
     if (refusal != null) return refusal;
 
     _rootPath = pathStr;
+    _pathSettings.dataRoot = pathStr;
     _binDir = Directory(path.join(_rootPath!, 'koboldcpp_bin'));
     await _prefs?.setString(_rootPathKey, pathStr);
 

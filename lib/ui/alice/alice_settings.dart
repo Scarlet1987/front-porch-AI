@@ -2,14 +2,20 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 //
 // Alice edition Settings screen: the golden rule (static text, not a
-// setting), engine resources (wired to the real engine settings and live
-// hardware readings), content zone (wired to UiSettings with the shared
-// zone-change flow), and About & License (Alice edition credits).
+// setting), where things live (UiSettings folder paths), the engines
+// overview (live KoboldCpp state, selected image backend), engine
+// resources (wired to the real engine settings and live hardware
+// readings), content zone (wired to UiSettings with the shared
+// zone-change flow), advanced paths (collapsed), and About & License
+// (Alice edition credits).
 
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:path/path.dart' as path;
 import 'package:provider/provider.dart';
+import 'package:front_porch_ai/ui/widgets/widgets.dart';
 
 import 'package:front_porch_ai/models/models.dart';
 import 'package:front_porch_ai/services/services.dart';
@@ -20,6 +26,8 @@ import 'package:front_porch_ai/ui/settings/widgets/content_zone_select.dart';
 import 'package:front_porch_ai/ui/settings/widgets/dead_dove/dead_dove_panel.dart';
 import 'package:front_porch_ai/ui/theme/app_colors.dart';
 
+part 'alice_settings_paths.dart';
+part 'alice_settings_engines.dart';
 part 'alice_settings_engine.dart';
 part 'alice_settings_engine_budget.dart';
 part 'alice_settings_image_engine.dart';
@@ -28,13 +36,41 @@ part 'alice_settings_about.dart';
 
 /// Alice Settings screen. Everything here runs locally; the app holds
 /// memory only while a story is running.
-class AliceSettingsScreen extends StatelessWidget {
+class AliceSettingsScreen extends StatefulWidget {
   const AliceSettingsScreen({super.key});
+
+  @override
+  State<AliceSettingsScreen> createState() => _AliceSettingsScreenState();
+}
+
+class _AliceSettingsScreenState extends State<AliceSettingsScreen> {
+  final ScrollController _scroll = ScrollController();
+  final GlobalKey _engineResourcesKey = GlobalKey();
+  final GlobalKey _imageEngineKey = GlobalKey();
+
+  @override
+  void dispose() {
+    _scroll.dispose();
+    super.dispose();
+  }
+
+  /// Jumps the list to the detail card a Swap button names.
+  void _jumpTo(GlobalKey key) {
+    final target = key.currentContext;
+    if (target == null) return;
+    Scrollable.ensureVisible(
+      target,
+      duration: const Duration(milliseconds: 320),
+      curve: Curves.easeOut,
+      alignment: 0.0,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return SingleChildScrollView(
+      controller: _scroll,
       padding: const EdgeInsets.fromLTRB(20, 18, 20, 28),
       child: Center(
         child: ConstrainedBox(
@@ -59,11 +95,20 @@ class AliceSettingsScreen extends StatelessWidget {
               const SizedBox(height: 14),
               const _GoldenRuleCard(),
               const SizedBox(height: 12),
-              const AliceEngineResourcesCard(),
+              const AliceWhereThingsLiveCard(),
               const SizedBox(height: 12),
-              const AliceImageEngineCard(),
+              AliceEnginesCard(
+                onSwapText: () => _jumpTo(_engineResourcesKey),
+                onSwapImage: () => _jumpTo(_imageEngineKey),
+              ),
+              const SizedBox(height: 12),
+              AliceEngineResourcesCard(key: _engineResourcesKey),
+              const SizedBox(height: 12),
+              AliceImageEngineCard(key: _imageEngineKey),
               const SizedBox(height: 12),
               const AliceContentZoneCard(),
+              const SizedBox(height: 12),
+              const AliceAdvancedPathsSection(),
               const SizedBox(height: 12),
               const AliceAboutSection(),
             ],

@@ -42,6 +42,12 @@ class BackupService {
   static const String _backupDir = 'backups';
   static Timer? _autoBackupTimer;
 
+  /// The folder the user chose for backups (Settings → Advanced paths),
+  /// or null for the default folder next to the database. Static because
+  /// the whole service is static; StorageService restores it from the
+  /// persisted setting at startup and Settings updates it on change.
+  static String? dirOverride;
+
   /// Start the automatic backup timer (every 30 minutes).
   /// Safe to call multiple times — will not create duplicate timers.
   static void startAutoBackup() {
@@ -70,10 +76,16 @@ class BackupService {
 
   /// Get the backup directory path (creates it if needed).
   static Future<Directory> _getBackupDir() async {
-    final dbPath = AppDatabase.dbFilePath;
-    if (dbPath == null) throw StateError('Database path not initialized');
-    final parentDir = path.dirname(dbPath); // .../KoboldManager/
-    final backupDir = Directory(path.join(parentDir, _backupDir));
+    final override = dirOverride;
+    final Directory backupDir;
+    if (override != null && override.isNotEmpty) {
+      backupDir = Directory(override);
+    } else {
+      final dbPath = AppDatabase.dbFilePath;
+      if (dbPath == null) throw StateError('Database path not initialized');
+      final parentDir = path.dirname(dbPath); // .../KoboldManager/
+      backupDir = Directory(path.join(parentDir, _backupDir));
+    }
     if (!await backupDir.exists()) {
       await backupDir.create(recursive: true);
     }
