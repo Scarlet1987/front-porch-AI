@@ -2,9 +2,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 //
 // Alice Home screen ("On your porch"): greeting header with the real
-// detail-level setting, Continue-chatting + world cards, the porch character
-// shelf, and the Advanced-only engine status. Layout follows the GUI preview
-// (front-porch-gui-preview.html, Home section, lines 682-768).
+// detail-level setting, then the two porch areas from the approved
+// preview — a Worlds card (empty state, or every place world as a labeled
+// collapsible hierarchy panel) and a Character cards card (empty state,
+// or a grid of character cards with Edit + Delete). Continue-chatting
+// (real recent sessions) and the Advanced-only engine status stay below.
 
 import 'package:flutter/material.dart';
 import 'package:path/path.dart' as p;
@@ -16,10 +18,12 @@ import 'package:front_porch_ai/services/services.dart';
 import 'package:front_porch_ai/services/storage/storage.dart';
 import 'package:front_porch_ai/ui/alice/alice_motion.dart';
 import 'package:front_porch_ai/ui/alice/alice_widgets.dart';
+import 'package:front_porch_ai/ui/pages/edit_character_page.dart';
 import 'package:front_porch_ai/ui/theme/app_colors.dart';
 import 'package:front_porch_ai/utils/utils.dart';
 
-part 'home/alice_home_porch.dart';
+part 'home/alice_home_characters.dart';
+part 'home/alice_home_worlds.dart';
 part 'home/alice_home_engine.dart';
 
 /// Alice navigation destinations in rail order (see [AliceShell]).
@@ -162,14 +166,11 @@ class _AliceHomeScreenState extends State<AliceHomeScreen> {
         children: [
           _buildHeader(context, greeting, detailLevel, storage),
           const SizedBox(height: 18),
-          _buildTopCards(context),
+          _buildWorldsCard(context),
           const SizedBox(height: 18),
-          const AliceSectionHead(
-            title: 'On your porch',
-            subtitle: 'Tap one to open the chat',
-          ),
-          const SizedBox(height: 10),
-          _buildPorchShelf(context, characters),
+          _buildCharactersCard(context, characters),
+          const SizedBox(height: 18),
+          AliceCard(child: _buildContinueChatting(context)),
           if (detailLevel.reveals(DetailLevel.advanced)) ...[
             const SizedBox(height: 18),
             _buildEngineStatus(context, storage),
@@ -214,15 +215,15 @@ class _AliceHomeScreenState extends State<AliceHomeScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                greeting,
+                'On your porch',
                 style: theme.textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.w700,
                 ),
               ),
               const SizedBox(height: 4),
               Text(
-                'Pick up a story where you left off, or start a new one '
-                'on the porch.',
+                '$greeting — pick up a story where you left off, or start '
+                'a new one on the porch.',
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: theme.hintColor,
                 ),
@@ -240,15 +241,15 @@ class _AliceHomeScreenState extends State<AliceHomeScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    greeting,
+                    'On your porch',
                     style: theme.textTheme.headlineSmall?.copyWith(
                       fontWeight: FontWeight.w700,
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Pick up a story where you left off, or start a new one '
-                    'on the porch.',
+                    '$greeting — pick up a story where you left off, or '
+                    'start a new one on the porch.',
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: theme.hintColor,
                     ),
@@ -258,29 +259,6 @@ class _AliceHomeScreenState extends State<AliceHomeScreen> {
             ),
             const SizedBox(width: 16),
             segBlock,
-          ],
-        );
-      },
-    );
-  }
-
-  Widget _buildTopCards(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final narrow = constraints.maxWidth < 860;
-        final continueCard = AliceCard(child: _buildContinueChatting(context));
-        final worldCard = AliceCard(child: _buildWorldCard(context));
-        if (narrow) {
-          return Column(
-            children: [continueCard, const SizedBox(height: 12), worldCard],
-          );
-        }
-        return Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(child: continueCard),
-            const SizedBox(width: 12),
-            Expanded(child: worldCard),
           ],
         );
       },
@@ -376,113 +354,6 @@ class _AliceHomeScreenState extends State<AliceHomeScreen> {
           ],
         ),
       ),
-    );
-  }
-
-  /// "Your world right now": breadcrumb built from the real world hierarchy
-  /// (World.tier / parentWorldId in WorldRepository).
-  /// TODO(alice): "your world right now" needs a notion of the *current*
-  /// world — right now this shows the first place world. Wire to the real
-  /// current-world selection when Alice Worlds lands.
-  Widget _buildWorldCard(BuildContext context) {
-    final theme = Theme.of(context);
-    final worlds = context.watch<WorldRepository>().placeWorlds;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const AliceSectionHead(
-          title: 'Your world right now',
-          subtitle: 'Where your stories are set',
-        ),
-        const SizedBox(height: 8),
-        if (worlds.isEmpty) ...[
-          Text(
-            'No world yet — build the stage your stories live on.',
-            style: theme.textTheme.bodyMedium?.copyWith(color: theme.hintColor),
-          ),
-        ] else ...[
-          _buildBreadcrumb(context, worlds.first),
-          const SizedBox(height: 8),
-          Text(
-            worlds.first.description.isEmpty
-                ? 'No description yet.'
-                : worlds.first.description,
-            style: theme.textTheme.bodyMedium?.copyWith(color: theme.hintColor),
-            maxLines: 3,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
-        const SizedBox(height: 12),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: [
-            AliceButton(
-              label: 'Open the world',
-              ghost: true,
-              small: true,
-              onPressed: () => Provider.of<AppState>(
-                context,
-                listen: false,
-              ).setIndex(_aliceWorldsIndex),
-            ),
-            AliceButton(
-              label: 'New character',
-              ghost: true,
-              small: true,
-              onPressed: () => Provider.of<AppState>(
-                context,
-                listen: false,
-              ).setIndex(_aliceCreatorIndex),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  /// Walks the world's parent chain up to the root and renders
-  /// Stage › Universe › Planet › Continent › **Name**, bold on the leaf.
-  Widget _buildBreadcrumb(BuildContext context, World world) {
-    final repo = Provider.of<WorldRepository>(context, listen: false);
-    final chain = <World>[world];
-    var parentId = world.parentWorldId;
-    final seen = <String>{world.id};
-    while (parentId != null &&
-        parentId.isNotEmpty &&
-        !seen.contains(parentId)) {
-      final parent = repo.worldById(parentId);
-      if (parent == null) break;
-      chain.add(parent);
-      seen.add(parent.id);
-      parentId = parent.parentWorldId;
-    }
-    final ordered = chain.reversed.toList();
-    final theme = Theme.of(context);
-    return Text.rich(
-      TextSpan(
-        children: [
-          for (var i = 0; i < ordered.length; i++) ...[
-            if (i > 0)
-              TextSpan(
-                text: ' › ',
-                style: TextStyle(color: theme.hintColor),
-              ),
-            TextSpan(
-              text: ordered[i].name,
-              style: TextStyle(
-                fontWeight: i == ordered.length - 1
-                    ? FontWeight.w700
-                    : FontWeight.w500,
-                color: i == ordered.length - 1
-                    ? theme.colorScheme.onSurface
-                    : theme.hintColor,
-              ),
-            ),
-          ],
-        ],
-      ),
-      style: const TextStyle(fontSize: 13.5),
     );
   }
 }
