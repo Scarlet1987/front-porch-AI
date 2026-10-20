@@ -224,6 +224,7 @@ class HardwareService extends ChangeNotifier {
     } catch (e) {
       print('Hardware detection failed: $e');
     } finally {
+      _fillGapsFromAudit(audit);
       _isDetecting = false;
       _detectedOnce = true;
       if (!_disposed) notifyListeners();
@@ -243,6 +244,65 @@ class HardwareService extends ChangeNotifier {
         }
       }
     }
+  }
+
+  /// Fills gaps in the locally probed [_hardwareInfo] from the startup
+  /// audit profile — the single source of truth for vendor, name, VRAM
+  /// and RAM, consumed here the same way [detectHardware] already consumes
+  /// its CUDA/ROCm answers.
+  ///
+  /// Local probing derives the vendor from a cleaned-up GPU name, and the
+  /// cleanup strips the bracketed parts of the lspci string — on an
+  /// Ellesmere RX 580 the name reduces to "Advanced Micro Devices, Inc.
+  /// Ellesmere", which matches no vendor substring, so local detection
+  /// reported vendor 'Unknown', never read AMD sysfs VRAM, and the
+  /// Engine resources card sat at "unknown VRAM" with its bar stuck on
+  /// "reading…" while the audit had logged the correct 8192 MB all
+  /// along. The audit classifies from the full lspci line, brackets
+  /// included. Local values win wherever they actually answered; the
+  /// audit only fills gaps, and when it never ran (tests, headless)
+  /// this is a no-op.
+  void _fillGapsFromAudit(HardwareProfile? audit) {
+    if (audit == null) return;
+    final auditVendor = audit.gpuVendor == 'None' ? 'Unknown' : audit.gpuVendor;
+    final info = _hardwareInfo;
+    if (info == null) {
+      _hardwareInfo = HardwareInfo(
+        gpuName: audit.gpuName,
+        vramMb: audit.vramMb,
+        ramMb: audit.systemRamMb,
+        vendor: auditVendor,
+        hasCuda: audit.hasCuda,
+        hasRocm: audit.hasRocm,
+        hasMetal: Platform.isMacOS,
+      );
+      return;
+    }
+    final vramMb = info.vramMb > 0 ? info.vramMb : audit.vramMb;
+    final ramMb = info.ramMb > 0 ? info.ramMb : audit.systemRamMb;
+    final vendor = info.vendor != 'Unknown' ? info.vendor : auditVendor;
+    final gpuName = info.gpuName != 'Unknown GPU'
+        ? info.gpuName
+        : audit.gpuName;
+    if (vramMb == info.vramMb &&
+        ramMb == info.ramMb &&
+        vendor == info.vendor &&
+        gpuName == info.gpuName) {
+      return;
+    }
+    _hardwareInfo = HardwareInfo(
+      gpuName: gpuName,
+      vramMb: vramMb,
+      ramMb: ramMb,
+      vendor: vendor,
+      hasCuda: info.hasCuda,
+      hasRocm: info.hasRocm,
+      hasMetal: info.hasMetal,
+      isSharedMemory: info.isSharedMemory,
+      linuxDistro: info.linuxDistro,
+      cardCount: info.cardCount,
+      smallestCardMb: info.smallestCardMb > 0 ? info.smallestCardMb : null,
+    );
   }
 
   bool _hasCuda = false;

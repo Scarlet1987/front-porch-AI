@@ -178,6 +178,7 @@ class _LiveMemoryBars extends StatefulWidget {
 class _LiveMemoryBarsState extends State<_LiveMemoryBars> {
   Timer? _timer;
   FreeMemoryMb? _free;
+  bool _polled = false;
 
   @override
   void initState() {
@@ -199,9 +200,17 @@ class _LiveMemoryBarsState extends State<_LiveMemoryBars> {
         context,
         listen: false,
       ).readFreeMemory();
-      if (mounted) setState(() => _free = free);
+      if (mounted) {
+        setState(() {
+          _free = free;
+          _polled = true;
+        });
+      }
     } catch (_) {
-      // Best-effort: keep the last reading up.
+      // Best-effort: keep the last reading up. The poll still counts as
+      // settled — the bar must not sit on "reading…" forever when this
+      // machine simply cannot report free graphics memory.
+      if (mounted) setState(() => _polled = true);
     }
   }
 
@@ -218,6 +227,7 @@ class _LiveMemoryBarsState extends State<_LiveMemoryBars> {
           totalMb: totalVram,
           freeMb: free?.graphics,
           live: free?.graphics != null,
+          settled: _polled,
         ),
         const SizedBox(height: 10),
         _MemoryBar(
@@ -225,6 +235,7 @@ class _LiveMemoryBarsState extends State<_LiveMemoryBars> {
           totalMb: totalRam,
           freeMb: free?.system,
           live: free?.system != null,
+          settled: _polled,
         ),
       ],
     );
@@ -239,12 +250,18 @@ class _MemoryBar extends StatelessWidget {
     required this.totalMb,
     required this.freeMb,
     required this.live,
+    required this.settled,
   });
 
   final String title;
   final int totalMb;
   final int? freeMb;
   final bool live;
+
+  /// True once at least one free-memory poll has completed. Before that
+  /// the bar honestly says "reading…"; after it, a missing reading says
+  /// "unavailable" instead of pretending a reading is still coming.
+  final bool settled;
 
   @override
   Widget build(BuildContext context) {
@@ -268,7 +285,11 @@ class _MemoryBar extends StatelessWidget {
               ),
             ),
             Text(
-              live ? 'live' : 'reading\u2026',
+              live
+                  ? 'live'
+                  : settled
+                  ? 'unavailable'
+                  : 'reading\u2026',
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.hintColor,
               ),
