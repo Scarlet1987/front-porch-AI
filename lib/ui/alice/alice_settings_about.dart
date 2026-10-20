@@ -22,7 +22,7 @@ class AliceAboutSection extends StatelessWidget {
           const AliceEditionCreditsCard(),
           const SizedBox(height: 10),
           Text(
-            'Front Porch AI is free software, licensed under the GNU Affero '
+            'Rabbit Hole is free software, licensed under the GNU Affero '
             'General Public License v3.0.',
             style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor),
           ),

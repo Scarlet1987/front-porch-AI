@@ -54,7 +54,7 @@ export function InstallHint() {
   return (
     <div className="install-hint">
       <div className="install-hint-body">
-        <strong>Install Front Porch</strong>
+        <strong>Install Rabbit Hole</strong>
         <p className="muted small">
           Add it to your home screen for a full-screen, app-like experience.
         </p>

@@ -75,7 +75,7 @@ export function Layout({ children }: { children: ReactNode }) {
     return (
       <div className="app-shell cols">
         <aside className="side-nav">
-          <Link to="/" className="side-brand">Front Porch AI</Link>
+          <Link to="/" className="side-brand">Rabbit Hole</Link>
           {links()}
           {footer}
         </aside>
@@ -91,14 +91,14 @@ export function Layout({ children }: { children: ReactNode }) {
         <button className="hamburger icon-btn" aria-label="Open menu" onClick={() => setDrawerOpen(true)}>
           ☰
         </button>
-        <Link to="/" className="app-title">Front Porch AI</Link>
+        <Link to="/" className="app-title">Rabbit Hole</Link>
       </header>
       <main className="app-content">{children}</main>
       {drawerOpen && (
         <div className="drawer-backdrop nav-backdrop" onClick={() => setDrawerOpen(false)}>
           <aside className="side-nav nav-drawer" onClick={(e) => e.stopPropagation()}>
             <div className="drawer-head">
-              <Link to="/" className="side-brand" onClick={() => setDrawerOpen(false)}>Front Porch AI</Link>
+              <Link to="/" className="side-brand" onClick={() => setDrawerOpen(false)}>Rabbit Hole</Link>
               <button className="icon-btn" aria-label="Close menu" onClick={() => setDrawerOpen(false)}>
                 ✕
               </button>

@@ -13,9 +13,9 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       manifest: {
-        name: 'Front Porch AI',
-        short_name: 'Front Porch',
-        description: 'AI character chat — Front Porch AI',
+        name: 'Rabbit Hole',
+        short_name: 'Rabbit Hole',
+        description: 'AI character chat — Rabbit Hole',
         theme_color: '#1f2937',
         background_color: '#0f172a',
         display: 'standalone',

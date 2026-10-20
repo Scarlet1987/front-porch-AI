@@ -328,7 +328,7 @@ class _MyAppState extends State<MyApp> with WindowListener {
         return PorchThemeScope(
           oledBlack: oledBlack,
           child: MaterialApp(
-            title: 'Front Porch AI',
+            title: 'Rabbit Hole',
             debugShowCheckedModeBanner: false,
             theme: buildPorchThemeData(isDark: isDark, oledBlack: oledBlack),
             home: Builder(

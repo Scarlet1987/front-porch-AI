@@ -160,7 +160,7 @@ class _AliceNavRail extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
-                      'Front Porch',
+                      'Rabbit Hole',
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
