@@ -75,8 +75,7 @@ class AliceEditionCreditsCard extends StatelessWidget {
             'of Front Porch AI, directed by Scarlet1987: the engine overhaul '
             'under the hood, the full interface redesign, the Dead Dove '
             'negotiated-limits model, the Main Character board, and the '
-            'Kardashev civilization system. She gave it the review the '
-            'original never got.',
+            'Kardashev civilization system.',
             style: TextStyle(
               color: AppColors.textSecondary(context),
               fontSize: 12,
