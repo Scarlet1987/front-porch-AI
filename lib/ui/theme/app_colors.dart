@@ -164,6 +164,13 @@ class AppColors {
   static Color borderOf(BuildContext context) =>
       resolve(context, const Color(0xFF1C554B), lightBorder);
 
+  /// Soft border (the preview's --border-soft): card edges and the nav
+  /// rail's right edge — a whisper under [borderOf].
+  static const Color borderSoft = Color(0xFF123F37);
+  static const Color borderSoftLight = Color(0xFFD9ECE7);
+  static Color borderSoftOf(BuildContext context) =>
+      resolve(context, borderSoft, borderSoftLight);
+
   // ---------------------------------------------------------------------------
   // Process log / terminal output colors
   // ---------------------------------------------------------------------------

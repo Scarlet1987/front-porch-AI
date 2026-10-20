@@ -124,7 +124,19 @@ class _AliceNavRail extends StatelessWidget {
       width: 228,
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
       decoration: BoxDecoration(
-        border: Border(right: BorderSide(color: AppColors.borderOf(context))),
+        color: AppColors.cardOf(context),
+        border: Border(
+          right: BorderSide(color: AppColors.borderSoftOf(context)),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(
+              alpha: AppColors.isLight(context) ? 0.12 : 0.4,
+            ),
+            offset: const Offset(4, 0),
+            blurRadius: 20,
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -187,8 +199,8 @@ class _AliceNavRail extends StatelessWidget {
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               color: AppColors.cardOf(context),
-              border: Border.all(color: AppColors.borderOf(context)),
-              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppColors.borderSoftOf(context)),
+              borderRadius: BorderRadius.circular(12),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -236,21 +248,26 @@ class _AliceNavRail extends StatelessWidget {
   ) {
     final isOn = selected == index;
     final theme = Theme.of(context);
+    final accent = AppColors.porchAmberOf(context);
     return Padding(
       padding: const EdgeInsets.only(bottom: 4),
       child: InkWell(
         onTap: () => onSelect(index),
+        hoverColor: accent.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(12),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 8),
           decoration: BoxDecoration(
-            color: isOn ? AppColors.surfaceOf(context) : Colors.transparent,
+            color: isOn ? accent.withValues(alpha: 0.08) : Colors.transparent,
             borderRadius: BorderRadius.circular(12),
-            border: isOn
-                ? Border(
-                    left: BorderSide(color: AppColors.porchAmber, width: 3),
-                  )
-                : null,
+            // The preview keeps a 3px left bar in both states (accent
+            // when active, transparent when not) so nothing shifts.
+            border: Border(
+              left: BorderSide(
+                color: isOn ? accent : Colors.transparent,
+                width: 3,
+              ),
+            ),
           ),
           child: Row(
             children: [

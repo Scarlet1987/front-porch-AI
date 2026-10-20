@@ -128,12 +128,7 @@ class _AliceCreatorScreenState extends State<AliceCreatorScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              'Character creator',
-                              style: theme.textTheme.headlineSmall?.copyWith(
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
+                            const AliceScreenTitle(title: 'Character creator'),
                             const SizedBox(height: 2),
                             Text(
                               'You author the main character and yourself; '

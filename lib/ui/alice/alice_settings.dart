@@ -78,12 +78,7 @@ class _AliceSettingsScreenState extends State<AliceSettingsScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text(
-                'Settings',
-                style: theme.textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
+              const AliceScreenTitle(title: 'Settings'),
               const SizedBox(height: 2),
               Text(
                 'Everything runs locally; the app holds memory only while '

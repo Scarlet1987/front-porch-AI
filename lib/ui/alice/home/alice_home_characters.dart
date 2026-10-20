@@ -161,20 +161,9 @@ extension _AliceHomeCharacters on _AliceHomeScreenState {
                   onPressed: () => _editCharacterFromHome(context, character),
                 ),
                 const SizedBox(width: 6),
-                TextButton(
+                AliceDangerButton(
+                  label: 'Delete',
                   onPressed: () => _confirmDeleteCharacter(context, character),
-                  style: TextButton.styleFrom(
-                    foregroundColor: theme.colorScheme.error,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 7,
-                    ),
-                    textStyle: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  child: const Text('Delete'),
                 ),
               ],
             ),

@@ -214,12 +214,7 @@ class _AliceHomeScreenState extends State<AliceHomeScreen> {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'On your porch',
-                style: theme.textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
+              const AliceScreenTitle(title: 'On your porch'),
               const SizedBox(height: 4),
               Text(
                 '$greeting — pick up a story where you left off, or start '
@@ -240,12 +235,7 @@ class _AliceHomeScreenState extends State<AliceHomeScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'On your porch',
-                    style: theme.textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
+                  const AliceScreenTitle(title: 'On your porch'),
                   const SizedBox(height: 4),
                   Text(
                     '$greeting — pick up a story where you left off, or '

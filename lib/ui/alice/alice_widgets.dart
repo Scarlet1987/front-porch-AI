@@ -8,8 +8,12 @@ import 'package:flutter/material.dart';
 import 'package:front_porch_ai/ui/alice/alice_motion.dart';
 import 'package:front_porch_ai/ui/theme/app_colors.dart';
 
-/// A card with the Alice look: teal-tinted surface, hairline border,
-/// 16px radius. No heavy shadows.
+export 'package:front_porch_ai/ui/alice/alice_buttons.dart';
+
+/// A card in the approved preview's language: card fill, soft border,
+/// 12px radius, the preview's strategic shadow (0 8px 32px black at .6)
+/// and a teal top highlight. The CSS highlight is an inset shadow;
+/// Flutter draws it as an inner [BlurStyle.inner] shadow — same read.
 class AliceCard extends StatelessWidget {
   final Widget child;
   final EdgeInsetsGeometry padding;
@@ -17,24 +21,122 @@ class AliceCard extends StatelessWidget {
   const AliceCard({
     super.key,
     required this.child,
-    this.padding = const EdgeInsets.all(14),
+    this.padding = const EdgeInsets.all(20),
   });
 
   @override
   Widget build(BuildContext context) {
+    final accent = AppColors.porchAmberOf(context);
     return Container(
       padding: padding,
       decoration: BoxDecoration(
         color: AppColors.cardOf(context),
-        border: Border.all(color: AppColors.borderOf(context)),
-        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.borderSoftOf(context)),
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(
+              alpha: AppColors.isLight(context) ? 0.10 : 0.6,
+            ),
+            offset: const Offset(0, 8),
+            blurRadius: 32,
+          ),
+          BoxShadow(
+            color: accent.withValues(alpha: 0.12),
+            offset: const Offset(0, 1),
+            blurRadius: 0,
+            blurStyle: BlurStyle.inner,
+          ),
+        ],
       ),
       child: child,
     );
   }
 }
 
-/// Section header with the teal accent bar: title + subtitle.
+/// A section title on the preview's card-title gradient: the tint washes
+/// in from the left at .16 and is gone by 60%, on a 6px radius. Shared by
+/// [AliceSectionHead] and the collapsible section header so every card
+/// title in the app speaks the same language.
+class _AliceGradientTitle extends StatelessWidget {
+  final String title;
+  final Color tint;
+  final TextStyle? style;
+
+  const _AliceGradientTitle({
+    required this.title,
+    required this.tint,
+    this.style,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [tint.withValues(alpha: 0.16), tint.withValues(alpha: 0)],
+          stops: const [0, 0.6],
+        ),
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Text(title, style: style),
+    );
+  }
+}
+
+/// Screen title in the preview's language: a 3px accent bar with the
+/// title on a gradient that washes in at .22 and fades out by 70%,
+/// rounded on the right only. The subtitle stays the screen's own
+/// muted line under it.
+class AliceScreenTitle extends StatelessWidget {
+  final String title;
+
+  const AliceScreenTitle({super.key, required this.title});
+
+  @override
+  Widget build(BuildContext context) {
+    final accent = AppColors.porchAmberOf(context);
+    // IntrinsicHeight gives the stretch row a finite height (the title
+    // text's) even in the unbounded-height contexts screens put it in.
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Container(width: 3, color: accent),
+          Expanded(
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    accent.withValues(alpha: 0.22),
+                    accent.withValues(alpha: 0),
+                  ],
+                  stops: const [0, 0.7],
+                ),
+                borderRadius: const BorderRadius.horizontal(
+                  right: Radius.circular(8),
+                ),
+              ),
+              child: Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Card title + subtitle: the title sits on the preview's card-title
+/// gradient (see [_AliceGradientTitle]); [barColor] tints the wash and
+/// defaults to the teal accent.
 class AliceSectionHead extends StatelessWidget {
   final String title;
   final String? subtitle;
@@ -50,98 +152,28 @@ class AliceSectionHead extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Row(
+    return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Container(
-          width: 3,
-          height: 20,
-          margin: const EdgeInsets.only(top: 2),
-          decoration: BoxDecoration(
-            color: barColor ?? AppColors.porchAmber,
-            borderRadius: BorderRadius.circular(99),
+        _AliceGradientTitle(
+          title: title,
+          tint: barColor ?? AppColors.porchAmberOf(context),
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w700,
           ),
         ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
+        if (subtitle != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Text(
+              subtitle!,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.hintColor,
               ),
-              if (subtitle != null)
-                Padding(
-                  padding: const EdgeInsets.only(top: 2),
-                  child: Text(
-                    subtitle!,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.hintColor,
-                    ),
-                  ),
-                ),
-            ],
+            ),
           ),
-        ),
       ],
     );
-  }
-}
-
-/// Primary / ghost buttons in the Alice style.
-class AliceButton extends StatelessWidget {
-  final String label;
-  final VoidCallback? onPressed;
-  final bool ghost;
-  final bool small;
-  final bool block;
-
-  const AliceButton({
-    super.key,
-    required this.label,
-    this.onPressed,
-    this.ghost = false,
-    this.small = false,
-    this.block = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final style = ElevatedButton.styleFrom(
-      backgroundColor: ghost ? Colors.transparent : AppColors.porchAmber,
-      foregroundColor: ghost
-          ? Theme.of(context).colorScheme.onSurface
-          : AppColors.onChaosAccent,
-      padding: EdgeInsets.symmetric(
-        horizontal: small ? 12 : 16,
-        vertical: small ? 7 : 10,
-      ),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(small ? 10 : 12),
-        side: ghost
-            ? BorderSide(color: AppColors.borderOf(context))
-            : BorderSide.none,
-      ),
-      elevation: 0,
-      textStyle: TextStyle(
-        fontWeight: FontWeight.w600,
-        fontSize: small ? 13 : 14,
-      ),
-    );
-    final btn = ghost
-        ? OutlinedButton(onPressed: onPressed, style: style, child: Text(label))
-        : ElevatedButton(
-            onPressed: onPressed,
-            style: style,
-            child: Text(label),
-          );
-    if (block) {
-      return SizedBox(width: double.infinity, child: btn);
-    }
-    return btn;
   }
 }
 
@@ -322,22 +354,15 @@ class _AliceCollapsibleSectionState extends State<AliceCollapsibleSection> {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Container(
-                    width: 3,
-                    height: 20,
-                    margin: const EdgeInsets.only(top: 2),
-                    decoration: BoxDecoration(
-                      color: widget.barColor ?? AppColors.porchAmber,
-                      borderRadius: BorderRadius.circular(99),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          widget.title,
+                        _AliceGradientTitle(
+                          title: widget.title,
+                          tint:
+                              widget.barColor ??
+                              AppColors.porchAmberOf(context),
                           style: const TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.w700,

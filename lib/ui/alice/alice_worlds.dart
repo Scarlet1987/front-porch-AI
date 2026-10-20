@@ -128,12 +128,7 @@ class _PageHeader extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'Worlds',
-                style: theme.textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
+              const AliceScreenTitle(title: 'Worlds'),
               const SizedBox(height: 4),
               Text(
                 'Widest to narrowest. Descriptions live on disk and page into '
