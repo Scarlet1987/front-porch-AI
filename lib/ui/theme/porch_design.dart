@@ -9,7 +9,6 @@
 // (at your option) any later version.
 
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import 'package:front_porch_ai/ui/theme/app_colors.dart';
 
@@ -110,7 +109,8 @@ ThemeData buildPorchThemeData({required bool isDark, required bool oledBlack}) {
         ),
     scaffoldBackgroundColor: isDark ? bg : AppColors.lightBackground,
     cardColor: isDark ? card : AppColors.lightCard,
-    textTheme: GoogleFonts.interTextTheme().apply(
+    textTheme: ThemeData.light().textTheme.apply(
+      fontFamily: 'Inter',
       bodyColor: isDark ? Colors.white : Colors.black87,
       displayColor: isDark ? Colors.white : Colors.black87,
     ),

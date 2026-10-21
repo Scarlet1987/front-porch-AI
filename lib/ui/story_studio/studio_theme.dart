@@ -17,7 +17,6 @@
 // along with Front Porch AI. If not, see <https://www.gnu.org/licenses/>.
 
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import 'package:front_porch_ai/ui/theme/studio_colors.dart';
 
@@ -33,7 +32,8 @@ class StudioType {
     FontWeight weight = FontWeight.w400,
     Color? color,
     double? height,
-  }) => GoogleFonts.figtree(
+  }) => TextStyle(
+    fontFamily: 'Figtree',
     fontSize: size,
     fontWeight: weight,
     color: color ?? StudioColors.inkOf(context),
@@ -55,7 +55,8 @@ class StudioType {
     double height = 1.7,
     Color? color,
     FontStyle style = FontStyle.normal,
-  }) => GoogleFonts.literata(
+  }) => TextStyle(
+    fontFamily: 'Literata',
     fontSize: size,
     height: height,
     fontStyle: style,
@@ -67,7 +68,8 @@ class StudioType {
     BuildContext context, {
     double size = 12,
     Color? color,
-  }) => GoogleFonts.jetBrainsMono(
+  }) => TextStyle(
+    fontFamily: 'JetBrainsMono',
     fontSize: size,
     color: color ?? StudioColors.mutedOf(context),
   ).copyWith(fontFamilyFallback: const ['Menlo', 'Consolas', 'monospace']);

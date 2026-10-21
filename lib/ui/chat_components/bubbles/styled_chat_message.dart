@@ -17,7 +17,6 @@
 // along with Front Porch AI. If not, see <https://www.gnu.org/licenses/>.
 
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 import 'package:front_porch_ai/models/models.dart';
@@ -26,48 +25,49 @@ import 'package:front_porch_ai/ui/theme/theme.dart';
 import 'package:front_porch_ai/ui/widgets/widgets.dart';
 import 'external_image_widget.dart';
 
-/// Applies a font family to a base TextStyle dynamically.
-/// Uses Google Fonts for web-hosted fonts, otherwise applies system fonts directly.
-TextStyle _applyGoogleFont(String? fontFamily, TextStyle baseStyle) {
+/// Applies a font family to a base TextStyle. Every family the switch names
+/// is bundled natively (see the fonts section of pubspec.yaml); system fonts
+/// are applied as named fontFamily directly.
+TextStyle _applyChatFont(String? fontFamily, TextStyle baseStyle) {
   if (fontFamily == null || fontFamily.isEmpty) return baseStyle;
 
   switch (fontFamily) {
     case 'Roboto':
-      return GoogleFonts.roboto(textStyle: baseStyle);
+      return baseStyle.copyWith(fontFamily: 'Roboto');
     case 'Open Sans':
-      return GoogleFonts.openSans(textStyle: baseStyle);
+      return baseStyle.copyWith(fontFamily: 'OpenSans');
     case 'Lato':
-      return GoogleFonts.lato(textStyle: baseStyle);
+      return baseStyle.copyWith(fontFamily: 'Lato');
     case 'Source Sans 3':
-      return GoogleFonts.sourceSans3(textStyle: baseStyle);
+      return baseStyle.copyWith(fontFamily: 'SourceSans3');
     case 'Nunito':
-      return GoogleFonts.nunito(textStyle: baseStyle);
+      return baseStyle.copyWith(fontFamily: 'Nunito');
     case 'Poppins':
-      return GoogleFonts.poppins(textStyle: baseStyle);
+      return baseStyle.copyWith(fontFamily: 'Poppins');
     case 'Montserrat':
-      return GoogleFonts.montserrat(textStyle: baseStyle);
+      return baseStyle.copyWith(fontFamily: 'Montserrat');
     case 'Raleway':
-      return GoogleFonts.raleway(textStyle: baseStyle);
+      return baseStyle.copyWith(fontFamily: 'Raleway');
     case 'Work Sans':
-      return GoogleFonts.workSans(textStyle: baseStyle);
+      return baseStyle.copyWith(fontFamily: 'WorkSans');
     case 'DM Sans':
-      return GoogleFonts.dmSans(textStyle: baseStyle);
+      return baseStyle.copyWith(fontFamily: 'DMSans');
     case 'Quicksand':
-      return GoogleFonts.quicksand(textStyle: baseStyle);
+      return baseStyle.copyWith(fontFamily: 'Quicksand');
     case 'Rubik':
-      return GoogleFonts.rubik(textStyle: baseStyle);
+      return baseStyle.copyWith(fontFamily: 'Rubik');
     case 'Karla':
-      return GoogleFonts.karla(textStyle: baseStyle);
+      return baseStyle.copyWith(fontFamily: 'Karla');
     case 'Merriweather':
-      return GoogleFonts.merriweather(textStyle: baseStyle);
+      return baseStyle.copyWith(fontFamily: 'Merriweather');
     case 'Playfair Display':
-      return GoogleFonts.playfairDisplay(textStyle: baseStyle);
+      return baseStyle.copyWith(fontFamily: 'PlayfairDisplay');
     case 'Roboto Mono':
-      return GoogleFonts.robotoMono(textStyle: baseStyle);
+      return baseStyle.copyWith(fontFamily: 'RobotoMono');
     case 'Fira Code':
-      return GoogleFonts.firaCode(textStyle: baseStyle);
+      return baseStyle.copyWith(fontFamily: 'FiraCode');
     case 'Source Code Pro':
-      return GoogleFonts.sourceCodePro(textStyle: baseStyle);
+      return baseStyle.copyWith(fontFamily: 'SourceCodePro');
     // System fonts — apply as named fontFamily directly
     case 'serif':
       return baseStyle.copyWith(fontFamily: 'Times New Roman');
@@ -86,7 +86,7 @@ final _markdownImageRegex = RegExp(r'!\[([^\]]*)\]\((https?://[^)]+)\)');
 ///
 /// Stateful purely for PARSE CACHING: during streaming the whole visible
 /// message list rebuilds many times a second, and re-running the markdown
-/// scan + dialogue/action tokenizer + Google-Fonts style resolution for
+/// scan + dialogue/action tokenizer + font-style resolution for
 /// every unchanged message was the dominant UI-thread cost. Parse results
 /// are cached keyed on the source text (identical() fast path — unchanged
 /// messages keep the same string object; only the streaming bubble re-parses)
@@ -170,19 +170,19 @@ class _StyledChatMessageState extends State<StyledChatMessage> {
     _styleKey = key;
     // fontSize is the shared reading base. The RichText/Text below get
     // StorageService.textScale as textScaler — do not also bake it here.
-    _plainStyle = _applyGoogleFont(
+    _plainStyle = _applyChatFont(
       fontFamily,
       readingSurfaceStyle(color: textColor),
     );
-    _dialogueStyle = _applyGoogleFont(
+    _dialogueStyle = _applyChatFont(
       fontFamily,
       readingSurfaceStyle(color: dialogueColor, fontWeight: FontWeight.w500),
     );
-    _actionStyle = _applyGoogleFont(
+    _actionStyle = _applyChatFont(
       fontFamily,
       readingSurfaceStyle(color: actionColor),
     );
-    _rootStyle = _applyGoogleFont(
+    _rootStyle = _applyChatFont(
       fontFamily,
       readingSurfaceStyle(color: textColor, height: 1.4),
     );
