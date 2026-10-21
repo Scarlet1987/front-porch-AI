@@ -179,7 +179,7 @@ class WorldFacade {
   Map<String, dynamic>? exportWorld(String nameOrId) {
     final w = _worlds.resolveWorld(nameOrId);
     if (w == null) return null;
-    // Shared envelope core — same builder file export and Stoop upload use.
+    // Shared envelope core — the same builder the file export uses.
     return _worlds.fpWorldJson(w);
   }
 

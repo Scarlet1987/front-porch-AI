@@ -132,10 +132,6 @@ Widget _buildRootWidget(AppDatabase db, bool needsMigration) {
         // Theme / dark mode is now driven exclusively by StorageService (single source of truth,
         // persisted, notifies after async prefs load). This eliminates the prior race + glue bugs.
         ChangeNotifierProvider(create: (_) => AppState()),
-        // Repository (Backporch) account session. Lazy — constructed + restored
-        // only when the Repository page is first opened, so users who never
-        // touch the online hub pay nothing and make no network calls.
-        ChangeNotifierProvider(create: (_) => AuthState()..init()),
         ChangeNotifierProxyProvider<StorageService, DownloadManager>(
           create: (context) => DownloadManager(
             targetDir: Provider.of<StorageService>(
@@ -173,17 +169,6 @@ Widget _buildRootWidget(AppDatabase db, bool needsMigration) {
               };
             return hardware;
           },
-        ),
-        // Anonymous, opt-out app analytics. Lazy like AuthState — only built
-        // when the Stoop is first opened (RepositoryPage reads it), so users who
-        // never touch the hub make no network calls. It listens to AuthState and
-        // pings once per launch when signed in and analytics is enabled.
-        Provider<StoopAnalytics>(
-          create: (ctx) => StoopAnalytics(
-            ctx.read<AuthState>(),
-            ctx.read<HardwareService>(),
-          ),
-          dispose: (_, s) => s.dispose(),
         ),
         ChangeNotifierProxyProvider<StorageService, CharacterRepository>(
           create: (context) => CharacterRepository(

@@ -17,7 +17,6 @@ export 'remote_routes.dart';
 export 'settings_routes.dart';
 export 'speed_test_routes.dart';
 export 'static_routes.dart';
-export 'stoop_routes.dart';
 export 'story_export_routes.dart';
 export 'story_routes.dart';
 export 'story_studio_routes.dart';

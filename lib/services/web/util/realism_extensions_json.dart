@@ -172,8 +172,8 @@ FrontPorchExtensions frontPorchFromFields(
     // `intimate_preferences`. This bridge is the web editor's own wire format,
     // not the portable card JSON — every other field here is flat camelCase,
     // and nesting one pair would earn a special case in asStrList for nothing.
-    // CharacterCard.toJson still emits the nested object, so what ships to The
-    // Stoop is unchanged.
+    // CharacterCard.toJson still emits the nested object, so the exported
+    // card is unchanged.
     intimateInto: asStrList('intimateInto', b.intimateInto),
     intimateNotInto: asStrList('intimateNotInto', b.intimateNotInto),
     // Starting Pockets & Wardrobe. Nested (`{worn: [...], carrying: [...]}`)

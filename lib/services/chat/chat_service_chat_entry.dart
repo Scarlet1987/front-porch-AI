@@ -367,7 +367,7 @@ extension ChatServiceChatEntry on ChatService {
                 _storageService.realismSettings.needsSimDefault;
             // Objectives seed from the GLOBAL switch only — deliberately no card
             // extension. A per-character default would change the card JSON
-            // shape, which ripples to The Stoop and every external reader, and
+            // shape, which ripples to every external reader, and
             // nobody asked for objectives to be a per-character trait. The
             // per-chat store is sessions.objectives_enabled.
             _objectivesEnabled =

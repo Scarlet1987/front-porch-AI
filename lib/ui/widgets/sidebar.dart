@@ -66,60 +66,6 @@ class Sidebar extends StatelessWidget {
                     isSelected: appState.selectedIndex == 0,
                     onTap: () => appState.setIndex(0),
                   ),
-                  // The Stoop (community character hub) — a flagship destination, so it
-                  // sits right under Home.
-                  InkWell(
-                    onTap: () => Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => const RepositoryPage()),
-                    ),
-                    borderRadius: BorderRadius.circular(8),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: AppColors.resolve(
-                          context,
-                          Colors.tealAccent.withValues(alpha: 0.08),
-                          Colors.teal.withValues(alpha: 0.10),
-                        ),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      padding: const EdgeInsets.symmetric(
-                        vertical: 12.0,
-                        horizontal: 12.0,
-                      ),
-                      margin: const EdgeInsets.symmetric(
-                        horizontal: 12.0,
-                        vertical: 4.0,
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.travel_explore,
-                            color: AppColors.resolve(
-                              context,
-                              Colors.tealAccent,
-                              Colors.teal.shade700,
-                            ),
-                            size: 22,
-                          ),
-                          const SizedBox(width: 12),
-                          Flexible(
-                            child: Text(
-                              'The Stoop',
-                              style: TextStyle(
-                                color: AppColors.resolve(
-                                  context,
-                                  Colors.tealAccent,
-                                  Colors.teal.shade700,
-                                ),
-                                fontWeight: FontWeight.w600,
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
                   InkWell(
                     onTap: () => Navigator.of(context).push(
                       MaterialPageRoute(builder: (_) => CharacterCreatorPage()),

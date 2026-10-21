@@ -55,7 +55,7 @@ class GroupCardExporter {
     if (members.isEmpty) return null;
 
     // Guarantee the group has a portable stable id (persisted) before we embed
-    // it in the card — so a re-upload updates the same Stoop post in place and
+    // it in the card — so a re-import updates the same group in place and
     // survives switching devices, exactly like a solo character.
     await _groups.ensureStableId(group);
 
@@ -204,8 +204,8 @@ class GroupCardExporter {
     return true;
   }
 
-  /// The card's `extensions` blob: the portable group stable id (at the path the
-  /// Stoop backend reads — see [embedGroupStableId]) plus the legacy/extra
+  /// The card's `extensions` blob: the portable group stable id (embedded via
+  /// [embedGroupStableId]) plus the legacy/extra
   /// realism-state blob so older external readers can still find a
   /// `realism_state`. Returns null only when there is genuinely nothing to carry.
   Map<String, dynamic>? _buildExtensions(GroupChat group) {

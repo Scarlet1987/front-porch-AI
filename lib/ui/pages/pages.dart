@@ -13,7 +13,6 @@ export 'edit_group_page.dart';
 export 'home_page.dart';
 export 'import_lorebook_page.dart';
 export 'model_manager_page.dart';
-export 'repository_page.dart';
 export 'settings_page.dart';
 export 'story_dashboard_page.dart';
 export 'story_home_view.dart';

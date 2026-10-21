@@ -404,7 +404,7 @@ class TimeService {
   String get narrativeWeekday => StoryClock.weekdayName(_clock);
 
   /// Derived legacy anchor — still written to the session row / snapshots so
-  /// external readers (Character Card Forge, older apps via The Stoop) keep
+  /// external readers (Character Card Forge, older apps) keep
   /// seeing a consistent value.
   int get startDayOfWeekAnchor => _startDate.weekday;
 

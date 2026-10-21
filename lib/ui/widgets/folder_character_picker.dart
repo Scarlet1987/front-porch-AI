@@ -27,9 +27,9 @@ import 'package:front_porch_ai/ui/theme/app_colors.dart';
 
 /// What a folder-aware pick surface shows at one (folder, query) position.
 /// Computed by [buildFolderPickView] — the ONE set of folder-browsing rules
-/// shared by every "pick from the library" surface (group-creation wizard,
-/// Stoop share Pick step), so their behavior can't drift while their visual
-/// treatments differ.
+/// shared by every "pick from the library" surface (group-creation wizard
+/// and the other pick surfaces), so their behavior can't drift while their
+/// visual treatments differ.
 class FolderPickView {
   const FolderPickView({
     required this.folders,
@@ -114,13 +114,11 @@ FolderPickView buildFolderPickView({
           groups.where((g) => groupIds.contains(g.id)).length;
     }
 
-    folders =
-        folderService.getSubfolders(folderId).where((f) {
-            final n = eligibleIn(f);
-            if (n > 0) counts[f.id] = n;
-            return n > 0;
-          }).toList()
-          ..sort((a, b) => a.name.compareTo(b.name));
+    folders = folderService.getSubfolders(folderId).where((f) {
+      final n = eligibleIn(f);
+      if (n > 0) counts[f.id] = n;
+      return n > 0;
+    }).toList()..sort((a, b) => a.name.compareTo(b.name));
   }
 
   visibleCharacters.sort((a, b) => a.name.compareTo(b.name));
@@ -135,8 +133,8 @@ FolderPickView buildFolderPickView({
 
 /// The ONE folder-aware character browser for "pick characters" surfaces
 /// (docs/design/folder-groups.md, related queued item). First consumer is the
-/// group-chat creation wizard's Members step; the Scene Guest picker and the
-/// Stoop share Pick step share the same flat-grid pattern and should adopt
+/// group-chat creation wizard's Members step; the Scene Guest picker shares
+/// the same flat-grid pattern and should adopt
 /// this widget rather than growing their own folder logic.
 ///
 /// Behavior mirrors the home grid's folder rules:

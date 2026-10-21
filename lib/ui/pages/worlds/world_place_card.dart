@@ -36,9 +36,8 @@ class WorldPlaceCard extends StatelessWidget {
     final accent = AppColors.formMasterAccent;
     final worldColor = WorldColors.getColorForWorld(world.name);
     final climate = world.biomeId;
-    final climateLabel = (climate != null &&
-            climate.isNotEmpty &&
-            climate != 'temperate')
+    final climateLabel =
+        (climate != null && climate.isNotEmpty && climate != 'temperate')
         ? climate
         : null;
 
@@ -255,7 +254,7 @@ class _CoverBackgroundState extends State<_CoverBackground> {
   // base64-decoding the cover data-URL per build allocated a NEW byte list
   // every rebuild, which also defeated MemoryImage's identity-based cache —
   // so the grid re-decoded the full PNG on every rebuild and scroll recycle.
-  // Memoize on the source string (same pattern as stoop_world_share).
+  // Memoize on the source string.
   String? _coverSource;
   Uint8List? _coverBytes;
 
@@ -292,8 +291,9 @@ class _CoverBackgroundState extends State<_CoverBackground> {
   }
 
   Widget _gradientFallback() {
-    final initial =
-        world.name.trim().isEmpty ? '?' : world.name.trim()[0].toUpperCase();
+    final initial = world.name.trim().isEmpty
+        ? '?'
+        : world.name.trim()[0].toUpperCase();
     return DecoratedBox(
       decoration: BoxDecoration(
         gradient: LinearGradient(

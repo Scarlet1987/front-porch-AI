@@ -132,7 +132,7 @@ class _GoldenRuleCard extends StatelessWidget {
             subtitle:
                 'Stands over every setting and every world — it isn\u2019t '
                 'a setting, so nothing can switch it off.',
-            barColor: AppColors.stoopCheckGold,
+            barColor: AppColors.porchAmber,
           ),
           const SizedBox(height: 10),
           Text.rich(

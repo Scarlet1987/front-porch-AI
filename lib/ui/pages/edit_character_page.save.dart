@@ -295,7 +295,7 @@ extension _EditCharacterSave on _EditCharacterPageState {
       }
 
       if (mounted) {
-        // Continue mode (e.g. the Stoop update flow): return the saved card so
+        // Continue mode (e.g. a caller's update flow): return the saved card so
         // the caller can proceed, instead of the standard "updated" toast + pop.
         if (widget.popWithCardOnSave) {
           Navigator.pop(context, widget.character);

@@ -44,7 +44,7 @@ extension ChatServiceGreeting on ChatService {
   /// setActiveGroup, and a reload of a session that predates the feature), and
   /// the seed shipped wired to exactly one of them, behind two gates it did
   /// not need: `frontPorchExtensions == null` — which excludes every card
-  /// authored in Front Porch AI and every card downloaded from The Stoop, i.e.
+  /// authored in Front Porch AI and every imported card, i.e.
   /// almost every real card — and `_activeGroup == null`, which excluded
   /// groups entirely.
   ///

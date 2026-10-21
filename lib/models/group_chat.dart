@@ -41,7 +41,7 @@ class GroupChat {
   ///
   /// Distinct from [id] (which is a device-local `group_<timestamp>` handle):
   /// this id travels inside the exported Group Card and is preserved on import,
-  /// so a shared group can be UPDATED in place on The Stoop (no duplicate) and
+  /// so a re-imported group can be UPDATED in place (no duplicate) and
   /// re-associated after switching devices — the group-level analogue of a
   /// character's stable id. Null until first generated (lazily on export via
   /// [GroupChatRepository.ensureStableId]) or carried in from an imported card.

@@ -479,7 +479,7 @@ extension ChatServiceSessionManage on ChatService {
     // emotion, the numbers a creator set on the card — which is why an
     // extensions-bearing card is excluded and why a group (whose baselines live
     // in defaultMemberRealismState, not on a card) is too. Spatial stance is
-    // not authored anywhere: no card, group or Stoop download carries one, so
+    // not authored anywhere: no card, group or imported file carries one, so
     // there is nothing here to protect and these gates only ever hid the seed
     // from the majority of real chats. It lives in the pre-turn dance instead
     // (_seedOpeningPosture), which reaches every card shape, every group

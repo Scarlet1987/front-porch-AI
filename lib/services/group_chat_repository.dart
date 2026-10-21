@@ -205,7 +205,7 @@ class GroupChatRepository extends ChangeNotifier {
   }
 
   /// Guarantee this group has a portable, device-independent [GroupChat.stableId]
-  /// (used to update a shared group in place on The Stoop instead of duplicating
+  /// (used to update a re-imported group in place instead of duplicating
   /// it, and to re-associate it after switching devices). Generates + persists
   /// one on the first call for a group that lacks it; a no-op afterwards.
   /// Returns the id. Mutates the passed [group] so callers see it immediately.
@@ -266,8 +266,8 @@ class GroupChatRepository extends ChangeNotifier {
 
   /// Resolves the on-disk avatar [File]s for a group's members, in member
   /// order. Members without an avatar are skipped. Paths are absolute (under
-  /// the group's private avatars dir). Shared by the home grid's group card and
-  /// the Stoop share picker so both preview a group from the same source.
+  /// the group's private avatars dir). Used by the home grid's group card so
+  /// a group is always previewed from the same source.
   Future<List<File>> getMemberAvatarFiles(String groupId) async {
     final rows = await getMembersForGroup(groupId);
     final files = <File>[];

@@ -51,8 +51,8 @@ const _borderFocus = AppColors.formMasterAccent;
 class EditCharacterPage extends StatefulWidget {
   final CharacterCard character;
 
-  /// Label for the save action (default "Save"). The Stoop update flow passes
-  /// "Next" so this editor reads as the first step of publishing an update.
+  /// Label for the save action (default "Save"). A caller's update flow can
+  /// pass "Next" so this editor reads as the first step of a longer flow.
   final String saveLabel;
 
   /// When true, a successful save pops this page returning the saved

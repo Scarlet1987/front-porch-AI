@@ -141,17 +141,6 @@ extension WebServerHostWiring on WebServerHost {
         ? SettingsFacade(_storage, _llmProvider!, chat: _chatService)
         : null;
 
-    // The Stoop relay. The web client keeps its own Stoop session (tokens in
-    // browser localStorage, sent per-request); the facade only relays calls
-    // and runs the local import chain on downloads.
-    final stoopFacade = StoopFacade(
-      _storage,
-      db,
-      characters: _characterRepository,
-      groups: _groupChatRepository,
-      worlds: _worldRepository,
-    );
-
     final worldFacade = _worldRepository != null
         ? WorldFacade(
             _worldRepository!,
@@ -232,7 +221,6 @@ extension WebServerHostWiring on WebServerHost {
       chatToolsFacade: chatToolsFacade,
       groupFacade: groupFacade,
       settingsFacade: settingsFacade,
-      stoopFacade: stoopFacade,
       worldFacade: worldFacade,
       worldFromWikiFacade: worldFromWikiFacade,
       backendFacade: backendFacade,

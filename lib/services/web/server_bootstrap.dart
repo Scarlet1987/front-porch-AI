@@ -76,7 +76,6 @@ shelf.Handler buildWebHandler(WebServerDeps deps) {
   if (deps.settingsFacade != null) {
     WebSettingsRoutes(deps, router);
   }
-  if (deps.stoopFacade != null) WebStoopRoutes(deps.stoopFacade!, router);
   if (deps.worldFacade != null) WebWorldRoutes(deps.worldFacade!, router);
   if (deps.worldFromWikiFacade != null) {
     WebWorldFromWikiRoutes(deps.worldFromWikiFacade!, router);

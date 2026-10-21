@@ -56,10 +56,10 @@ part 'edit_group_page.lore_worlds.dart';
 class EditGroupPage extends StatefulWidget {
   final GroupChat group;
 
-  /// Update-flow mode (e.g. the Stoop group Update): label the primary action
+  /// Update-flow mode (e.g. a caller's update flow): label the primary action
   /// (default 'Save', pass 'Next') and, when [popWithGroupOnSave] is true, pop
   /// returning the saved [GroupChat] instead of showing a toast + plain pop, so
-  /// the caller can continue to a publish step. Defaults preserve normal editing.
+  /// the caller can continue its flow. Defaults preserve normal editing.
   final String saveLabel;
   final bool popWithGroupOnSave;
 
@@ -250,9 +250,9 @@ class _EditGroupPageState extends State<EditGroupPage>
 
     final updated = GroupChat(
       id: widget.group.id,
-      // Preserve the portable stable id (used for in-place Stoop updates +
-      // cross-device). Rebuilding the GroupChat from scratch would otherwise
-      // silently drop it.
+      // Preserve the portable stable id (used for in-place updates on
+      // re-import + cross-device). Rebuilding the GroupChat from scratch would
+      // otherwise silently drop it.
       stableId: widget.group.stableId,
       name: _nameController.text.trim().isEmpty
           ? widget.group.name
@@ -291,7 +291,7 @@ class _EditGroupPageState extends State<EditGroupPage>
       final nav = Navigator.of(context);
 
       // Update-flow mode: hand the saved group back to the caller (which
-      // continues to the Stoop publish step) instead of toasting + plain pop.
+      // continues its own flow) instead of toasting + plain pop.
       if (widget.popWithGroupOnSave) {
         nav.pop(updated);
         return;

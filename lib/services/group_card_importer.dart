@@ -43,8 +43,8 @@ class GroupImportResult {
 /// group_members rows + private avatars), the mirror of [GroupCardExporter].
 ///
 /// This is the single source of truth for the group-import logic that used to
-/// live inline in `home_page._importGroupCard`; the desktop UI and The Stoop's
-/// "Download to library" both call it so the two paths can never diverge. It is
+/// live inline in `home_page._importGroupCard`; every import surface calls
+/// it so the paths can never diverge. It is
 /// a clean-break PRIVATE import: it NEVER touches the library/CharacterRepository
 /// — all members go to `groups/<id>/avatars/` + group_members rows (UUID keys),
 /// and realism/prompts/objectives are remapped to the new UUIDs.
@@ -307,8 +307,8 @@ class GroupCardImporter {
     final newGroup = GroupChat(
       id: groupId,
       // Preserve the card's portable stable id so the owner can UPDATE the same
-      // Stoop post from this device (cross-device). Absent on older cards → left
-      // null; a fresh id is generated on first export/share here instead.
+      // group from this device (cross-device). Absent on older cards → left
+      // null; a fresh id is generated on first export here instead.
       stableId: readGroupStableIdFromExtensions(groupCard.extensions),
       name: groupCard.name,
       turnOrder: groupCard.turnOrder == 'random'

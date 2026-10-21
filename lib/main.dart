@@ -37,13 +37,11 @@ import 'package:window_manager/window_manager.dart';
 // ignore: depend_on_referenced_packages
 import 'package:screen_retriever/screen_retriever.dart';
 import 'package:front_porch_ai/providers/app_state.dart';
-import 'package:front_porch_ai/providers/auth_state.dart';
 import 'package:front_porch_ai/ui/theme/app_colors.dart';
 import 'package:front_porch_ai/ui/theme/porch_design.dart';
 import 'package:front_porch_ai/ui/theme/porch_theme_scope.dart';
 import 'package:front_porch_ai/ui/window_chrome.dart';
 import 'package:front_porch_ai/ui/window_size_env.dart';
-import 'package:front_porch_ai/services/backporch/backporch.dart';
 import 'package:front_porch_ai/ui/alice/alice_shell.dart';
 import 'package:front_porch_ai/ui/alice/alice_setup_wizard.dart';
 import 'package:front_porch_ai/app_version.dart';

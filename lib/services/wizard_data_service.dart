@@ -128,7 +128,6 @@ class WizardDataService {
       ('skills', s.skillsDir),
       ('backgrounds', s.customBackgroundDir),
       ('web cache', dirs.webThumbnailCacheDir),
-      ('stoop cache', dirs.stoopAssetCacheDir),
       ('engine', s.binDir),
     ];
   }

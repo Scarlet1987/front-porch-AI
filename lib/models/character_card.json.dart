@@ -23,9 +23,9 @@ part of 'character_card.dart';
 /// Every authored phrase list on a card (ambitions, likes, dislikes, the
 /// intimate pair) parses through here. `is List` rather than `as List?` on
 /// purpose: a card can arrive from ANYWHERE — a PNG someone mailed you, a
-/// Stoop download, a hand-edited JSON — so a field that is present but the
+/// downloaded card, a hand-edited JSON — so a field that is present but the
 /// wrong type must yield an empty list rather than throw and fail the whole
-/// import. The same cast bug was caught in review on the Stoop card panel
+/// import. The same cast bug was caught in review on a card panel
 /// (2026-08-07); this is the one place it can now be got wrong.
 List<String> _phrases(Object? raw) => [
   for (final v in raw is List ? raw : const [])

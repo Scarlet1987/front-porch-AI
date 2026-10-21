@@ -47,7 +47,7 @@ class FrontPorchExtensions {
   String timeOfDay; // dawn/morning/late_morning/afternoon/evening/night
 
   // Story Calendar (docs/design/story-calendar.md §3a). Additive next to the
-  // kept day_count/time_of_day so cards round-trip through The Stoop and
+  // kept day_count/time_of_day so cards round-trip through export/import and
   // stay readable by older apps.
   String?
   storyStartDate; // ISO date the story begins on; null = "the day the chat starts"
@@ -126,7 +126,7 @@ class FrontPorchExtensions {
 
   /// Starting Pockets & Wardrobe — what the character already has when a chat
   /// opens: `{worn: [...], carrying: [...]}`, entries either plain strings or
-  /// `{name, state}`. Optional and additive, so older apps and The Stoop
+  /// `{name, state}`. Optional and additive, so older apps
   /// ignore it and a card without one simply starts empty.
   ///
   /// Kept as a raw map rather than a typed Pockets: this is the MODEL layer and

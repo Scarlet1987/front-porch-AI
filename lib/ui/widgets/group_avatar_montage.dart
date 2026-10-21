@@ -18,7 +18,7 @@ import 'package:front_porch_ai/ui/theme/app_colors.dart';
 /// 1 fills the square, 2 sit side-by-side (full height), 3 form an inverted
 /// pyramid (two on top, one centered below), and 4+ use the iOS-style 2x2 grid.
 ///
-/// Shared by the home grid (folder + group cards) and the Stoop share picker so
+/// Shared by the home grid (folder + group cards) so
 /// a group looks identical everywhere its members are previewed.
 class GroupAvatarMontage extends StatelessWidget {
   /// The member/character avatar files, in display order. Up to four are shown.
@@ -33,21 +33,22 @@ class GroupAvatarMontage extends StatelessWidget {
     required this.side,
   });
 
-  Widget _cell(BuildContext context, File? img, double w, double h) => Container(
-    width: w,
-    height: h,
-    decoration: BoxDecoration(
-      color: AppColors.surfaceContainerOf(context),
-      borderRadius: BorderRadius.circular(6),
-      image: img != null
-          // Montage cells are tiny (quarter of a tile); decode small.
-          ? DecorationImage(
-              image: ResizeImage(FileImage(img), width: 256),
-              fit: BoxFit.cover,
-            )
-          : null,
-    ),
-  );
+  Widget _cell(BuildContext context, File? img, double w, double h) =>
+      Container(
+        width: w,
+        height: h,
+        decoration: BoxDecoration(
+          color: AppColors.surfaceContainerOf(context),
+          borderRadius: BorderRadius.circular(6),
+          image: img != null
+              // Montage cells are tiny (quarter of a tile); decode small.
+              ? DecorationImage(
+                  image: ResizeImage(FileImage(img), width: 256),
+                  fit: BoxFit.cover,
+                )
+              : null,
+        ),
+      );
 
   @override
   Widget build(BuildContext context) {
@@ -95,14 +96,22 @@ class GroupAvatarMontage extends StatelessWidget {
     Widget tile(int i) => _cell(context, i < n ? images[i] : null, half, half);
     Widget row(int a, int b) => Row(
       mainAxisSize: MainAxisSize.min,
-      children: [tile(a), const SizedBox(width: gap), tile(b)],
+      children: [
+        tile(a),
+        const SizedBox(width: gap),
+        tile(b),
+      ],
     );
     return SizedBox(
       width: side,
       height: side,
       child: Column(
         mainAxisSize: MainAxisSize.min,
-        children: [row(0, 1), const SizedBox(height: gap), row(2, 3)],
+        children: [
+          row(0, 1),
+          const SizedBox(height: gap),
+          row(2, 3),
+        ],
       ),
     );
   }

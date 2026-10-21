@@ -49,7 +49,6 @@ class WebServerDeps {
     this.chatToolsFacade,
     this.groupFacade,
     this.settingsFacade,
-    this.stoopFacade,
     this.worldFacade,
     this.worldFromWikiFacade,
     this.backendFacade,
@@ -104,11 +103,6 @@ class WebServerDeps {
 
   /// Generation/backend settings adapter — null until the LLM provider is wired.
   final SettingsFacade? settingsFacade;
-
-  /// The Stoop (community hub) relay — always constructible (storage + db),
-  /// with download-import available only once the library repositories are
-  /// injected.
-  final StoopFacade? stoopFacade;
 
   /// World (shared lorebook) CRUD adapter — null until the WorldRepository is
   /// injected.

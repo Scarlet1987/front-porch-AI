@@ -27,8 +27,8 @@
 /// weighting preferences the reply was never told about. Two copies of "roughly
 /// the same cleanup" is how that happens, so there is now one.
 ///
-/// It also hardens the path that made this worth doing properly: a card
-/// downloaded from The Stoop is a STRANGER'S TEXT that lands inside a judge
+/// It also hardens the path that made this worth doing properly: an imported
+/// card is a STRANGER'S TEXT that lands inside a judge
 /// prompt. Card description and personality already did, so this is not a new
 /// class of exposure — but a short unescaped phrase joined with commas is a far
 /// cleaner injection vector than a paragraph. A `likes` entry of

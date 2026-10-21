@@ -192,7 +192,6 @@ class WebAuthRoutes {
   Future<shelf.Response> _logout(shelf.Request request) async {
     final token = Cookies.sessionToken(request);
     if (token != null) await _auth.logout(token);
-    _deps.stoopFacade?.clearAssetToken(token);
     return JsonResponse.ok(
       {'ok': true},
       extraHeaders: {

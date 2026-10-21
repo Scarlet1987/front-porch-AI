@@ -40,7 +40,7 @@ import 'package:front_porch_ai/services/world_repository.dart';
 /// or a backup restore, [reopenAndRebindDatabase] replaces the singleton, and
 /// every widget still reading the provider gets the *closed* database instead.
 /// That is exactly how the Database Cleanup dialog, the Data Bank, the
-/// character export/transfer sheet and the Stoop upload pages kept throwing
+/// character export/transfer sheet kept throwing
 /// "database was closed" until the app was restarted.
 ///
 /// Prefers the live singleton and falls back to the provider, so tests that

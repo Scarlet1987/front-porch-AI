@@ -290,7 +290,7 @@ class WorldRepository extends ChangeNotifier {
     return world;
   }
 
-  /// The ONE .fpworld envelope builder (file export AND Stoop upload): embeds
+  /// The ONE .fpworld envelope builder (used by every export path): embeds
   /// the resolved biome so importers get climate without built-ins, plus place
   /// traits, lore, and the cover image already carried by [model.World].
   Map<String, dynamic> fpWorldJson(model.World world) {

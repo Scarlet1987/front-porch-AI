@@ -182,11 +182,10 @@ class GroupCard {
 
   /// Rebuild a group card from card JSON.
   ///
-  /// THE INPUT IS A STRANGER'S UPLOAD. Both Stoop download paths
-  /// (stoop_card_detail_page, the web facade's stoop relay) hand a downloaded
-  /// card straight to this factory, so every read here is type-CHECKED rather
+  /// THE INPUT IS A STRANGER'S UPLOAD. An imported card file is handed
+  /// straight to this factory, so every read here is type-CHECKED rather
   /// than `as`-cast: an `as` on a present-but-wrong-typed field throws out of
-  /// the factory and kills the whole download instead of costing one field.
+  /// the factory and kills the whole import instead of costing one field.
   /// `turn_order` was the field that proved it: a card whose `turn_order` was
   /// an empty list threw a "not a subtype of type String" error from here.
   factory GroupCard.fromJson(Map<String, dynamic> json) {
@@ -249,7 +248,10 @@ class GroupCard {
       groupLorebook: json['group_lorebook']?.toString(),
       worldIds: worldIds,
       worldNames: worldNames,
-      inheritCharacterLorebooks: flag(json['inherit_character_lorebooks'], true),
+      inheritCharacterLorebooks: flag(
+        json['inherit_character_lorebooks'],
+        true,
+      ),
       chaosModeEnabled: flag(json['chaos_mode_enabled'], false),
       chaosNsfwEnabled: flag(json['chaos_nsfw_enabled'], false),
       baselineRealismState: json['baseline_realism_state']?.toString() ?? '{}',
@@ -259,7 +261,9 @@ class GroupCard {
           ? (json['member_objectives'] as Map).map(
               (k, v) => MapEntry(
                 k.toString(),
-                list(v).whereType<Map>().map(Map<String, dynamic>.from).toList(),
+                list(
+                  v,
+                ).whereType<Map>().map(Map<String, dynamic>.from).toList(),
               ),
             )
           : const {},

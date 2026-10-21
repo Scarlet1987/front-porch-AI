@@ -41,7 +41,8 @@ class CharacterCard {
   /// The UI now prevents (and warns about) cross-engine assignments.
   String? ttsVoice;
 
-  /// V2 spec credits — round-trip so Stoop/Chub author names survive import.
+  /// V2 spec credits — round-trip so author names (e.g. from Chub cards)
+  /// survive import.
   String creator;
   String creatorNotes;
   String characterVersion;

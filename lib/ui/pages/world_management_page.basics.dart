@@ -77,7 +77,7 @@ extension _WorldBasicsSection on _WorldManagementPageState {
             ],
           ),
           SizedBox(height: gap),
-          // Place cover (thumbnail on the Worlds grid; required on Stoop).
+          // Place cover (thumbnail on the Worlds grid).
           Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
@@ -104,7 +104,7 @@ extension _WorldBasicsSection on _WorldManagementPageState {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Shown on the Worlds grid and packed into .fpworld. Required to share on the Stoop.',
+                      'Shown on the Worlds grid and packed into .fpworld.',
                       style: TextStyle(
                         fontSize: 10.5,
                         color: AppColors.textTertiary(ctx),

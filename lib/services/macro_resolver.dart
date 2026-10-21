@@ -10,7 +10,7 @@ import 'package:intl/intl.dart';
 /// Only [userName]/[characterName] are universal. The chat-context fields
 /// (card fields, group roster, last messages, idle time) and the variable
 /// store callbacks are supplied by ChatService's prompt build; contexts that
-/// don't provide them (Stoop previews, image prompts) leave the dependent
+/// don't provide them (preview surfaces, image prompts) leave the dependent
 /// macros untouched (pass-through), never silently blank.
 class MacroContext {
   final String? userName;
@@ -85,13 +85,17 @@ class MacroResolver {
   // Accepts both ST separator styles: {{name::a::b}} and {{name:a,b}}.
   static final _macroPattern = RegExp(r'\{\{(\w+)(?:(::?)(.+?))?\}\}');
   // Dedicated roll pass: ST allows {{roll:d6}}, {{roll::1d20+5}}, {{roll d20}}.
-  static final _rollMacroPattern =
-      RegExp(r'\{\{roll[\s:]+([^}]+)\}\}', caseSensitive: false);
+  static final _rollMacroPattern = RegExp(
+    r'\{\{roll[\s:]+([^}]+)\}\}',
+    caseSensitive: false,
+  );
   static final _rollPattern = RegExp(r'^(\d+)d(\d+)([+-]\d+)?$');
   // Legacy ST {{time_UTC±N}} form (the modern {{time::UTC±N}} rides the
   // generic pattern; this one's +N suffix does not).
-  static final _timeUtcPattern =
-      RegExp(r'\{\{time_UTC([+-]\d+)\}\}', caseSensitive: false);
+  static final _timeUtcPattern = RegExp(
+    r'\{\{time_UTC([+-]\d+)\}\}',
+    caseSensitive: false,
+  );
   // {{trim}} eats surrounding whitespace/newlines — applied after the macro
   // pass so macros around it resolve first.
   static final _trimPattern = RegExp(
@@ -133,12 +137,15 @@ class MacroResolver {
     register('time', (args, ctx) {
       // {{time}} or {{time::UTC±N}} (ST timezone form).
       if (args.isNotEmpty) {
-        final m = RegExp(r'^UTC([+-]\d+)$', caseSensitive: false)
-            .firstMatch(args[0].trim());
+        final m = RegExp(
+          r'^UTC([+-]\d+)$',
+          caseSensitive: false,
+        ).firstMatch(args[0].trim());
         if (m != null) {
           final offset = int.tryParse(m.group(1)!) ?? 0;
-          return DateFormat('HH:mm')
-              .format(DateTime.now().toUtc().add(Duration(hours: offset)));
+          return DateFormat(
+            'HH:mm',
+          ).format(DateTime.now().toUtc().add(Duration(hours: offset)));
         }
       }
       return DateFormat('HH:mm').format(DateTime.now());
@@ -166,8 +173,14 @@ class MacroResolver {
       if (a == null || b == null) return '';
       return _humanizeDuration(a.difference(b).abs());
     });
-    register('date', (args, ctx) => DateFormat('yyyy-MM-dd').format(DateTime.now()));
-    register('weekday', (args, ctx) => DateFormat('EEEE').format(DateTime.now()));
+    register(
+      'date',
+      (args, ctx) => DateFormat('yyyy-MM-dd').format(DateTime.now()),
+    );
+    register(
+      'weekday',
+      (args, ctx) => DateFormat('EEEE').format(DateTime.now()),
+    );
     register('isotime', (args, ctx) {
       final iso = DateTime.now().toIso8601String();
       return iso.split('T')[1].split('.').first;
@@ -243,7 +256,8 @@ class MacroResolver {
 
       if (name == 'pick') {
         // Deterministic per chatId + characterId + position
-        final seedKey = '${context.chatId}_${context.characterId}_${section}_$_pickCounter';
+        final seedKey =
+            '${context.chatId}_${context.characterId}_${section}_$_pickCounter';
         _pickCounter++;
         final h = seedKey.hashCode.abs();
         return args.isEmpty ? '' : args[h % args.length];
@@ -263,8 +277,9 @@ class MacroResolver {
     // 6. Legacy {{time_UTC±N}} + {{trim}} post-passes
     result = result.replaceAllMapped(_timeUtcPattern, (m) {
       final offset = int.tryParse(m.group(1)!) ?? 0;
-      return DateFormat('HH:mm')
-          .format(DateTime.now().toUtc().add(Duration(hours: offset)));
+      return DateFormat(
+        'HH:mm',
+      ).format(DateTime.now().toUtc().add(Duration(hours: offset)));
     });
     result = result.replaceAll(_trimPattern, '');
 
@@ -279,7 +294,8 @@ class MacroResolver {
   /// Accepts both `{{setvar::k::v}}` and `{{setvar:k:v}}` (single-colon args
   /// arrive as one string and are split at the first colon).
   String? _varMacro(String name, List<String> args, MacroContext ctx) {
-    final isGlobal = name.startsWith('setglobal') ||
+    final isGlobal =
+        name.startsWith('setglobal') ||
         name.startsWith('getglobal') ||
         name.startsWith('addglobal') ||
         name.startsWith('incglobal') ||
@@ -295,8 +311,11 @@ class MacroResolver {
 
     String key = args[0];
     String value = args.length > 1 ? args.sublist(1).join('::') : '';
-    if (args.length == 1 && key.contains(':') && op != 'getvar' &&
-        op != 'incvar' && op != 'decvar') {
+    if (args.length == 1 &&
+        key.contains(':') &&
+        op != 'getvar' &&
+        op != 'incvar' &&
+        op != 'decvar') {
       final i = key.indexOf(':');
       value = key.substring(i + 1);
       key = key.substring(0, i);

@@ -276,7 +276,7 @@ extension ChatServiceRegenRevert on ChatService {
       // realism snapshot; on turn one there is only the greeting, and the
       // greeting is stamped on exactly one entry path (1:1 + startNewChat +
       // a card with no frontPorchExtensions). Every other opening — the
-      // ordinary open-a-character path, any Front Porch or Stoop card, any
+      // ordinary open-a-character path, any Front Porch or imported card, any
       // group — found nothing to restore and left the discarded reply's
       // position standing, so each reroll wrote the next attempt from a
       // place invented by the reply the user had just rejected. Two rerolls

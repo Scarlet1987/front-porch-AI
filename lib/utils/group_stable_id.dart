@@ -9,11 +9,11 @@
 // (at your option) any later version.
 
 // A group card carries its portable, device-independent stable id at
-// `extensions.front_porch.realism_engine.stable_id` — the SAME JSON path the
-// Stoop backend's `cardStableId()` reads for solo cards. Embedding a group's
-// stable id there makes the backend treat a re-upload as an in-place UPDATE of
-// the same post (no duplicate) and lets the owner re-associate it after
-// switching devices — exactly like a solo character, with zero backend change.
+// `extensions.front_porch.realism_engine.stable_id` — the SAME JSON path a
+// solo card's stable id rides at. Embedding a group's
+// stable id there makes a re-import an in-place UPDATE of
+// the same group (no duplicate) and lets the owner re-associate it after
+// switching devices — exactly like a solo character.
 //
 // These are pure functions so the exporter, the importer, and their tests all
 // use one contract.

@@ -395,7 +395,7 @@ class CharacterRepository extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// The file to bake as the character's exported / Stoop card cover: the ★
+  /// The file to bake as the character's exported card cover: the ★
   /// starred avatar (a gallery look OR an expression image) when it's set and
   /// present on disk, else the library portrait (`imagePath`). Null when neither
   /// resolves. Lets a user pick their best render (an outfit, a mood) as the

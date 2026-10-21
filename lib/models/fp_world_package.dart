@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 //
 // Portable world package (.fpworld) — a place with lore (+ optional biome).
-// See docs/design/living-worlds.md. Envelope is Stoop-ready; biome may be null
+// See docs/design/living-worlds.md. Envelope is portable; biome may be null
 // until the world carries a climate.
 
 import 'dart:convert';
