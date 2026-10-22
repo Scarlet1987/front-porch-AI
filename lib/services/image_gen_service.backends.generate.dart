@@ -356,7 +356,7 @@ extension ImageGenBackendsGenerate on ImageGenService {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $apiKey',
-          'HTTP-Referer': 'https://github.com/linux4life1/front-porch-AI',
+          'HTTP-Referer': 'https://github.com/Scarlet1987/front-porch-AI',
           'X-Title': 'Front Porch AI',
         },
         body: jsonEncode(payload),

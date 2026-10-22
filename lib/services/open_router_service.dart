@@ -186,7 +186,7 @@ class OpenRouterService extends LLMService implements LlmApiEndpoint {
   Map<String, String> get _chatHeaders => {
     'Content-Type': 'application/json',
     ...remoteAuthHeaders(_apiKey),
-    'HTTP-Referer': 'https://github.com/linux4life1/front-porch-AI',
+    'HTTP-Referer': 'https://github.com/Scarlet1987/front-porch-AI',
     'X-Title': 'Front Porch AI',
   };
 
