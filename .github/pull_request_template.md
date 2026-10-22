@@ -15,7 +15,7 @@ instead of a list of unfinished pieces.
 <!-- All work (features, fixes, experiments) -> Rawhide. main is tagged
 releases only. -->
 
-- [ ] This PR targets the correct branch ([which branch?](https://github.com/linux4life1/front-porch-AI/blob/Rawhide/CONTRIBUTING.md#which-branch-do-i-target))
+- [ ] This PR targets the correct branch ([which branch?](https://github.com/Scarlet1987/front-porch-AI/blob/Rawhide/CONTRIBUTING.md#which-branch-do-i-target))
 
 ## Type of change
 

@@ -11,7 +11,7 @@ body:
         another, so the details genuinely decide whether this is fixable.
 
         **Security problems do not belong here.** Report those privately via the
-        [Security tab](https://github.com/linux4life1/front-porch-AI/security).
+        [Security tab](https://github.com/Scarlet1987/front-porch-AI/security).
 
   - type: textarea
     id: what-happened
