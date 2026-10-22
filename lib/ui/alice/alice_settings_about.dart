@@ -82,6 +82,17 @@ class AliceEditionCreditsCard extends StatelessWidget {
               height: 1.4,
             ),
           ),
+          const SizedBox(height: 8),
+          Text(
+            'Front Porch AI was created by linux4life1. Alice is an '
+            'independent edition, and its updates are published from '
+            "Scarlet1987's repository.",
+            style: TextStyle(
+              color: AppColors.textSecondary(context),
+              fontSize: 12,
+              height: 1.4,
+            ),
+          ),
         ],
       ),
     );

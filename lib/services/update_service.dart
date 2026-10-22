@@ -35,19 +35,25 @@ part 'update_service_install.dart';
 
 /// Cross-platform self-update service.
 /// Checks GitHub Releases for new versions and downloads/runs the update.
-/// Supports Windows (Inno Setup), Linux (AppImage), and macOS (.pkg —
+/// Supports Windows (Inno Setup), Linux (.deb), and macOS (.pkg —
 /// signed+notarized+stapled, the only macOS asset since the unsigned shim
 /// DMG was retired 2026-07-27; binaries old enough to predate the .pkg
 /// updater must manually download once).
 class UpdateService extends ChangeNotifier {
-  static const String _repoOwner = 'linux4life1';
+  static const String _repoOwner = 'Scarlet1987';
   static const String _repoName = 'front-porch-AI';
   static const String _windowsAssetStable = 'Front_Porch_AI_Setup.exe';
   static const String _windowsAssetBeta = 'Front_Porch_AI_Beta_Setup.exe';
   static const String _windowsAssetNightly = 'Front_Porch_AI_Nightly_Setup.exe';
-  static const String _linuxAsset = 'Front_Porch_AI-Linux.AppImage';
-  static const String _linuxAssetNightly =
-      'Front_Porch_AI_Nightly-Linux.AppImage';
+  // Linux has no fixed asset name: Scarlet1987's releases publish one .deb
+  // per release (plus a Flatpak the updater does not consume), and the .deb
+  // name embeds the version — front-porch-ai_<version>_amd64.deb. There is
+  // no AppImage and no nightly-specific Linux asset, so every Linux channel
+  // matches this single pattern instead of an exact-name constant.
+  static final RegExp _linuxDebAssetPattern = RegExp(
+    r'^front-porch-ai_.+_amd64\.deb$',
+    caseSensitive: false,
+  );
   // Primary (new canonical) asset names for macOS .pkg releases (signed+notarized).
   static const String _macosAssetPkg = 'Front_Porch_AI.pkg';
   static const String _macosAssetBetaPkg = 'Front_Porch_AI_MacOS.pkg';
@@ -132,17 +138,32 @@ class UpdateService extends ChangeNotifier {
     return false;
   }
 
+  /// Whether [name] is the published Linux update asset: the versioned
+  /// .deb (see [_linuxDebAssetPattern]). Name-only so tests can pin it on
+  /// any host; platform dispatch lives in [_matchesPlatformAsset].
+  @visibleForTesting
+  static bool isLinuxDebAssetName(String name) =>
+      _linuxDebAssetPattern.hasMatch(name);
+
+  /// Whether a release asset [name] is this platform's update package.
+  static bool _matchesPlatformAsset(String name) {
+    if (Platform.isLinux) return isLinuxDebAssetName(name);
+    return name == _platformAsset;
+  }
+
   /// The correct asset name for this platform's update package.
   /// Nightly (Rawhide), Beta, and Stable each use distinct filenames so the
   /// three update channels never cross-pollinate (prevents data dir disasters).
+  /// Linux is the exception: it matches by pattern (see
+  /// [_matchesPlatformAsset]), so this getter returns '' there and remains
+  /// only as the download fallback for the fixed-name platforms.
   static String get _platformAsset {
     if (Platform.isWindows) {
       if (isNightlyBuild) return _windowsAssetNightly;
       return isPreRelease ? _windowsAssetBeta : _windowsAssetStable;
     }
     if (Platform.isLinux) {
-      if (isNightlyBuild) return _linuxAssetNightly;
-      return _linuxAsset;
+      return '';
     }
     if (Platform.isMacOS) {
       // .pkg is the only macOS asset (the legacy shim DMG and its fallback
@@ -220,27 +241,31 @@ class UpdateService extends ChangeNotifier {
       final normalizedVersion = _normalizeForCompare(tagNameStripped);
       final assets = targetRelease['assets'] as List<dynamic>? ?? [];
 
-      // Find the platform-specific update asset (now correctly picks Nightly/Beta/Stable)
-      final targetAsset = _platformAsset;
+      // Find the platform-specific update asset (now correctly picks
+      // Nightly/Beta/Stable). Linux matches by pattern instead of exact
+      // name: the .deb's filename embeds the version being downloaded.
       String? installerUrl;
       String? resolvedAssetName;
       for (final asset in assets) {
-        if (asset['name'] == targetAsset) {
+        final assetName = asset['name'] as String? ?? '';
+        if (_matchesPlatformAsset(assetName)) {
           installerUrl = asset['browser_download_url'] as String?;
-          resolvedAssetName = targetAsset;
+          resolvedAssetName = assetName;
           break;
         }
       }
 
       if (installerUrl == null) {
-        debugPrint('No update asset ($targetAsset) found in release $originalTag');
+        debugPrint(
+          'No update asset for this platform found in release $originalTag',
+        );
         return false;
       }
 
       _latestReleaseTag = originalTag;
       _latestVersion = normalizedVersion;
       _downloadUrl = installerUrl;
-      _selectedAssetName = resolvedAssetName ?? targetAsset;
+      _selectedAssetName = resolvedAssetName ?? _platformAsset;
       _releaseNotes = targetRelease['body'] as String? ?? '';
       // The friendly "What's New" (including the macOS .pkg+shim transition note)
       // comes from docs/<Branch>.md (e.g. docs/Rawhide.md) via the CI release_notes
@@ -262,7 +287,6 @@ class UpdateService extends ChangeNotifier {
   /// Download the installer to a temp directory.
   /// Does NOT run it — call installNow() or let installOnClose() handle it.
   Future<void> downloadUpdate() => _downloadUpdateImpl();
-
 
   /// Reject a download that cannot be a real installer: a truncated stream
   /// (received != Content-Length) or a body so small it is an error page,
